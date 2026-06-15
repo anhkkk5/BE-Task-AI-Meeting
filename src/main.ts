@@ -1,0 +1,26 @@
+import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('app.port') ?? 3001;
+  const apiPrefix = configService.get<string>('app.apiPrefix') ?? 'api';
+  const apiVersion = configService.get<string>('app.apiVersion') ?? 'v1';
+
+  app.setGlobalPrefix(`${apiPrefix}/${apiVersion}`);
+  app.enableCors();
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
+
+  await app.listen(port);
+}
+void bootstrap();
