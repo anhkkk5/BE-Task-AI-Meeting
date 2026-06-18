@@ -48,6 +48,13 @@ let AuthController = class AuthController {
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('register'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Dang ky tai khoan',
+        description: 'Tao user moi, hash password va tra accessToken/refreshToken.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Dang ky thanh cong.' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Request body khong hop le.' }),
+    (0, swagger_1.ApiResponse)({ status: 409, description: 'Email da ton tai.' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [register_dto_1.RegisterDto]),
@@ -55,6 +62,13 @@ __decorate([
 ], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.Post)('login'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Dang nhap',
+        description: 'Nhap email/password de lay accessToken va refreshToken.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Dang nhap thanh cong.' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Request body khong hop le.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Sai email hoac mat khau.' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [login_dto_1.LoginDto]),
@@ -63,6 +77,12 @@ __decorate([
 __decorate([
     (0, common_1.Post)('refresh'),
     (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Lam moi token',
+        description: 'Dan refreshToken vao Authorize dang Bearer token truoc khi goi API nay.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Cap token moi thanh cong.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Refresh token khong hop le.' }),
     (0, common_1.UseGuards)(refresh_token_guard_1.RefreshTokenGuard),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Headers)('authorization')),
@@ -73,6 +93,12 @@ __decorate([
 __decorate([
     (0, common_1.Post)('logout'),
     (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Dang xuat',
+        description: 'Dan accessToken vao Authorize. API se xoa refresh token hash trong DB.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Dang xuat thanh cong.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Access token khong hop le.' }),
     (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -82,6 +108,12 @@ __decorate([
 __decorate([
     (0, common_1.Get)('me'),
     (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Lay thong tin user hien tai',
+        description: 'Dan accessToken vao Authorize de xem user dang dang nhap.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Lay thong tin thanh cong.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Access token khong hop le.' }),
     (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),

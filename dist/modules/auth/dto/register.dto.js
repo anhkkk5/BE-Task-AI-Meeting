@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RegisterDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class RegisterDto {
     email;
@@ -18,17 +19,34 @@ class RegisterDto {
 }
 exports.RegisterDto = RegisterDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        example: 'member@example.com',
+        description: 'Email dung de dang nhap. Phai la email hop le va khong trung.',
+        maxLength: 255,
+    }),
     (0, class_validator_1.IsEmail)(),
     (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "email", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        example: 'Nguyen Van A',
+        description: 'Ho ten hien thi cua nguoi dung.',
+        minLength: 2,
+        maxLength: 120,
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(2),
     (0, class_validator_1.MaxLength)(120),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "fullName", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        example: 'password123',
+        description: 'Mat khau tu 8 den 72 ky tu.',
+        minLength: 8,
+        maxLength: 72,
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(8),
     (0, class_validator_1.MaxLength)(72),

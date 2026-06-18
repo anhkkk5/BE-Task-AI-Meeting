@@ -38,6 +38,12 @@ let UsersController = class UsersController {
 exports.UsersController = UsersController;
 __decorate([
     (0, common_1.Get)('me'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Xem ho so ca nhan',
+        description: 'Dan accessToken vao Authorize de lay profile user hien tai.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Lay profile thanh cong.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Access token khong hop le.' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -45,6 +51,13 @@ __decorate([
 ], UsersController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.Patch)('me'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Cap nhat ho so ca nhan',
+        description: 'Dan accessToken vao Authorize, sau do gui cac field profile can cap nhat.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Cap nhat profile thanh cong.' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Request body khong hop le.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Access token khong hop le.' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -53,6 +66,16 @@ __decorate([
 ], UsersController.prototype, "updateProfile", null);
 __decorate([
     (0, common_1.Patch)('me/password'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Doi mat khau',
+        description: 'Dan accessToken vao Authorize. Can nhap currentPassword va newPassword.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Doi mat khau thanh cong.' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Request body khong hop le.' }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: 'Access token khong hop le hoac currentPassword sai.',
+    }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),

@@ -11,7 +11,8 @@ import { WorkspacesService } from './workspaces.service';
 
 describe('WorkspacesService', () => {
   let service: WorkspacesService;
-  let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
+  let transactionMock: jest.Mock;
+  let dataSource: Pick<DataSource, 'transaction'>;
   let workspacesRepository: jest.Mocked<
     Pick<
       WorkspacesRepository,
@@ -42,11 +43,12 @@ describe('WorkspacesService', () => {
   } as Workspace;
 
   beforeEach(() => {
+    transactionMock = jest.fn(
+      (callback: (manager: EntityManager) => Promise<Workspace>) =>
+        callback({} as EntityManager),
+    );
     dataSource = {
-      transaction: jest.fn(
-        (callback: (manager: EntityManager) => Promise<Workspace>) =>
-          callback({} as EntityManager),
-      ),
+      transaction: transactionMock,
     };
     workspacesRepository = {
       archive: jest.fn(),
@@ -65,7 +67,7 @@ describe('WorkspacesService', () => {
       assertWorkspaceOwner: jest.fn(),
     };
     service = new WorkspacesService(
-      dataSource as unknown as DataSource,
+      dataSource as DataSource,
       workspacesRepository as unknown as WorkspacesRepository,
       workspaceMembersRepository as unknown as WorkspaceMembersRepository,
       workspaceAccessService as unknown as WorkspaceAccessService,
@@ -81,7 +83,7 @@ describe('WorkspacesService', () => {
       description: ' Workspace demo ',
     });
 
-    expect(dataSource.transaction).toHaveBeenCalled();
+    expect(transactionMock).toHaveBeenCalled();
     expect(workspacesRepository.create).toHaveBeenCalledWith(
       {
         name: 'Nhom Agile AI',

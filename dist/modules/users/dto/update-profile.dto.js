@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateProfileDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class UpdateProfileDto {
     fullName;
@@ -19,6 +20,12 @@ class UpdateProfileDto {
 }
 exports.UpdateProfileDto = UpdateProfileDto;
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: 'Nguyen Van A',
+        description: 'Ho ten hien thi moi.',
+        minLength: 2,
+        maxLength: 120,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(2),
@@ -26,18 +33,33 @@ __decorate([
     __metadata("design:type", String)
 ], UpdateProfileDto.prototype, "fullName", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: 'https://res.cloudinary.com/demo/image/upload/avatar.png',
+        description: 'URL anh dai dien. Co the la URL Cloudinary.',
+        maxLength: 500,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUrl)(),
     (0, class_validator_1.MaxLength)(500),
     __metadata("design:type", String)
 ], UpdateProfileDto.prototype, "avatarUrl", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: '0900000000',
+        description: 'So dien thoai lien he.',
+        maxLength: 30,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MaxLength)(30),
     __metadata("design:type", String)
 ], UpdateProfileDto.prototype, "phoneNumber", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: 'Backend Developer',
+        description: 'Chuc danh hoac vai tro ca nhan.',
+        maxLength: 120,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MaxLength)(120),
