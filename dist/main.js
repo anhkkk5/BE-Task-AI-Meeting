@@ -17,11 +17,12 @@ async function bootstrap() {
     app.useGlobalFilters(new http_exception_filter_1.HttpExceptionFilter());
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,
+        forbidNonWhitelisted: true,
         transform: true,
     }));
     const swaggerConfig = new swagger_1.DocumentBuilder()
         .setTitle('Agile AI Project Management API')
-        .setDescription('API documentation for Auth and User Profile modules')
+        .setDescription('API documentation for Auth, User Profile and Workspace modules')
         .setVersion('1.0')
         .addBearerAuth()
         .build();

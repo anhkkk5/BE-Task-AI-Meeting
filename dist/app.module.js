@@ -23,6 +23,7 @@ const mongodb_config_1 = require("./config/mongodb.config");
 const redis_module_1 = require("./database/redis/redis.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const users_module_1 = require("./modules/users/users.module");
+const workspaces_module_1 = require("./modules/workspaces/workspaces.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -41,6 +42,7 @@ exports.AppModule = AppModule = __decorate([
             redis_module_1.RedisModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
+            workspaces_module_1.WorkspacesModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

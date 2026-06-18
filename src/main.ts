@@ -18,13 +18,16 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
+      forbidNonWhitelisted: true,
       transform: true,
     }),
   );
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Agile AI Project Management API')
-    .setDescription('API documentation for Auth and User Profile modules')
+    .setDescription(
+      'API documentation for Auth, User Profile and Workspace modules',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();
