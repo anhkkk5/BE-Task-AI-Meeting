@@ -17,7 +17,7 @@ export class User {
   @Column({ length: 255 })
   email: string;
 
-  @Column({ length: 120 })
+  @Column({ name: 'full_name', length: 120 })
   fullName: string;
 
   @Column({ name: 'avatar_url', type: 'varchar', length: 500, nullable: true })
