@@ -35,12 +35,59 @@ let WorkspaceMembersRepository = class WorkspaceMembersRepository {
         });
         return repository.save(member);
     }
+    createMember(data, manager) {
+        const repository = this.getRepository(manager);
+        const member = repository.create({
+            workspaceId: data.workspaceId,
+            userId: data.userId,
+            role: data.role,
+            status: workspace_member_status_enum_1.WorkspaceMemberStatus.Active,
+            joinedAt: new Date(),
+        });
+        return repository.save(member);
+    }
     findActiveByWorkspaceAndUser(workspaceId, userId) {
         return this.repository.findOne({
             where: {
                 workspaceId,
                 userId,
                 status: workspace_member_status_enum_1.WorkspaceMemberStatus.Active,
+            },
+        });
+    }
+    findByIdAndWorkspace(memberId, workspaceId) {
+        return this.repository.findOne({
+            where: {
+                id: memberId,
+                workspaceId,
+            },
+            relations: {
+                user: true,
+            },
+        });
+    }
+    findByWorkspaceAndUser(workspaceId, userId) {
+        return this.repository.findOne({
+            where: {
+                workspaceId,
+                userId,
+            },
+            relations: {
+                user: true,
+            },
+        });
+    }
+    findActiveByWorkspace(workspaceId) {
+        return this.repository.find({
+            where: {
+                workspaceId,
+                status: workspace_member_status_enum_1.WorkspaceMemberStatus.Active,
+            },
+            relations: {
+                user: true,
+            },
+            order: {
+                joinedAt: 'ASC',
             },
         });
     }
@@ -57,6 +104,19 @@ let WorkspaceMembersRepository = class WorkspaceMembersRepository {
             query.andWhere('workspace.status = :status', { status });
         }
         return query.orderBy('workspace.createdAt', 'DESC').getMany();
+    }
+    countActiveOwners(workspaceId) {
+        return this.repository.count({
+            where: {
+                workspaceId,
+                role: workspace_role_enum_1.WorkspaceRole.Owner,
+                status: workspace_member_status_enum_1.WorkspaceMemberStatus.Active,
+            },
+        });
+    }
+    async updateMember(member, data) {
+        Object.assign(member, data);
+        return this.repository.save(member);
     }
     getRepository(manager) {
         return manager ? manager.getRepository(workspace_member_entity_1.WorkspaceMember) : this.repository;

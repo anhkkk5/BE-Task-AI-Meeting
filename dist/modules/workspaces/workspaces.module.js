@@ -29,7 +29,7 @@ exports.WorkspacesModule = WorkspacesModule = __decorate([
             workspace_access_service_1.WorkspaceAccessService,
             workspaces_service_1.WorkspacesService,
         ],
-        exports: [workspace_access_service_1.WorkspaceAccessService],
+        exports: [workspace_access_service_1.WorkspaceAccessService, workspace_members_repository_1.WorkspaceMembersRepository],
     })
 ], WorkspacesModule);
 //# sourceMappingURL=workspaces.module.js.map
