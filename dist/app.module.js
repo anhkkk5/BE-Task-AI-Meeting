@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const mongoose_1 = require("@nestjs/mongoose");
 const typeorm_1 = require("@nestjs/typeorm");
+const path_1 = require("path");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const app_config_1 = __importDefault(require("./config/app.config"));
@@ -30,10 +31,13 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
+                envFilePath: [(0, path_1.join)(__dirname, '..', '.env'), '.env'],
                 load: [app_config_1.default],
             }),
             typeorm_1.TypeOrmModule.forRoot((0, database_config_1.mysqlConfig)()),
-            mongoose_1.MongooseModule.forRoot((0, mongodb_config_1.mongodbConfig)().uri),
+            ...((0, mongodb_config_1.mongodbConfig)().enabled
+                ? [mongoose_1.MongooseModule.forRoot((0, mongodb_config_1.mongodbConfig)().uri)]
+                : []),
             redis_module_1.RedisModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,

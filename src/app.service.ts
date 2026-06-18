@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { InjectDataSource } from '@nestjs/typeorm';
 import Redis from 'ioredis';
@@ -11,8 +11,9 @@ export class AppService {
   constructor(
     @InjectDataSource()
     private readonly dataSource: DataSource,
+    @Optional()
     @InjectConnection()
-    private readonly mongoConnection: Connection,
+    private readonly mongoConnection: Connection | null,
     @Inject(REDIS_CLIENT)
     private readonly redisClient: Redis,
   ) {}
@@ -26,14 +27,20 @@ export class AppService {
       data: {
         service: 'agile-ai-backend',
         mysql: this.dataSource.isInitialized ? 'connected' : 'disconnected',
-        mongodb: this.isMongoConnected() ? 'connected' : 'disconnected',
+        mongodb: this.getMongoStatus(),
         redis: redisStatus,
       },
     };
   }
 
-  private isMongoConnected() {
-    return Number(this.mongoConnection.readyState) === 1;
+  private getMongoStatus() {
+    if (!this.mongoConnection) {
+      return 'disabled';
+    }
+
+    return Number(this.mongoConnection.readyState) === 1
+      ? 'connected'
+      : 'disconnected';
   }
 
   private async getRedisStatus() {

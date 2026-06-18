@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 const current_user_decorator_1 = require("../../../common/decorators/current-user.decorator");
 const access_token_guard_1 = require("../../auth/guards/access-token.guard");
 const change_password_dto_1 = require("../dto/change-password.dto");
@@ -60,6 +61,8 @@ __decorate([
 ], UsersController.prototype, "changePassword", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
+    (0, swagger_1.ApiTags)('Users'),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard),
     __metadata("design:paramtypes", [users_service_1.UsersService])
 ], UsersController);

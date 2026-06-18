@@ -20,13 +20,13 @@ export class User {
   @Column({ length: 120 })
   fullName: string;
 
-  @Column({ name: 'avatar_url', length: 500, nullable: true })
+  @Column({ name: 'avatar_url', type: 'varchar', length: 500, nullable: true })
   avatarUrl: string | null;
 
-  @Column({ name: 'phone_number', length: 30, nullable: true })
+  @Column({ name: 'phone_number', type: 'varchar', length: 30, nullable: true })
   phoneNumber: string | null;
 
-  @Column({ name: 'job_title', length: 120, nullable: true })
+  @Column({ name: 'job_title', type: 'varchar', length: 120, nullable: true })
   jobTitle: string | null;
 
   @Column({ name: 'password_hash', length: 255 })
@@ -39,7 +39,12 @@ export class User {
   })
   status: UserStatus;
 
-  @Column({ name: 'refresh_token_hash', length: 255, nullable: true })
+  @Column({
+    name: 'refresh_token_hash',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   refreshTokenHash: string | null;
 
   @CreateDateColumn({ name: 'created_at' })

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import appConfig from './config/app.config';
@@ -15,10 +16,13 @@ import { UsersModule } from './modules/users/users.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [join(__dirname, '..', '.env'), '.env'],
       load: [appConfig],
     }),
     TypeOrmModule.forRoot(mysqlConfig()),
-    MongooseModule.forRoot(mongodbConfig().uri),
+    ...(mongodbConfig().enabled
+      ? [MongooseModule.forRoot(mongodbConfig().uri)]
+      : []),
     RedisModule,
     AuthModule,
     UsersModule,

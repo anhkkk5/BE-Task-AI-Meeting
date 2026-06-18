@@ -40,15 +40,15 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "fullName", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'avatar_url', length: 500, nullable: true }),
+    (0, typeorm_1.Column)({ name: 'avatar_url', type: 'varchar', length: 500, nullable: true }),
     __metadata("design:type", Object)
 ], User.prototype, "avatarUrl", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'phone_number', length: 30, nullable: true }),
+    (0, typeorm_1.Column)({ name: 'phone_number', type: 'varchar', length: 30, nullable: true }),
     __metadata("design:type", Object)
 ], User.prototype, "phoneNumber", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'job_title', length: 120, nullable: true }),
+    (0, typeorm_1.Column)({ name: 'job_title', type: 'varchar', length: 120, nullable: true }),
     __metadata("design:type", Object)
 ], User.prototype, "jobTitle", void 0);
 __decorate([
@@ -64,7 +64,12 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "status", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'refresh_token_hash', length: 255, nullable: true }),
+    (0, typeorm_1.Column)({
+        name: 'refresh_token_hash',
+        type: 'varchar',
+        length: 255,
+        nullable: true,
+    }),
     __metadata("design:type", Object)
 ], User.prototype, "refreshTokenHash", void 0);
 __decorate([

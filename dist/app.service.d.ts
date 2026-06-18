@@ -5,7 +5,7 @@ export declare class AppService {
     private readonly dataSource;
     private readonly mongoConnection;
     private readonly redisClient;
-    constructor(dataSource: DataSource, mongoConnection: Connection, redisClient: Redis);
+    constructor(dataSource: DataSource, mongoConnection: Connection | null, redisClient: Redis);
     getHealth(): Promise<{
         success: boolean;
         message: string;
@@ -16,6 +16,6 @@ export declare class AppService {
             redis: string;
         };
     }>;
-    private isMongoConnected;
+    private getMongoStatus;
     private getRedisStatus;
 }

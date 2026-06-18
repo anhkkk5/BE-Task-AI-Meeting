@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { AccessTokenGuard } from '../../auth/guards/access-token.guard';
 import type { AuthUser } from '../../auth/types/auth-user.type';
@@ -7,6 +8,8 @@ import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { UsersService } from '../services/users.service';
 
 @Controller('users')
+@ApiTags('Users')
+@ApiBearerAuth()
 @UseGuards(AccessTokenGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

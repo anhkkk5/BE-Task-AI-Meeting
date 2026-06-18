@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const swagger_1 = require("@nestjs/swagger");
 const app_module_1 = require("./app.module");
 const http_exception_filter_1 = require("./common/filters/http-exception.filter");
 async function bootstrap() {
@@ -18,6 +19,18 @@ async function bootstrap() {
         whitelist: true,
         transform: true,
     }));
+    const swaggerConfig = new swagger_1.DocumentBuilder()
+        .setTitle('Agile AI Project Management API')
+        .setDescription('API documentation for Auth and User Profile modules')
+        .setVersion('1.0')
+        .addBearerAuth()
+        .build();
+    const swaggerDocument = swagger_1.SwaggerModule.createDocument(app, swaggerConfig);
+    swagger_1.SwaggerModule.setup('api/docs', app, swaggerDocument, {
+        swaggerOptions: {
+            persistAuthorization: true,
+        },
+    });
     await app.listen(port);
 }
 void bootstrap();

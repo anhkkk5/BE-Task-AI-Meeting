@@ -20,7 +20,6 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const typeorm_1 = require("@nestjs/typeorm");
 const ioredis_1 = __importDefault(require("ioredis"));
-const mongoose_2 = require("mongoose");
 const typeorm_2 = require("typeorm");
 const redis_constants_1 = require("./database/redis/redis.constants");
 let AppService = class AppService {
@@ -40,13 +39,18 @@ let AppService = class AppService {
             data: {
                 service: 'agile-ai-backend',
                 mysql: this.dataSource.isInitialized ? 'connected' : 'disconnected',
-                mongodb: this.isMongoConnected() ? 'connected' : 'disconnected',
+                mongodb: this.getMongoStatus(),
                 redis: redisStatus,
             },
         };
     }
-    isMongoConnected() {
-        return Number(this.mongoConnection.readyState) === 1;
+    getMongoStatus() {
+        if (!this.mongoConnection) {
+            return 'disabled';
+        }
+        return Number(this.mongoConnection.readyState) === 1
+            ? 'connected'
+            : 'disconnected';
     }
     async getRedisStatus() {
         try {
@@ -62,10 +66,9 @@ exports.AppService = AppService;
 exports.AppService = AppService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectDataSource)()),
+    __param(1, (0, common_1.Optional)()),
     __param(1, (0, mongoose_1.InjectConnection)()),
     __param(2, (0, common_1.Inject)(redis_constants_1.REDIS_CLIENT)),
-    __metadata("design:paramtypes", [typeorm_2.DataSource,
-        mongoose_2.Connection,
-        ioredis_1.default])
+    __metadata("design:paramtypes", [typeorm_2.DataSource, Object, ioredis_1.default])
 ], AppService);
 //# sourceMappingURL=app.service.js.map

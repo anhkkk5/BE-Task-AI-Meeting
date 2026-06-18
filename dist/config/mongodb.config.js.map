@@ -1,1 +1,1 @@
-{"version":3,"file":"mongodb.config.js","sourceRoot":"","sources":["../../src/config/mongodb.config.ts"],"names":[],"mappings":";;;AAAO,MAAM,aAAa,GAAG,GAAG,EAAE,CAAC,CAAC;IAClC,GAAG,EACD,OAAO,CAAC,GAAG,CAAC,WAAW;QACvB,+DAA+D;CAClE,CAAC,CAAC;AAJU,QAAA,aAAa,iBAIvB"}
+{"version":3,"file":"mongodb.config.js","sourceRoot":"","sources":["../../src/config/mongodb.config.ts"],"names":[],"mappings":";;;AAAO,MAAM,aAAa,GAAG,GAAG,EAAE,CAAC,CAAC;IAClC,OAAO,EAAE,OAAO,CAAC,GAAG,CAAC,eAAe,KAAK,MAAM;IAC/C,GAAG,EACD,OAAO,CAAC,GAAG,CAAC,WAAW;QACvB,+DAA+D;CAClE,CAAC,CAAC;AALU,QAAA,aAAa,iBAKvB"}
