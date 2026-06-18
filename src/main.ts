@@ -13,7 +13,10 @@ async function bootstrap() {
   const apiVersion = configService.get<string>('app.apiVersion') ?? 'v1';
 
   app.setGlobalPrefix(`${apiPrefix}/${apiVersion}`);
-  app.enableCors();
+  app.enableCors({
+    credentials: true,
+    origin: true,
+  });
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({

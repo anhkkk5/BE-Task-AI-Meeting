@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Strategy } from 'passport-jwt';
+import type { Request } from 'express';
 import { jwtConfig } from '../../../config/jwt.config';
 import { UserStatus } from '../../users/enums/user-status.enum';
 import { UsersService } from '../../users/services/users.service';
@@ -14,8 +15,10 @@ export class RefreshTokenStrategy extends PassportStrategy(
 ) {
   constructor(private readonly usersService: UsersService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: (request: Request) =>
+        RefreshTokenStrategy.extractRefreshTokenFromCookie(request),
       secretOrKey: jwtConfig().refreshSecret,
+      passReqToCallback: false,
     });
   }
 
@@ -30,5 +33,24 @@ export class RefreshTokenStrategy extends PassportStrategy(
       id: user.id,
       email: user.email,
     };
+  }
+
+  private static extractRefreshTokenFromCookie(request: Request) {
+    const cookieHeader = request?.headers?.cookie;
+
+    if (!cookieHeader) {
+      return null;
+    }
+
+    const cookies = cookieHeader.split(';').map((cookie) => cookie.trim());
+    const refreshTokenCookie = cookies.find((cookie) =>
+      cookie.startsWith('refreshToken='),
+    );
+
+    if (!refreshTokenCookie) {
+      return null;
+    }
+
+    return decodeURIComponent(refreshTokenCookie.split('=').slice(1).join('='));
   }
 }

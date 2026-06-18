@@ -81,12 +81,12 @@ describe('AuthService', () => {
       user.id,
       expect.any(String),
     );
-    expect(response.data.user).not.toHaveProperty('passwordHash');
-    expect(response.data.user).not.toHaveProperty('refreshTokenHash');
-    expect(response.data.tokens).toEqual({
+    expect(response.body.data.user).not.toHaveProperty('passwordHash');
+    expect(response.body.data.user).not.toHaveProperty('refreshTokenHash');
+    expect(response.body.data.tokens).toEqual({
       accessToken: 'access-token',
-      refreshToken: 'refresh-token',
     });
+    expect(response.refreshToken).toBe('refresh-token');
   });
 
   it('rejects duplicate registration email', async () => {
@@ -110,8 +110,9 @@ describe('AuthService', () => {
       password: 'password123',
     });
 
-    expect(response.message).toBe('Login successfully');
-    expect(response.data.tokens.accessToken).toBe('access-token');
+    expect(response.body.message).toBe('Login successfully');
+    expect(response.body.data.tokens.accessToken).toBe('access-token');
+    expect(response.body.data.tokens).not.toHaveProperty('refreshToken');
   });
 
   it('rejects invalid login credentials', async () => {

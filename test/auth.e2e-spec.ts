@@ -11,6 +11,14 @@ type ErrorResponse = {
   errors: string[];
 };
 
+type AuthSuccessResponse = {
+  data: {
+    tokens: {
+      accessToken: string;
+    };
+  };
+};
+
 describe('AuthController validation (e2e)', () => {
   let app: INestApplication<App>;
   let authService: jest.Mocked<Pick<AuthService, 'login' | 'register'>>;
@@ -18,34 +26,38 @@ describe('AuthController validation (e2e)', () => {
   beforeEach(async () => {
     authService = {
       login: jest.fn().mockResolvedValue({
-        success: true,
-        message: 'Login successfully',
-        data: {
-          user: {
-            id: 'user-id',
-            email: 'member@example.com',
-            fullName: 'Nguyen Van A',
-          },
-          tokens: {
-            accessToken: 'access-token',
-            refreshToken: 'refresh-token',
+        body: {
+          success: true,
+          message: 'Login successfully',
+          data: {
+            user: {
+              id: 'user-id',
+              email: 'member@example.com',
+              fullName: 'Nguyen Van A',
+            },
+            tokens: {
+              accessToken: 'access-token',
+            },
           },
         },
+        refreshToken: 'refresh-token',
       }),
       register: jest.fn().mockResolvedValue({
-        success: true,
-        message: 'Register successfully',
-        data: {
-          user: {
-            id: 'user-id',
-            email: 'member@example.com',
-            fullName: 'Nguyen Van A',
-          },
-          tokens: {
-            accessToken: 'access-token',
-            refreshToken: 'refresh-token',
+        body: {
+          success: true,
+          message: 'Register successfully',
+          data: {
+            user: {
+              id: 'user-id',
+              email: 'member@example.com',
+              fullName: 'Nguyen Van A',
+            },
+            tokens: {
+              accessToken: 'access-token',
+            },
           },
         },
+        refreshToken: 'refresh-token',
       }),
     };
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -126,12 +138,18 @@ describe('AuthController validation (e2e)', () => {
         password: 'password123',
       })
       .expect(201)
-      .expect(() => {
+      .expect((response) => {
+        const body = response.body as AuthSuccessResponse;
+
         expect(authService.register).toHaveBeenCalledWith({
           email: 'member@example.com',
           fullName: 'Nguyen Van A',
           password: 'password123',
         });
+        expect(body.data.tokens).toEqual({
+          accessToken: 'access-token',
+        });
+        expect(response.headers['set-cookie']?.[0]).toContain('HttpOnly');
       });
   });
 
@@ -164,11 +182,17 @@ describe('AuthController validation (e2e)', () => {
         password: 'password123',
       })
       .expect(201)
-      .expect(() => {
+      .expect((response) => {
+        const body = response.body as AuthSuccessResponse;
+
         expect(authService.login).toHaveBeenCalledWith({
           email: 'member@example.com',
           password: 'password123',
         });
+        expect(body.data.tokens).toEqual({
+          accessToken: 'access-token',
+        });
+        expect(response.headers['set-cookie']?.[0]).toContain('HttpOnly');
       });
   });
 });
