@@ -146,12 +146,17 @@ let AuthService = class AuthService {
     }
     authResponse(message, user, tokens) {
         return {
-            success: true,
-            message,
-            data: {
-                user: this.toPublicUser(user),
-                tokens,
+            body: {
+                success: true,
+                message,
+                data: {
+                    user: this.toPublicUser(user),
+                    tokens: {
+                        accessToken: tokens.accessToken,
+                    },
+                },
             },
+            refreshToken: tokens.refreshToken,
         };
     }
     toPublicUser(user) {

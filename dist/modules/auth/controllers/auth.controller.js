@@ -21,28 +21,85 @@ const register_dto_1 = require("../dto/register.dto");
 const access_token_guard_1 = require("../guards/access-token.guard");
 const refresh_token_guard_1 = require("../guards/refresh-token.guard");
 const auth_service_1 = require("../services/auth.service");
+const REFRESH_TOKEN_COOKIE = 'refreshToken';
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
         this.authService = authService;
     }
-    register(dto) {
-        return this.authService.register(dto);
+    async register(dto, response) {
+        const result = await this.authService.register(dto);
+        this.setRefreshTokenCookie(response, result.refreshToken);
+        return result.body;
     }
-    login(dto) {
-        return this.authService.login(dto);
+    async login(dto, response) {
+        const result = await this.authService.login(dto);
+        this.setRefreshTokenCookie(response, result.refreshToken);
+        return result.body;
     }
-    refresh(user, authorization) {
-        return this.authService.refreshTokens(user, this.extractBearerToken(authorization));
+    refresh(user, request, response) {
+        const refreshToken = this.getRefreshTokenFromCookie(request);
+        if (!refreshToken) {
+            throw new common_1.UnauthorizedException('Invalid refresh token');
+        }
+        return this.authService.refreshTokens(user, refreshToken).then((result) => {
+            this.setRefreshTokenCookie(response, result.refreshToken);
+            return result.body;
+        });
     }
-    logout(user) {
+    async logout(user, response) {
+        this.clearRefreshTokenCookie(response);
         return this.authService.logout(user);
     }
     me(user) {
         return this.authService.getMe(user);
     }
-    extractBearerToken(authorization) {
-        return authorization.replace(/^Bearer\s+/i, '').trim();
+    setRefreshTokenCookie(response, refreshToken) {
+        response.cookie(REFRESH_TOKEN_COOKIE, refreshToken, this.getRefreshTokenCookieOptions());
+    }
+    clearRefreshTokenCookie(response) {
+        response.clearCookie(REFRESH_TOKEN_COOKIE, {
+            path: '/api/v1/auth',
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+        });
+    }
+    getRefreshTokenFromCookie(request) {
+        const cookieHeader = request.headers.cookie;
+        if (!cookieHeader) {
+            return null;
+        }
+        const cookies = cookieHeader.split(';').map((cookie) => cookie.trim());
+        const refreshTokenCookie = cookies.find((cookie) => cookie.startsWith(`${REFRESH_TOKEN_COOKIE}=`));
+        if (!refreshTokenCookie) {
+            return null;
+        }
+        return decodeURIComponent(refreshTokenCookie.split('=').slice(1).join('='));
+    }
+    getRefreshTokenCookieOptions() {
+        return {
+            httpOnly: true,
+            maxAge: this.getRefreshTokenCookieMaxAge(),
+            path: '/api/v1/auth',
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+        };
+    }
+    getRefreshTokenCookieMaxAge() {
+        const expiresIn = process.env.JWT_REFRESH_EXPIRES_IN ?? '7d';
+        const match = expiresIn.match(/^(\d+)([smhd])$/);
+        if (!match) {
+            return 7 * 24 * 60 * 60 * 1000;
+        }
+        const value = Number(match[1]);
+        const unit = match[2];
+        const multipliers = {
+            s: 1000,
+            m: 60 * 1000,
+            h: 60 * 60 * 1000,
+            d: 24 * 60 * 60 * 1000,
+        };
+        return value * multipliers[unit];
     }
 };
 exports.AuthController = AuthController;
@@ -56,9 +113,10 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Request body khong hop le.' }),
     (0, swagger_1.ApiResponse)({ status: 409, description: 'Email da ton tai.' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [register_dto_1.RegisterDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [register_dto_1.RegisterDto, Object]),
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.Post)('login'),
@@ -70,24 +128,25 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Request body khong hop le.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Sai email hoac mat khau.' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [login_dto_1.LoginDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [login_dto_1.LoginDto, Object]),
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('refresh'),
-    (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({
         summary: 'Lam moi token',
-        description: 'Dan refreshToken vao Authorize dang Bearer token truoc khi goi API nay.',
+        description: 'Refresh token duoc gui tu HttpOnly cookie, FE khong doc truc tiep token nay.',
     }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Cap token moi thanh cong.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Refresh token khong hop le.' }),
     (0, common_1.UseGuards)(refresh_token_guard_1.RefreshTokenGuard),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __param(1, (0, common_1.Headers)('authorization')),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "refresh", null);
 __decorate([
@@ -101,9 +160,10 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Access token khong hop le.' }),
     (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "logout", null);
 __decorate([
     (0, common_1.Get)('me'),

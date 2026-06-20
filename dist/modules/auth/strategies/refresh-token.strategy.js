@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var RefreshTokenStrategy_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RefreshTokenStrategy = void 0;
 const common_1 = require("@nestjs/common");
@@ -16,12 +17,13 @@ const passport_jwt_1 = require("passport-jwt");
 const jwt_config_1 = require("../../../config/jwt.config");
 const user_status_enum_1 = require("../../users/enums/user-status.enum");
 const users_service_1 = require("../../users/services/users.service");
-let RefreshTokenStrategy = class RefreshTokenStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy, 'jwt-refresh') {
+let RefreshTokenStrategy = RefreshTokenStrategy_1 = class RefreshTokenStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy, 'jwt-refresh') {
     usersService;
     constructor(usersService) {
         super({
-            jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
+            jwtFromRequest: (request) => RefreshTokenStrategy_1.extractRefreshTokenFromCookie(request),
             secretOrKey: (0, jwt_config_1.jwtConfig)().refreshSecret,
+            passReqToCallback: false,
         });
         this.usersService = usersService;
     }
@@ -35,9 +37,21 @@ let RefreshTokenStrategy = class RefreshTokenStrategy extends (0, passport_1.Pas
             email: user.email,
         };
     }
+    static extractRefreshTokenFromCookie(request) {
+        const cookieHeader = request?.headers?.cookie;
+        if (!cookieHeader) {
+            return null;
+        }
+        const cookies = cookieHeader.split(';').map((cookie) => cookie.trim());
+        const refreshTokenCookie = cookies.find((cookie) => cookie.startsWith('refreshToken='));
+        if (!refreshTokenCookie) {
+            return null;
+        }
+        return decodeURIComponent(refreshTokenCookie.split('=').slice(1).join('='));
+    }
 };
 exports.RefreshTokenStrategy = RefreshTokenStrategy;
-exports.RefreshTokenStrategy = RefreshTokenStrategy = __decorate([
+exports.RefreshTokenStrategy = RefreshTokenStrategy = RefreshTokenStrategy_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [users_service_1.UsersService])
 ], RefreshTokenStrategy);

@@ -9,5 +9,6 @@ export declare class RefreshTokenStrategy extends RefreshTokenStrategy_base {
     private readonly usersService;
     constructor(usersService: UsersService);
     validate(payload: JwtPayload): Promise<AuthUser>;
+    private static extractRefreshTokenFromCookie;
 }
 export {};

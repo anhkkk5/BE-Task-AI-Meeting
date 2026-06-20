@@ -1,3 +1,4 @@
+import type { Request, Response } from 'express';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { AuthService } from '../services/auth.service';
@@ -5,7 +6,7 @@ import type { AuthUser } from '../types/auth-user.type';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
-    register(dto: RegisterDto): Promise<{
+    register(dto: RegisterDto, response: Response): Promise<{
         success: boolean;
         message: string;
         data: {
@@ -22,11 +23,10 @@ export declare class AuthController {
             };
             tokens: {
                 accessToken: string;
-                refreshToken: string;
             };
         };
     }>;
-    login(dto: LoginDto): Promise<{
+    login(dto: LoginDto, response: Response): Promise<{
         success: boolean;
         message: string;
         data: {
@@ -43,11 +43,10 @@ export declare class AuthController {
             };
             tokens: {
                 accessToken: string;
-                refreshToken: string;
             };
         };
     }>;
-    refresh(user: AuthUser, authorization: string): Promise<{
+    refresh(user: AuthUser, request: Request, response: Response): Promise<{
         success: boolean;
         message: string;
         data: {
@@ -64,11 +63,10 @@ export declare class AuthController {
             };
             tokens: {
                 accessToken: string;
-                refreshToken: string;
             };
         };
     }>;
-    logout(user: AuthUser): Promise<{
+    logout(user: AuthUser, response: Response): Promise<{
         success: boolean;
         message: string;
         data: null;
@@ -88,5 +86,9 @@ export declare class AuthController {
             updatedAt: Date;
         };
     }>;
-    private extractBearerToken;
+    private setRefreshTokenCookie;
+    private clearRefreshTokenCookie;
+    private getRefreshTokenFromCookie;
+    private getRefreshTokenCookieOptions;
+    private getRefreshTokenCookieMaxAge;
 }
