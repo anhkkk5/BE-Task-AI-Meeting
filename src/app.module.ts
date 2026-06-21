@@ -13,6 +13,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { MembersModule } from './modules/members/members.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { SprintsModule } from './modules/sprints/sprints.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 import { UsersModule } from './modules/users/users.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 
@@ -33,6 +34,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     MembersModule,
     ProjectsModule,
     SprintsModule,
+    TasksModule,
     WorkspacesModule,
   ],
   controllers: [AppController],

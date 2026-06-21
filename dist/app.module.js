@@ -25,6 +25,7 @@ const auth_module_1 = require("./modules/auth/auth.module");
 const members_module_1 = require("./modules/members/members.module");
 const projects_module_1 = require("./modules/projects/projects.module");
 const sprints_module_1 = require("./modules/sprints/sprints.module");
+const tasks_module_1 = require("./modules/tasks/tasks.module");
 const users_module_1 = require("./modules/users/users.module");
 const workspaces_module_1 = require("./modules/workspaces/workspaces.module");
 let AppModule = class AppModule {
@@ -48,6 +49,7 @@ exports.AppModule = AppModule = __decorate([
             members_module_1.MembersModule,
             projects_module_1.ProjectsModule,
             sprints_module_1.SprintsModule,
+            tasks_module_1.TasksModule,
             workspaces_module_1.WorkspacesModule,
         ],
         controllers: [app_controller_1.AppController],
