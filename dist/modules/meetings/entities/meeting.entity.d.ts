@@ -1,0 +1,31 @@
+import { MeetingStatus } from '../../../common/enums/meeting-status.enum';
+import { MeetingType } from '../../../common/enums/meeting-type.enum';
+import { Project } from '../../projects/entities/project.entity';
+import { Sprint } from '../../sprints/entities/sprint.entity';
+import { User } from '../../users/entities/user.entity';
+import { Workspace } from '../../workspaces/entities/workspace.entity';
+import { MeetingParticipant } from './meeting-participant.entity';
+export declare class Meeting {
+    id: string;
+    workspaceId: string;
+    projectId: string;
+    sprintId: string | null;
+    title: string;
+    description: string | null;
+    meetingType: MeetingType;
+    meetingDate: string;
+    startTime: Date | null;
+    endTime: Date | null;
+    status: MeetingStatus;
+    createdBy: string;
+    mongoTranscriptId: string | null;
+    mongoSummaryId: string | null;
+    workspace: Workspace;
+    project: Project;
+    sprint: Sprint | null;
+    creator: User;
+    participants: MeetingParticipant[];
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+}

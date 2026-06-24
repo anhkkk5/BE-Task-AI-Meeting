@@ -10,6 +10,8 @@ import { mysqlConfig } from './config/database.config';
 import { mongodbConfig } from './config/mongodb.config';
 import { RedisModule } from './database/redis/redis.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { DailyUpdatesModule } from './modules/daily-updates/daily-updates.module';
+import { MeetingsModule } from './modules/meetings/meetings.module';
 import { MembersModule } from './modules/members/members.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { SprintsModule } from './modules/sprints/sprints.module';
@@ -35,6 +37,8 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     ProjectsModule,
     SprintsModule,
     TasksModule,
+    DailyUpdatesModule,
+    MeetingsModule,
     WorkspacesModule,
   ],
   controllers: [AppController],

@@ -1,0 +1,1 @@
+{"version":3,"file":"update-participant-attendance.dto.js","sourceRoot":"","sources":["../../../../src/modules/meetings/dto/update-participant-attendance.dto.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,6CAA8C;AAC9C,qDAA4C;AAE5C,MAAa,8BAA8B;IAMzC,QAAQ,CAAU;CACnB;AAPD,wEAOC;AADC;IALC,IAAA,qBAAW,EAAC;QACX,OAAO,EAAE,IAAI;QACb,WAAW,EAAE,2CAA2C;KACzD,CAAC;IACD,IAAA,2BAAS,GAAE;;gEACM"}

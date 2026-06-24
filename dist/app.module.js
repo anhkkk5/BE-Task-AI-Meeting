@@ -22,6 +22,8 @@ const database_config_1 = require("./config/database.config");
 const mongodb_config_1 = require("./config/mongodb.config");
 const redis_module_1 = require("./database/redis/redis.module");
 const auth_module_1 = require("./modules/auth/auth.module");
+const daily_updates_module_1 = require("./modules/daily-updates/daily-updates.module");
+const meetings_module_1 = require("./modules/meetings/meetings.module");
 const members_module_1 = require("./modules/members/members.module");
 const projects_module_1 = require("./modules/projects/projects.module");
 const sprints_module_1 = require("./modules/sprints/sprints.module");
@@ -50,6 +52,8 @@ exports.AppModule = AppModule = __decorate([
             projects_module_1.ProjectsModule,
             sprints_module_1.SprintsModule,
             tasks_module_1.TasksModule,
+            daily_updates_module_1.DailyUpdatesModule,
+            meetings_module_1.MeetingsModule,
             workspaces_module_1.WorkspacesModule,
         ],
         controllers: [app_controller_1.AppController],
