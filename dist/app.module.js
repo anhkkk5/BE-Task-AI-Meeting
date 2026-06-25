@@ -21,6 +21,7 @@ const app_config_1 = __importDefault(require("./config/app.config"));
 const database_config_1 = require("./config/database.config");
 const mongodb_config_1 = require("./config/mongodb.config");
 const redis_module_1 = require("./database/redis/redis.module");
+const ai_assistant_module_1 = require("./modules/ai-assistant/ai-assistant.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const daily_updates_module_1 = require("./modules/daily-updates/daily-updates.module");
 const meetings_module_1 = require("./modules/meetings/meetings.module");
@@ -46,6 +47,7 @@ exports.AppModule = AppModule = __decorate([
                 ? [mongoose_1.MongooseModule.forRoot((0, mongodb_config_1.mongodbConfig)().uri)]
                 : []),
             redis_module_1.RedisModule,
+            ai_assistant_module_1.AiAssistantModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             members_module_1.MembersModule,
