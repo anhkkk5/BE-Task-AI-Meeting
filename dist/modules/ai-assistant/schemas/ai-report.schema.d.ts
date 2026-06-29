@@ -14,15 +14,33 @@ export type PersonalDailyReportOutput = {
     recommendations?: string[];
     generatedText: string;
 };
+export type TeamDailyReportOutput = {
+    title: string;
+    summary: string;
+    teamProgress: string;
+    completedWork?: string[];
+    todayFocus?: string[];
+    blockers?: string[];
+    risks?: string[];
+    missingDailyUpdates?: string[];
+    memberSummaries?: {
+        userId: string;
+        fullName: string;
+        summary: string;
+        blockers: string[];
+    }[];
+    recommendations?: string[];
+    generatedText: string;
+};
 export declare class AiReport {
     workspaceId: string;
     projectId: string;
     sprintId?: string | null;
-    userId: string;
+    userId?: string | null;
     reportType: AiReportType;
     reportDate: string;
     inputData: Record<string, unknown>;
-    aiOutput: PersonalDailyReportOutput;
+    aiOutput: PersonalDailyReportOutput | TeamDailyReportOutput;
     aiModel?: string;
     status: AiReportStatus;
     createdBy: string;
@@ -63,7 +81,7 @@ export declare const AiReportSchema: import("mongoose").Schema<AiReport, import(
     }, "id"> & {
         id: string;
     }> | undefined;
-    userId?: import("mongoose").SchemaDefinitionProperty<string, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
+    userId?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;
@@ -99,7 +117,7 @@ export declare const AiReportSchema: import("mongoose").Schema<AiReport, import(
     }, "id"> & {
         id: string;
     }> | undefined;
-    aiOutput?: import("mongoose").SchemaDefinitionProperty<PersonalDailyReportOutput, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
+    aiOutput?: import("mongoose").SchemaDefinitionProperty<PersonalDailyReportOutput | TeamDailyReportOutput, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;

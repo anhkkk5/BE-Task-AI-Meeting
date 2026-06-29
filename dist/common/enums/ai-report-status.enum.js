@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiReportStatus = void 0;
 var AiReportStatus;
 (function (AiReportStatus) {
+    AiReportStatus["Pending"] = "PENDING";
     AiReportStatus["Completed"] = "COMPLETED";
     AiReportStatus["Failed"] = "FAILED";
 })(AiReportStatus || (exports.AiReportStatus = AiReportStatus = {}));

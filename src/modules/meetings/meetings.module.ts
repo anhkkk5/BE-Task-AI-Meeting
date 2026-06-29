@@ -54,6 +54,11 @@ const mongoImports = mongodbConfig().enabled
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,
   ],
-  exports: [MeetingAccessService, MeetingsRepository],
+  exports: [
+    MeetingAccessService,
+    MeetingParticipantsRepository,
+    MeetingsRepository,
+    MeetingTranscriptsService,
+  ],
 })
 export class MeetingsModule {}

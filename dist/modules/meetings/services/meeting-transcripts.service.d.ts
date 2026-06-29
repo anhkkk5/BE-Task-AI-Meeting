@@ -2,7 +2,7 @@ import { Model } from 'mongoose';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { SaveMeetingTranscriptDto } from '../dto/save-meeting-transcript.dto';
-import { MeetingTranscriptDocument } from '../schemas/meeting-transcript.schema';
+import { MeetingTranscript, MeetingTranscriptDocument } from '../schemas/meeting-transcript.schema';
 import { MeetingsRepository } from '../repositories/meetings.repository';
 import { MeetingAccessService } from './meeting-access.service';
 export declare class MeetingTranscriptsService {
@@ -48,6 +48,23 @@ export declare class MeetingTranscriptsService {
             };
         };
     }>;
+    findTranscriptForMeeting(meeting: {
+        mongoTranscriptId: string | null;
+    }): Promise<import("mongoose").Document<unknown, {}, import("mongoose").Document<unknown, {}, MeetingTranscript, {}, import("mongoose").DefaultSchemaOptions> & MeetingTranscript & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    } & {
+        id: string;
+    }, {}, import("mongoose").DefaultSchemaOptions> & import("mongoose").Document<unknown, {}, MeetingTranscript, {}, import("mongoose").DefaultSchemaOptions> & MeetingTranscript & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    } & {
+        id: string;
+    } & Required<{
+        _id: import("mongoose").Types.ObjectId;
+    }>>;
     private getTranscriptModel;
     private getTranscriptId;
     private toTranscriptResponse;

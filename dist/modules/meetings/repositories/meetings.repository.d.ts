@@ -14,6 +14,7 @@ export declare class MeetingsRepository {
     }>;
     update(meeting: Meeting, data: Partial<Meeting>): Promise<Meeting>;
     updateTranscriptId(meeting: Meeting, mongoTranscriptId: string): Promise<Meeting>;
+    updateSummaryId(meeting: Meeting, mongoSummaryId: string): Promise<Meeting>;
     private getRepository;
     private normalizeDate;
 }

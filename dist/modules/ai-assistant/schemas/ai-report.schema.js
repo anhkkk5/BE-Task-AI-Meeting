@@ -40,8 +40,8 @@ __decorate([
     __metadata("design:type", Object)
 ], AiReport.prototype, "sprintId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
+    (0, mongoose_1.Prop)({ type: String }),
+    __metadata("design:type", Object)
 ], AiReport.prototype, "userId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({

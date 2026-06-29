@@ -18,6 +18,25 @@ export type PersonalDailyReportOutput = {
   generatedText: string;
 };
 
+export type TeamDailyReportOutput = {
+  title: string;
+  summary: string;
+  teamProgress: string;
+  completedWork?: string[];
+  todayFocus?: string[];
+  blockers?: string[];
+  risks?: string[];
+  missingDailyUpdates?: string[];
+  memberSummaries?: {
+    userId: string;
+    fullName: string;
+    summary: string;
+    blockers: string[];
+  }[];
+  recommendations?: string[];
+  generatedText: string;
+};
+
 @Schema({ timestamps: true, collection: 'ai_reports' })
 export class AiReport {
   @Prop({ required: true })
@@ -29,8 +48,8 @@ export class AiReport {
   @Prop({ type: String })
   sprintId?: string | null;
 
-  @Prop({ required: true })
-  userId: string;
+  @Prop({ type: String })
+  userId?: string | null;
 
   @Prop({
     type: String,
@@ -47,7 +66,7 @@ export class AiReport {
   inputData: Record<string, unknown>;
 
   @Prop({ type: Object, default: {} })
-  aiOutput: PersonalDailyReportOutput;
+  aiOutput: PersonalDailyReportOutput | TeamDailyReportOutput;
 
   @Prop({ name: 'model', type: String })
   aiModel?: string;

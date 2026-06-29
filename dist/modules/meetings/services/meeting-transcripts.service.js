@@ -98,6 +98,19 @@ let MeetingTranscriptsService = class MeetingTranscriptsService {
             },
         };
     }
+    async findTranscriptForMeeting(meeting) {
+        const transcriptModel = this.getTranscriptModel();
+        if (!meeting.mongoTranscriptId) {
+            throw new common_1.NotFoundException('Meeting transcript not found');
+        }
+        const transcript = await transcriptModel
+            .findById(meeting.mongoTranscriptId)
+            .exec();
+        if (!transcript) {
+            throw new common_1.NotFoundException('Meeting transcript not found');
+        }
+        return transcript;
+    }
     getTranscriptModel() {
         if (!this.transcriptModel) {
             throw new common_1.ServiceUnavailableException('MongoDB is disabled');

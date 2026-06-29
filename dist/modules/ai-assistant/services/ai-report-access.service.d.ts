@@ -6,6 +6,7 @@ export declare class AiReportAccessService {
     constructor(workspaceAccessService: WorkspaceAccessService);
     assertCanUseOwnReports(userId: string, workspaceId: string): Promise<WorkspaceRole>;
     assertCanManageMemberReports(userId: string, workspaceId: string): Promise<WorkspaceRole>;
+    assertCanUseTeamReports(userId: string, workspaceId: string): Promise<WorkspaceRole>;
     assertCanViewReport(currentUserId: string, workspaceId: string, report: AiReportDocument): Promise<WorkspaceRole>;
     isManagerRole(role: WorkspaceRole | string | null): boolean;
 }

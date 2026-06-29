@@ -62,7 +62,12 @@ exports.MeetingsModule = MeetingsModule = __decorate([
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,
         ],
-        exports: [meeting_access_service_1.MeetingAccessService, meetings_repository_1.MeetingsRepository],
+        exports: [
+            meeting_access_service_1.MeetingAccessService,
+            meeting_participants_repository_1.MeetingParticipantsRepository,
+            meetings_repository_1.MeetingsRepository,
+            meeting_transcripts_service_1.MeetingTranscriptsService,
+        ],
     })
 ], MeetingsModule);
 //# sourceMappingURL=meetings.module.js.map

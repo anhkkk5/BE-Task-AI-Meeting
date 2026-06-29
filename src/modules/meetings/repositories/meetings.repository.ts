@@ -138,6 +138,11 @@ export class MeetingsRepository {
     return this.repository.save(meeting);
   }
 
+  updateSummaryId(meeting: Meeting, mongoSummaryId: string) {
+    meeting.mongoSummaryId = mongoSummaryId;
+    return this.repository.save(meeting);
+  }
+
   private getRepository(manager?: EntityManager) {
     return manager ? manager.getRepository(Meeting) : this.repository;
   }

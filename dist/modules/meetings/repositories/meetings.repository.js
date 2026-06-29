@@ -104,6 +104,10 @@ let MeetingsRepository = class MeetingsRepository {
         meeting.mongoTranscriptId = mongoTranscriptId;
         return this.repository.save(meeting);
     }
+    updateSummaryId(meeting, mongoSummaryId) {
+        meeting.mongoSummaryId = mongoSummaryId;
+        return this.repository.save(meeting);
+    }
     getRepository(manager) {
         return manager ? manager.getRepository(meeting_entity_1.Meeting) : this.repository;
     }

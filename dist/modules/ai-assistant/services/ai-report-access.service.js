@@ -43,6 +43,13 @@ let AiReportAccessService = class AiReportAccessService {
         }
         return role;
     }
+    async assertCanUseTeamReports(userId, workspaceId) {
+        const role = await this.workspaceAccessService.getUserWorkspaceRole(userId, workspaceId);
+        if (!role || !managerRoles.includes(role)) {
+            throw new common_1.ForbiddenException('You can not use AI team reports');
+        }
+        return role;
+    }
     async assertCanViewReport(currentUserId, workspaceId, report) {
         const role = await this.assertCanUseOwnReports(currentUserId, workspaceId);
         if (report.userId === currentUserId) {

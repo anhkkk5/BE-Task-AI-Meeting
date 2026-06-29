@@ -50,6 +50,19 @@ export class AiReportAccessService {
     return role;
   }
 
+  async assertCanUseTeamReports(userId: string, workspaceId: string) {
+    const role = await this.workspaceAccessService.getUserWorkspaceRole(
+      userId,
+      workspaceId,
+    );
+
+    if (!role || !managerRoles.includes(role)) {
+      throw new ForbiddenException('You can not use AI team reports');
+    }
+
+    return role;
+  }
+
   async assertCanViewReport(
     currentUserId: string,
     workspaceId: string,
