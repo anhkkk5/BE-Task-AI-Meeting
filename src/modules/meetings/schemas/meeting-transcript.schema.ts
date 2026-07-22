@@ -22,6 +22,9 @@ export const MeetingTranscriptSpeakerSchema = SchemaFactory.createForClass(
 @Schema({ _id: false })
 export class MeetingTranscriptSegment {
   @Prop({ type: String })
+  chunkId?: string;
+
+  @Prop({ type: String })
   userId?: string;
 
   @Prop({ type: String })

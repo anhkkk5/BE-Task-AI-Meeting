@@ -34,6 +34,7 @@ exports.MeetingTranscriptSpeaker = MeetingTranscriptSpeaker = __decorate([
 ], MeetingTranscriptSpeaker);
 exports.MeetingTranscriptSpeakerSchema = mongoose_1.SchemaFactory.createForClass(MeetingTranscriptSpeaker);
 let MeetingTranscriptSegment = class MeetingTranscriptSegment {
+    chunkId;
     userId;
     speakerName;
     text;
@@ -43,6 +44,10 @@ let MeetingTranscriptSegment = class MeetingTranscriptSegment {
     source;
 };
 exports.MeetingTranscriptSegment = MeetingTranscriptSegment;
+__decorate([
+    (0, mongoose_1.Prop)({ type: String }),
+    __metadata("design:type", String)
+], MeetingTranscriptSegment.prototype, "chunkId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: String }),
     __metadata("design:type", String)

@@ -43,6 +43,7 @@ export declare const MeetingTranscriptSpeakerSchema: import("mongoose").Schema<M
     }> | undefined;
 }, MeetingTranscriptSpeaker>;
 export declare class MeetingTranscriptSegment {
+    chunkId?: string;
     userId?: string;
     speakerName?: string;
     text: string;
@@ -60,6 +61,15 @@ export declare const MeetingTranscriptSegmentSchema: import("mongoose").Schema<M
 }, "id"> & {
     id: string;
 }, {
+    chunkId?: import("mongoose").SchemaDefinitionProperty<string | undefined, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
     userId?: import("mongoose").SchemaDefinitionProperty<string | undefined, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {

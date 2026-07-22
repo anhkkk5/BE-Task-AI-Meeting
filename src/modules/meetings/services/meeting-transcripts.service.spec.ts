@@ -9,6 +9,7 @@ import { MeetingsRepository } from '../repositories/meetings.repository';
 import { MeetingParticipantsRepository } from '../repositories/meeting-participants.repository';
 import { MeetingTranscriptDocument } from '../schemas/meeting-transcript.schema';
 import { MeetingAccessService } from './meeting-access.service';
+import { GroqTranscriptionService } from './groq-transcription.service';
 import { MeetingTranscriptsService } from './meeting-transcripts.service';
 
 type TranscriptModelMock = Pick<
@@ -39,6 +40,9 @@ describe('MeetingTranscriptsService', () => {
   >;
   let projectAccessService: jest.Mocked<
     Pick<ProjectAccessService, 'assertProjectInWorkspace'>
+  >;
+  let groqTranscriptionService: jest.Mocked<
+    Pick<GroqTranscriptionService, 'transcribe'>
   >;
 
   const meeting = {
@@ -78,6 +82,10 @@ describe('MeetingTranscriptsService', () => {
   } as unknown as MeetingTranscriptDocument;
 
   beforeEach(() => {
+    transcript.liveSegments = [];
+    transcript.speakers = [];
+    transcript.rawTranscript = 'Nguyen Van A: Daily scrum';
+    (transcript.save as jest.Mock).mockClear();
     transcriptModel = {
       create: jest.fn(),
       findById: jest.fn(),
@@ -100,6 +108,12 @@ describe('MeetingTranscriptsService', () => {
     };
     projectAccessService = {
       assertProjectInWorkspace: jest.fn(),
+    };
+    groqTranscriptionService = {
+      transcribe: jest.fn().mockResolvedValue({
+        text: 'Noi dung tu Groq',
+        model: 'whisper-large-v3-turbo',
+      }),
     };
 
     transcriptModel.create.mockResolvedValue(transcript);
@@ -125,6 +139,7 @@ describe('MeetingTranscriptsService', () => {
       meetingAccessService as unknown as MeetingAccessService,
       workspaceAccessService as unknown as WorkspaceAccessService,
       projectAccessService as unknown as ProjectAccessService,
+      groqTranscriptionService as unknown as GroqTranscriptionService,
     );
   });
 
@@ -136,6 +151,7 @@ describe('MeetingTranscriptsService', () => {
       meetingAccessService as unknown as MeetingAccessService,
       workspaceAccessService as unknown as WorkspaceAccessService,
       projectAccessService as unknown as ProjectAccessService,
+      groqTranscriptionService as unknown as GroqTranscriptionService,
     );
 
     await expect(
@@ -234,5 +250,73 @@ describe('MeetingTranscriptsService', () => {
       'Nguyen Van A: Em da import backlog tu Excel',
     );
     expect(response.data.transcript.liveSegments).toHaveLength(1);
+  });
+
+  it('transcribes an audio chunk and stores the authenticated speaker', async () => {
+    meetingAccessService.assertMeetingInProject.mockResolvedValue({
+      ...meeting,
+      mongoTranscriptId: transcriptId.toString(),
+    });
+
+    const response = await service.appendAudioChunk(
+      'owner-id',
+      'workspace-id',
+      'project-id',
+      'meeting-id',
+      {
+        buffer: Buffer.from('audio'),
+        mimetype: 'audio/webm',
+        originalname: 'chunk.webm',
+      },
+      {
+        chunkId: 'session-id-1',
+        startedAt: '2026-06-20T08:00:00.000Z',
+        endedAt: '2026-06-20T08:00:30.000Z',
+      },
+    );
+
+    expect(groqTranscriptionService.transcribe).toHaveBeenCalled();
+    expect(response.data.segment).toEqual(
+      expect.objectContaining({
+        chunkId: 'session-id-1',
+        userId: 'owner-id',
+        speakerName: 'Nguyen Van A',
+        text: 'Noi dung tu Groq',
+      }),
+    );
+    expect(response.data.transcript.rawTranscript).toContain(
+      'Nguyen Van A: Noi dung tu Groq',
+    );
+  });
+
+  it('does not transcribe the same audio chunk twice', async () => {
+    transcript.liveSegments = [
+      {
+        chunkId: 'session-id-1',
+        userId: 'owner-id',
+        speakerName: 'Nguyen Van A',
+        text: 'Da xu ly',
+        startedAt: new Date('2026-06-20T08:00:00.000Z'),
+        endedAt: new Date('2026-06-20T08:00:30.000Z'),
+        confidence: null,
+        source: 'groq:whisper-large-v3-turbo',
+      },
+    ];
+    meetingAccessService.assertMeetingInProject.mockResolvedValue({
+      ...meeting,
+      mongoTranscriptId: transcriptId.toString(),
+    });
+
+    const response = await service.appendAudioChunk(
+      'owner-id',
+      'workspace-id',
+      'project-id',
+      'meeting-id',
+      { buffer: Buffer.from('audio'), mimetype: 'audio/webm' },
+      { chunkId: 'session-id-1' },
+    );
+
+    expect(groqTranscriptionService.transcribe).not.toHaveBeenCalled();
+    expect(response.data.segment.text).toBe('Da xu ly');
   });
 });

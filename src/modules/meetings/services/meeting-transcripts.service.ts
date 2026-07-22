@@ -10,6 +10,7 @@ import { ProjectAccessService } from '../../projects/services/project-access.ser
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { SaveMeetingTranscriptDto } from '../dto/save-meeting-transcript.dto';
 import { AppendLiveTranscriptSegmentDto } from '../dto/append-live-transcript-segment.dto';
+import { TranscribeAudioChunkDto } from '../dto/transcribe-audio-chunk.dto';
 import {
   MeetingTranscript,
   MeetingTranscriptDocument,
@@ -18,6 +19,10 @@ import {
 import { MeetingsRepository } from '../repositories/meetings.repository';
 import { MeetingParticipantsRepository } from '../repositories/meeting-participants.repository';
 import { MeetingAccessService } from './meeting-access.service';
+import {
+  GroqTranscriptionService,
+  MeetingAudioFile,
+} from './groq-transcription.service';
 
 type MeetingTranscriptWithTimestamps = MeetingTranscriptDocument & {
   createdAt?: Date;
@@ -35,6 +40,7 @@ export class MeetingTranscriptsService {
     private readonly meetingAccessService: MeetingAccessService,
     private readonly workspaceAccessService: WorkspaceAccessService,
     private readonly projectAccessService: ProjectAccessService,
+    private readonly groqTranscriptionService: GroqTranscriptionService,
   ) {}
 
   async saveTranscript(
@@ -153,31 +159,12 @@ export class MeetingTranscriptsService {
     meetingId: string,
     dto: AppendLiveTranscriptSegmentDto,
   ) {
-    const transcriptModel = this.getTranscriptModel();
-    await this.meetingAccessService.assertUserCanViewMeeting(
+    const { meeting, speakerName } = await this.getAppendContext(
       currentUserId,
       workspaceId,
-    );
-    await this.projectAccessService.assertProjectInWorkspace(
       projectId,
-      workspaceId,
-    );
-    const meeting = await this.meetingAccessService.assertMeetingInProject(
       meetingId,
-      projectId,
     );
-
-    if (meeting.workspaceId !== workspaceId) {
-      throw new NotFoundException('Meeting transcript not found');
-    }
-
-    const participant =
-      await this.meetingParticipantsRepository.findByMeetingAndUser(
-        meetingId,
-        currentUserId,
-      );
-    const speakerName =
-      participant?.user?.fullName || participant?.user?.email || 'Unknown';
     const segment: MeetingTranscriptSegment = {
       userId: currentUserId,
       speakerName,
@@ -187,50 +174,86 @@ export class MeetingTranscriptsService {
       confidence: dto.confidence ?? null,
       source: dto.source?.trim() || 'browser-speech',
     };
-    const nextLiveSegments = [segment];
-    const nextSpeakers = this.buildSpeakersFromSegments(nextLiveSegments);
-    const nextRawTranscript = this.buildRawTranscript(nextLiveSegments);
-
-    let transcript: MeetingTranscriptDocument | null = null;
-
-    if (meeting.mongoTranscriptId) {
-      transcript = await transcriptModel
-        .findById(meeting.mongoTranscriptId)
-        .exec();
-    }
-
-    if (!transcript) {
-      transcript = await transcriptModel.create({
-        meetingId,
-        workspaceId,
-        projectId,
-        sprintId: meeting.sprintId,
-        rawTranscript: nextRawTranscript,
-        speakers: nextSpeakers,
-        liveSegments: nextLiveSegments,
-        createdBy: currentUserId,
-      });
-      await this.meetingsRepository.updateTranscriptId(
-        meeting,
-        this.getTranscriptId(transcript),
-      );
-    } else {
-      transcript.liveSegments = [
-        ...(transcript.liveSegments ?? []),
-        segment,
-      ].slice(-1000);
-      transcript.speakers = this.buildSpeakersFromSegments(
-        transcript.liveSegments,
-      );
-      transcript.rawTranscript = this.buildRawTranscript(
-        transcript.liveSegments,
-      );
-      await transcript.save();
-    }
+    const transcript = await this.persistSegment(
+      meeting,
+      currentUserId,
+      workspaceId,
+      projectId,
+      segment,
+    );
 
     return {
       success: true,
       message: 'Append live transcript segment successfully',
+      data: {
+        segment,
+        transcript: this.toTranscriptResponse(transcript),
+      },
+    };
+  }
+
+  async appendAudioChunk(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    meetingId: string,
+    audio: MeetingAudioFile,
+    dto: TranscribeAudioChunkDto,
+  ) {
+    const { meeting, speakerName } = await this.getAppendContext(
+      currentUserId,
+      workspaceId,
+      projectId,
+      meetingId,
+    );
+    const transcriptModel = this.getTranscriptModel();
+    let existingTranscript: MeetingTranscriptDocument | null = null;
+
+    if (meeting.mongoTranscriptId) {
+      existingTranscript = await transcriptModel
+        .findById(meeting.mongoTranscriptId)
+        .exec();
+      const existingSegment = existingTranscript?.liveSegments?.find(
+        (segment) =>
+          segment.userId === currentUserId && segment.chunkId === dto.chunkId,
+      );
+
+      if (existingSegment && existingTranscript) {
+        return {
+          success: true,
+          message: 'Doan am thanh da duoc xu ly truoc do',
+          data: {
+            segment: existingSegment,
+            transcript: this.toTranscriptResponse(existingTranscript),
+          },
+        };
+      }
+    }
+
+    const transcription =
+      await this.groqTranscriptionService.transcribe(audio);
+    const segment: MeetingTranscriptSegment = {
+      chunkId: dto.chunkId,
+      userId: currentUserId,
+      speakerName,
+      text: transcription.text,
+      startedAt: dto.startedAt ? new Date(dto.startedAt) : new Date(),
+      endedAt: dto.endedAt ? new Date(dto.endedAt) : null,
+      confidence: null,
+      source: `groq:${transcription.model}`,
+    };
+    const transcript = await this.persistSegment(
+      meeting,
+      currentUserId,
+      workspaceId,
+      projectId,
+      segment,
+      existingTranscript,
+    );
+
+    return {
+      success: true,
+      message: 'Chuyen am thanh thanh transcript thanh cong',
       data: {
         segment,
         transcript: this.toTranscriptResponse(transcript),
@@ -264,6 +287,96 @@ export class MeetingTranscriptsService {
     }
 
     return this.transcriptModel;
+  }
+
+  private async getAppendContext(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    meetingId: string,
+  ) {
+    this.getTranscriptModel();
+    await this.meetingAccessService.assertUserCanViewMeeting(
+      currentUserId,
+      workspaceId,
+    );
+    await this.projectAccessService.assertProjectInWorkspace(
+      projectId,
+      workspaceId,
+    );
+    const meeting = await this.meetingAccessService.assertMeetingInProject(
+      meetingId,
+      projectId,
+    );
+
+    if (meeting.workspaceId !== workspaceId) {
+      throw new NotFoundException('Meeting transcript not found');
+    }
+
+    const participant =
+      await this.meetingParticipantsRepository.findByMeetingAndUser(
+        meetingId,
+        currentUserId,
+      );
+
+    return {
+      meeting,
+      speakerName:
+        participant?.user?.fullName ||
+        participant?.user?.email ||
+        currentUserId,
+    };
+  }
+
+  private async persistSegment(
+    meeting: Awaited<
+      ReturnType<MeetingAccessService['assertMeetingInProject']>
+    >,
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    segment: MeetingTranscriptSegment,
+    loadedTranscript: MeetingTranscriptDocument | null = null,
+  ) {
+    const transcriptModel = this.getTranscriptModel();
+    let transcript = loadedTranscript;
+
+    if (!transcript && meeting.mongoTranscriptId) {
+      transcript = await transcriptModel
+        .findById(meeting.mongoTranscriptId)
+        .exec();
+    }
+
+    if (!transcript) {
+      transcript = await transcriptModel.create({
+        meetingId: meeting.id,
+        workspaceId,
+        projectId,
+        sprintId: meeting.sprintId,
+        rawTranscript: this.buildRawTranscript([segment]),
+        speakers: this.buildSpeakersFromSegments([segment]),
+        liveSegments: [segment],
+        createdBy: currentUserId,
+      });
+      await this.meetingsRepository.updateTranscriptId(
+        meeting,
+        this.getTranscriptId(transcript),
+      );
+    } else {
+      transcript.liveSegments = [
+        ...(transcript.liveSegments ?? []),
+        segment,
+      ].slice(-1000);
+      transcript.speakers = this.buildSpeakersFromSegments(
+        transcript.liveSegments,
+      );
+      transcript.rawTranscript = this.buildRawTranscript(
+        transcript.liveSegments,
+      );
+      await transcript.save();
+    }
+
+    return transcript;
   }
 
   private getTranscriptId(transcript: MeetingTranscriptDocument) {

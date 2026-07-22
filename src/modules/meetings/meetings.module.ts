@@ -25,6 +25,7 @@ import { MeetingAccessService } from './services/meeting-access.service';
 import { MeetingParticipantsService } from './services/meeting-participants.service';
 import { MeetingTranscriptsService } from './services/meeting-transcripts.service';
 import { MeetingsService } from './services/meetings.service';
+import { GroqTranscriptionService } from './services/groq-transcription.service';
 
 const mongoImports = mongodbConfig().enabled
   ? [
@@ -56,6 +57,7 @@ const mongoImports = mongodbConfig().enabled
     MeetingsService,
     MeetingParticipantsService,
     MeetingTranscriptsService,
+    GroqTranscriptionService,
     MeetingSignalingGateway,
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,
