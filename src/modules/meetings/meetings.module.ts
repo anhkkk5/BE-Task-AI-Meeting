@@ -26,6 +26,7 @@ import { MeetingParticipantsService } from './services/meeting-participants.serv
 import { MeetingTranscriptsService } from './services/meeting-transcripts.service';
 import { MeetingsService } from './services/meetings.service';
 import { GroqTranscriptionService } from './services/groq-transcription.service';
+import { MeetingLifecycleService } from './services/meeting-lifecycle.service';
 
 const mongoImports = mongodbConfig().enabled
   ? [
@@ -58,6 +59,7 @@ const mongoImports = mongodbConfig().enabled
     MeetingParticipantsService,
     MeetingTranscriptsService,
     GroqTranscriptionService,
+    MeetingLifecycleService,
     MeetingSignalingGateway,
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,
@@ -67,6 +69,7 @@ const mongoImports = mongodbConfig().enabled
     MeetingParticipantsRepository,
     MeetingsRepository,
     MeetingTranscriptsService,
+    MeetingLifecycleService,
   ],
 })
 export class MeetingsModule {}

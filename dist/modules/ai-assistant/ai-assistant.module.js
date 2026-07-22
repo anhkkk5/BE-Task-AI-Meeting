@@ -40,6 +40,7 @@ const ai_report_data_builder_service_1 = require("./services/ai-report-data-buil
 const ai_team_report_data_builder_service_1 = require("./services/ai-team-report-data-builder.service");
 const ai_team_report_service_1 = require("./services/ai-team-report.service");
 const prompt_builder_service_1 = require("./services/prompt-builder.service");
+const auto_meeting_summary_listener_1 = require("./listeners/auto-meeting-summary.listener");
 const mongoImports = (0, mongodb_config_1.mongodbConfig)().enabled
     ? [
         mongoose_1.MongooseModule.forFeature([
@@ -90,6 +91,7 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
             ai_report_data_builder_service_1.AiReportDataBuilderService,
             ai_team_report_data_builder_service_1.AiTeamReportDataBuilderService,
             prompt_builder_service_1.PromptBuilderService,
+            auto_meeting_summary_listener_1.AutoMeetingSummaryListener,
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,
         ],

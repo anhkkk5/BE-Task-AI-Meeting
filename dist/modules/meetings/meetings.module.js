@@ -32,6 +32,7 @@ const meeting_participants_service_1 = require("./services/meeting-participants.
 const meeting_transcripts_service_1 = require("./services/meeting-transcripts.service");
 const meetings_service_1 = require("./services/meetings.service");
 const groq_transcription_service_1 = require("./services/groq-transcription.service");
+const meeting_lifecycle_service_1 = require("./services/meeting-lifecycle.service");
 const mongoImports = (0, mongodb_config_1.mongodbConfig)().enabled
     ? [
         mongoose_1.MongooseModule.forFeature([
@@ -66,6 +67,7 @@ exports.MeetingsModule = MeetingsModule = __decorate([
             meeting_participants_service_1.MeetingParticipantsService,
             meeting_transcripts_service_1.MeetingTranscriptsService,
             groq_transcription_service_1.GroqTranscriptionService,
+            meeting_lifecycle_service_1.MeetingLifecycleService,
             meeting_signaling_gateway_1.MeetingSignalingGateway,
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,
@@ -75,6 +77,7 @@ exports.MeetingsModule = MeetingsModule = __decorate([
             meeting_participants_repository_1.MeetingParticipantsRepository,
             meetings_repository_1.MeetingsRepository,
             meeting_transcripts_service_1.MeetingTranscriptsService,
+            meeting_lifecycle_service_1.MeetingLifecycleService,
         ],
     })
 ], MeetingsModule);

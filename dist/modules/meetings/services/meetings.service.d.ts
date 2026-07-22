@@ -11,6 +11,7 @@ import { UpdateMeetingDto } from '../dto/update-meeting.dto';
 import { MeetingParticipantsRepository } from '../repositories/meeting-participants.repository';
 import { MeetingsRepository } from '../repositories/meetings.repository';
 import { MeetingAccessService } from './meeting-access.service';
+import { MeetingLifecycleService } from './meeting-lifecycle.service';
 export declare class MeetingsService {
     private readonly dataSource;
     private readonly meetingsRepository;
@@ -19,7 +20,8 @@ export declare class MeetingsService {
     private readonly workspaceAccessService;
     private readonly projectAccessService;
     private readonly sprintAccessService;
-    constructor(dataSource: DataSource, meetingsRepository: MeetingsRepository, meetingParticipantsRepository: MeetingParticipantsRepository, meetingAccessService: MeetingAccessService, workspaceAccessService: WorkspaceAccessService, projectAccessService: ProjectAccessService, sprintAccessService: SprintAccessService);
+    private readonly meetingLifecycleService;
+    constructor(dataSource: DataSource, meetingsRepository: MeetingsRepository, meetingParticipantsRepository: MeetingParticipantsRepository, meetingAccessService: MeetingAccessService, workspaceAccessService: WorkspaceAccessService, projectAccessService: ProjectAccessService, sprintAccessService: SprintAccessService, meetingLifecycleService: MeetingLifecycleService);
     createMeeting(currentUserId: string, workspaceId: string, projectId: string, dto: CreateMeetingDto): Promise<{
         success: boolean;
         message: string;

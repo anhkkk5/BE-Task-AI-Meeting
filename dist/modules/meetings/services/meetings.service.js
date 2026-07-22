@@ -25,6 +25,7 @@ const workspace_access_service_1 = require("../../workspaces/services/workspace-
 const meeting_participants_repository_1 = require("../repositories/meeting-participants.repository");
 const meetings_repository_1 = require("../repositories/meetings.repository");
 const meeting_access_service_1 = require("./meeting-access.service");
+const meeting_lifecycle_service_1 = require("./meeting-lifecycle.service");
 let MeetingsService = class MeetingsService {
     dataSource;
     meetingsRepository;
@@ -33,7 +34,8 @@ let MeetingsService = class MeetingsService {
     workspaceAccessService;
     projectAccessService;
     sprintAccessService;
-    constructor(dataSource, meetingsRepository, meetingParticipantsRepository, meetingAccessService, workspaceAccessService, projectAccessService, sprintAccessService) {
+    meetingLifecycleService;
+    constructor(dataSource, meetingsRepository, meetingParticipantsRepository, meetingAccessService, workspaceAccessService, projectAccessService, sprintAccessService, meetingLifecycleService) {
         this.dataSource = dataSource;
         this.meetingsRepository = meetingsRepository;
         this.meetingParticipantsRepository = meetingParticipantsRepository;
@@ -41,6 +43,7 @@ let MeetingsService = class MeetingsService {
         this.workspaceAccessService = workspaceAccessService;
         this.projectAccessService = projectAccessService;
         this.sprintAccessService = sprintAccessService;
+        this.meetingLifecycleService = meetingLifecycleService;
     }
     async createMeeting(currentUserId, workspaceId, projectId, dto) {
         await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
@@ -160,6 +163,12 @@ let MeetingsService = class MeetingsService {
     }
     async completeMeeting(currentUserId, workspaceId, projectId, meetingId) {
         await this.changeMeetingStatus(currentUserId, workspaceId, projectId, meetingId, meeting_status_enum_1.MeetingStatus.Completed);
+        this.meetingLifecycleService.publishMeetingCompleted({
+            currentUserId,
+            workspaceId,
+            projectId,
+            meetingId,
+        });
         return {
             success: true,
             message: 'Complete meeting successfully',
@@ -296,6 +305,7 @@ exports.MeetingsService = MeetingsService = __decorate([
         meeting_access_service_1.MeetingAccessService,
         workspace_access_service_1.WorkspaceAccessService,
         project_access_service_1.ProjectAccessService,
-        sprint_access_service_1.SprintAccessService])
+        sprint_access_service_1.SprintAccessService,
+        meeting_lifecycle_service_1.MeetingLifecycleService])
 ], MeetingsService);
 //# sourceMappingURL=meetings.service.js.map

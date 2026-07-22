@@ -19,6 +19,7 @@ import { Meeting } from '../entities/meeting.entity';
 import { MeetingParticipantsRepository } from '../repositories/meeting-participants.repository';
 import { MeetingsRepository } from '../repositories/meetings.repository';
 import { MeetingAccessService } from './meeting-access.service';
+import { MeetingLifecycleService } from './meeting-lifecycle.service';
 
 @Injectable()
 export class MeetingsService {
@@ -31,6 +32,7 @@ export class MeetingsService {
     private readonly workspaceAccessService: WorkspaceAccessService,
     private readonly projectAccessService: ProjectAccessService,
     private readonly sprintAccessService: SprintAccessService,
+    private readonly meetingLifecycleService: MeetingLifecycleService,
   ) {}
 
   async createMeeting(
@@ -253,6 +255,12 @@ export class MeetingsService {
       meetingId,
       MeetingStatus.Completed,
     );
+    this.meetingLifecycleService.publishMeetingCompleted({
+      currentUserId,
+      workspaceId,
+      projectId,
+      meetingId,
+    });
 
     return {
       success: true,

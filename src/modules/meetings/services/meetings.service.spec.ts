@@ -10,6 +10,7 @@ import { Meeting } from '../entities/meeting.entity';
 import { MeetingParticipantsRepository } from '../repositories/meeting-participants.repository';
 import { MeetingsRepository } from '../repositories/meetings.repository';
 import { MeetingAccessService } from './meeting-access.service';
+import { MeetingLifecycleService } from './meeting-lifecycle.service';
 import { MeetingsService } from './meetings.service';
 
 describe('MeetingsService', () => {
@@ -52,6 +53,9 @@ describe('MeetingsService', () => {
   >;
   let sprintAccessService: jest.Mocked<
     Pick<SprintAccessService, 'assertSprintInProject'>
+  >;
+  let meetingLifecycleService: jest.Mocked<
+    Pick<MeetingLifecycleService, 'publishMeetingCompleted'>
   >;
 
   const meeting = {
@@ -109,6 +113,9 @@ describe('MeetingsService', () => {
     sprintAccessService = {
       assertSprintInProject: jest.fn(),
     };
+    meetingLifecycleService = {
+      publishMeetingCompleted: jest.fn(),
+    };
 
     meetingsRepository.create.mockResolvedValue(meeting);
     meetingsRepository.findByIdAndProject.mockResolvedValue(meeting);
@@ -130,6 +137,7 @@ describe('MeetingsService', () => {
       workspaceAccessService as unknown as WorkspaceAccessService,
       projectAccessService as unknown as ProjectAccessService,
       sprintAccessService as unknown as SprintAccessService,
+      meetingLifecycleService as unknown as MeetingLifecycleService,
     );
   });
 
@@ -278,6 +286,33 @@ describe('MeetingsService', () => {
       status: MeetingStatus.Cancelled,
     });
     expect(response.data).toBeNull();
+  });
+
+  it('publishes completed event after meeting status is updated', async () => {
+    meetingAccessService.assertMeetingInProject.mockResolvedValue(meeting);
+
+    await service.completeMeeting(
+      'owner-id',
+      'workspace-id',
+      'project-id',
+      'meeting-id',
+    );
+
+    expect(meetingsRepository.update).toHaveBeenCalledWith(meeting, {
+      status: MeetingStatus.Completed,
+    });
+    expect(
+      meetingLifecycleService.publishMeetingCompleted,
+    ).toHaveBeenCalledWith({
+      currentUserId: 'owner-id',
+      workspaceId: 'workspace-id',
+      projectId: 'project-id',
+      meetingId: 'meeting-id',
+    });
+    expect(meetingsRepository.update.mock.invocationCallOrder[0]).toBeLessThan(
+      meetingLifecycleService.publishMeetingCompleted.mock
+        .invocationCallOrder[0],
+    );
   });
 
   it('soft deletes meeting when current user can manage meeting', async () => {
