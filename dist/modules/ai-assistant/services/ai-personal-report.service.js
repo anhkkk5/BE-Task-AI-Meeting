@@ -69,6 +69,31 @@ let AiPersonalReportService = class AiPersonalReportService {
             managerMode: true,
         });
     }
+    async generateScheduledPersonalDailyReport(currentUserId, workspaceId, projectId, memberId, reportDate) {
+        const reportModel = this.getReportModel();
+        const normalizedDate = this.normalizeDate(reportDate);
+        const existingReport = await reportModel
+            .findOne({
+            workspaceId,
+            projectId,
+            sprintId: null,
+            userId: memberId,
+            reportType: ai_report_type_enum_1.AiReportType.PersonalDailyReport,
+            reportDate: normalizedDate,
+        })
+            .exec();
+        if (existingReport) {
+            return {
+                generated: false,
+                reportId: this.getReportId(existingReport),
+            };
+        }
+        const response = await this.generateMemberPersonalDailyReport(currentUserId, workspaceId, projectId, memberId, { reportDate: normalizedDate });
+        return {
+            generated: true,
+            reportId: response.data.report.id,
+        };
+    }
     async getMyPersonalDailyReports(currentUserId, workspaceId, projectId, query) {
         await this.aiReportAccessService.assertCanUseOwnReports(currentUserId, workspaceId);
         await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);

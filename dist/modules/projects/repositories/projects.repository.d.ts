@@ -13,6 +13,7 @@ export declare class ProjectsRepository {
         page: number;
         limit: number;
     }>;
+    findActiveForAutomaticReports(reportDate: string): Promise<Project[]>;
     update(project: Project, data: Partial<Project>): Promise<Project>;
     archive(project: Project): Promise<void>;
     complete(project: Project): Promise<void>;

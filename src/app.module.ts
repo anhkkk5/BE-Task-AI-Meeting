@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { AppController } from './app.controller';
@@ -33,6 +34,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
       ? [MongooseModule.forRoot(mongodbConfig().uri)]
       : []),
     RedisModule,
+    ScheduleModule.forRoot(),
     AiAssistantModule,
     AuthModule,
     UsersModule,

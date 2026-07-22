@@ -44,6 +44,7 @@ import { AiTeamReportDataBuilderService } from './services/ai-team-report-data-b
 import { AiTeamReportService } from './services/ai-team-report.service';
 import { PromptBuilderService } from './services/prompt-builder.service';
 import { AutoMeetingSummaryListener } from './listeners/auto-meeting-summary.listener';
+import { AiDailyReportSchedulerService } from './schedulers/ai-daily-report-scheduler.service';
 
 const mongoImports = mongodbConfig().enabled
   ? [
@@ -93,6 +94,7 @@ const mongoImports = mongodbConfig().enabled
     AiTeamReportDataBuilderService,
     PromptBuilderService,
     AutoMeetingSummaryListener,
+    AiDailyReportSchedulerService,
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,
   ],

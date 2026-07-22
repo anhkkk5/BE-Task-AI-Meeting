@@ -152,6 +152,45 @@ export class AiTeamReportService {
     }
   }
 
+  async generateScheduledTeamDailyReport(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    reportDate: string,
+  ) {
+    const reportModel = this.getReportModel();
+    const normalizedDate = this.normalizeDate(reportDate);
+    const existingReport = await reportModel
+      .findOne({
+        workspaceId,
+        projectId,
+        sprintId: null,
+        userId: null,
+        reportType: AiReportType.TeamDailyReport,
+        reportDate: normalizedDate,
+      })
+      .exec();
+
+    if (existingReport) {
+      return {
+        generated: false,
+        reportId: this.getReportId(existingReport),
+      };
+    }
+
+    const response = await this.generateTeamDailyReport(
+      currentUserId,
+      workspaceId,
+      projectId,
+      { reportDate: normalizedDate },
+    );
+
+    return {
+      generated: true,
+      reportId: response.data.report.id,
+    };
+  }
+
   async getTeamDailyReports(
     currentUserId: string,
     workspaceId: string,

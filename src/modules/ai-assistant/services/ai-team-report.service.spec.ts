@@ -248,6 +248,30 @@ describe('AiTeamReportService', () => {
     );
   });
 
+  it('skips scheduled team report when the daily report already exists', async () => {
+    const response = await service.generateScheduledTeamDailyReport(
+      'owner-id',
+      'workspace-id',
+      'project-id',
+      '2026-06-22',
+    );
+
+    expect(response).toEqual({
+      generated: false,
+      reportId: reportId.toString(),
+    });
+    expect(reportModel.findOne).toHaveBeenCalledWith({
+      workspaceId: 'workspace-id',
+      projectId: 'project-id',
+      sprintId: null,
+      userId: null,
+      reportType: AiReportType.TeamDailyReport,
+      reportDate: '2026-06-22',
+    });
+    expect(aiProviderService.generateTeamDailyReport).not.toHaveBeenCalled();
+    expect(reportModel.create).not.toHaveBeenCalled();
+  });
+
   it('gets team reports with date filters', async () => {
     const response = await service.getTeamDailyReports(
       'owner-id',

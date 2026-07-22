@@ -47,6 +47,10 @@ export declare class AiTeamReportService {
             };
         };
     }>;
+    generateScheduledTeamDailyReport(currentUserId: string, workspaceId: string, projectId: string, reportDate: string): Promise<{
+        generated: boolean;
+        reportId: string;
+    }>;
     getTeamDailyReports(currentUserId: string, workspaceId: string, projectId: string, query: GetAiTeamReportsQueryDto): Promise<{
         success: boolean;
         message: string;

@@ -13,6 +13,7 @@ exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const mongoose_1 = require("@nestjs/mongoose");
+const schedule_1 = require("@nestjs/schedule");
 const typeorm_1 = require("@nestjs/typeorm");
 const path_1 = require("path");
 const app_controller_1 = require("./app.controller");
@@ -48,6 +49,7 @@ exports.AppModule = AppModule = __decorate([
                 ? [mongoose_1.MongooseModule.forRoot((0, mongodb_config_1.mongodbConfig)().uri)]
                 : []),
             redis_module_1.RedisModule,
+            schedule_1.ScheduleModule.forRoot(),
             ai_assistant_module_1.AiAssistantModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,

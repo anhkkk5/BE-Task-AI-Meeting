@@ -21,7 +21,7 @@ import { PromptBuilderService } from './prompt-builder.service';
 
 type ModelMock<T> = Pick<
   Model<T>,
-  'countDocuments' | 'create' | 'find' | 'findById'
+  'countDocuments' | 'create' | 'find' | 'findById' | 'findOne'
 >;
 
 describe('AiPersonalReportService', () => {
@@ -117,6 +117,7 @@ describe('AiPersonalReportService', () => {
       create: jest.fn(),
       find: jest.fn(),
       findById: jest.fn(),
+      findOne: jest.fn(),
     };
     promptLogModel = {
       create: jest.fn(),
@@ -157,6 +158,9 @@ describe('AiPersonalReportService', () => {
     } as never);
     reportModel.findById.mockReturnValue({
       exec: jest.fn().mockResolvedValue(report),
+    } as never);
+    reportModel.findOne.mockReturnValue({
+      exec: jest.fn().mockResolvedValue(null),
     } as never);
     dataBuilderService.buildPersonalDailyReportInput.mockResolvedValue(
       inputData,
@@ -248,6 +252,37 @@ describe('AiPersonalReportService', () => {
       'sprint-id',
       'project-id',
     );
+  });
+
+  it('skips scheduled personal report when the daily report already exists', async () => {
+    reportModel.findOne.mockReturnValue({
+      exec: jest.fn().mockResolvedValue(report),
+    } as never);
+
+    const response = await service.generateScheduledPersonalDailyReport(
+      'owner-id',
+      'workspace-id',
+      'project-id',
+      'member-id',
+      '2026-06-20',
+    );
+
+    expect(response).toEqual({
+      generated: false,
+      reportId: reportId.toString(),
+    });
+    expect(reportModel.findOne).toHaveBeenCalledWith({
+      workspaceId: 'workspace-id',
+      projectId: 'project-id',
+      sprintId: null,
+      userId: 'member-id',
+      reportType: AiReportType.PersonalDailyReport,
+      reportDate: '2026-06-20',
+    });
+    expect(
+      aiProviderService.generatePersonalDailyReport,
+    ).not.toHaveBeenCalled();
+    expect(reportModel.create).not.toHaveBeenCalled();
   });
 
   it('returns 503 when MongoDB is disabled', async () => {

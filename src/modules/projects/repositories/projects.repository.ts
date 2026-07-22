@@ -77,6 +77,24 @@ export class ProjectsRepository {
     return { items, total, page, limit };
   }
 
+  findActiveForAutomaticReports(reportDate: string) {
+    return this.repository
+      .createQueryBuilder('project')
+      .where('project.status = :status', { status: ProjectStatus.Active })
+      .andWhere('project.deletedAt IS NULL')
+      .andWhere(
+        '(project.startDate IS NULL OR project.startDate <= :reportDate)',
+        {
+          reportDate,
+        },
+      )
+      .andWhere('(project.endDate IS NULL OR project.endDate >= :reportDate)', {
+        reportDate,
+      })
+      .orderBy('project.createdAt', 'ASC')
+      .getMany();
+  }
+
   async update(project: Project, data: Partial<Project>) {
     Object.assign(project, data);
     return this.repository.save(project);

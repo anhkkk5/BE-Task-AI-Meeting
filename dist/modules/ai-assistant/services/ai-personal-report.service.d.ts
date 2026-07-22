@@ -69,6 +69,10 @@ export declare class AiPersonalReportService {
             };
         };
     }>;
+    generateScheduledPersonalDailyReport(currentUserId: string, workspaceId: string, projectId: string, memberId: string, reportDate: string): Promise<{
+        generated: boolean;
+        reportId: string;
+    }>;
     getMyPersonalDailyReports(currentUserId: string, workspaceId: string, projectId: string, query: GetAiReportsQueryDto): Promise<{
         success: boolean;
         message: string;

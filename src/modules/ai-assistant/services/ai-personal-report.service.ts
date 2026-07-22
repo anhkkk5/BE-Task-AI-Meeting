@@ -94,6 +94,47 @@ export class AiPersonalReportService {
     });
   }
 
+  async generateScheduledPersonalDailyReport(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    memberId: string,
+    reportDate: string,
+  ) {
+    const reportModel = this.getReportModel();
+    const normalizedDate = this.normalizeDate(reportDate);
+    const existingReport = await reportModel
+      .findOne({
+        workspaceId,
+        projectId,
+        sprintId: null,
+        userId: memberId,
+        reportType: AiReportType.PersonalDailyReport,
+        reportDate: normalizedDate,
+      })
+      .exec();
+
+    if (existingReport) {
+      return {
+        generated: false,
+        reportId: this.getReportId(existingReport),
+      };
+    }
+
+    const response = await this.generateMemberPersonalDailyReport(
+      currentUserId,
+      workspaceId,
+      projectId,
+      memberId,
+      { reportDate: normalizedDate },
+    );
+
+    return {
+      generated: true,
+      reportId: response.data.report.id,
+    };
+  }
+
   async getMyPersonalDailyReports(
     currentUserId: string,
     workspaceId: string,
