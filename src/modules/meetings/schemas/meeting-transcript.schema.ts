@@ -19,6 +19,34 @@ export const MeetingTranscriptSpeakerSchema = SchemaFactory.createForClass(
   MeetingTranscriptSpeaker,
 );
 
+@Schema({ _id: false })
+export class MeetingTranscriptSegment {
+  @Prop({ type: String })
+  userId?: string;
+
+  @Prop({ type: String })
+  speakerName?: string;
+
+  @Prop({ required: true })
+  text: string;
+
+  @Prop({ required: true })
+  startedAt: Date;
+
+  @Prop({ type: Date })
+  endedAt?: Date | null;
+
+  @Prop({ type: Number })
+  confidence?: number | null;
+
+  @Prop({ type: String, default: 'browser-speech' })
+  source: string;
+}
+
+export const MeetingTranscriptSegmentSchema = SchemaFactory.createForClass(
+  MeetingTranscriptSegment,
+);
+
 @Schema({ timestamps: true, collection: 'meeting_transcripts' })
 export class MeetingTranscript {
   @Prop({ required: true })
@@ -38,6 +66,9 @@ export class MeetingTranscript {
 
   @Prop({ type: [MeetingTranscriptSpeakerSchema], default: [] })
   speakers: MeetingTranscriptSpeaker[];
+
+  @Prop({ type: [MeetingTranscriptSegmentSchema], default: [] })
+  liveSegments: MeetingTranscriptSegment[];
 
   @Prop({ required: true })
   createdBy: string;

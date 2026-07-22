@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { MEETING_SUMMARY_PROMPT_TEMPLATE } from '../prompts/meeting-summary.prompt';
 import { personalDailyReportPromptTemplate } from '../prompts/personal-daily-report.prompt';
+import { PERSONALIZED_MEETING_SUMMARY_PROMPT_TEMPLATE } from '../prompts/personalized-meeting-summary.prompt';
 import { TEAM_DAILY_REPORT_PROMPT_TEMPLATE } from '../prompts/team-daily-report.prompt';
 import { MeetingSummaryInputData } from './ai-meeting-summary-data-builder.service';
+import { PersonalizedMeetingSummaryInputData } from './ai-personalized-meeting-summary-data-builder.service';
 import { PersonalReportInputData } from './ai-report-data-builder.service';
 import { TeamReportInputData } from './ai-team-report-data-builder.service';
 
@@ -24,6 +26,15 @@ export class PromptBuilderService {
 
   buildMeetingSummaryPrompt(inputData: MeetingSummaryInputData) {
     return MEETING_SUMMARY_PROMPT_TEMPLATE.replace(
+      '{{INPUT_DATA}}',
+      JSON.stringify(inputData, null, 2),
+    );
+  }
+
+  buildPersonalizedMeetingSummaryPrompt(
+    inputData: PersonalizedMeetingSummaryInputData,
+  ) {
+    return PERSONALIZED_MEETING_SUMMARY_PROMPT_TEMPLATE.replace(
       '{{INPUT_DATA}}',
       JSON.stringify(inputData, null, 2),
     );

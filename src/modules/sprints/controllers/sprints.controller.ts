@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -200,6 +201,31 @@ export class SprintsController {
     @Param('sprintId') sprintId: string,
   ) {
     return this.sprintsService.cancelSprint(
+      user.id,
+      workspaceId,
+      projectId,
+      sprintId,
+    );
+  }
+
+  @Delete(':sprintId')
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({
+    summary: 'Xóa sprint',
+    description:
+      'Người tạo hoặc quản lý được xóa sprint không hoạt động. Task trong sprint sẽ trở về Backlog.',
+  })
+  @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
+  @ApiParam({ name: 'projectId', example: 'project-uuid' })
+  @ApiParam({ name: 'sprintId', example: 'sprint-uuid' })
+  @ApiResponse({ status: 200, description: 'Xóa sprint thành công.' })
+  deleteSprint(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('sprintId') sprintId: string,
+  ) {
+    return this.sprintsService.deleteSprint(
       user.id,
       workspaceId,
       projectId,

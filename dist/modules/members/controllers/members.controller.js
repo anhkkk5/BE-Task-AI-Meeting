@@ -23,6 +23,7 @@ const workspace_roles_guard_1 = require("../../../common/guards/workspace-roles.
 const access_token_guard_1 = require("../../auth/guards/access-token.guard");
 const add_member_dto_1 = require("../dto/add-member.dto");
 const change_member_role_dto_1 = require("../dto/change-member-role.dto");
+const lookup_member_query_dto_1 = require("../dto/lookup-member-query.dto");
 const members_service_1 = require("../services/members.service");
 let MembersController = class MembersController {
     membersService;
@@ -31,6 +32,9 @@ let MembersController = class MembersController {
     }
     getMembers(user, workspaceId) {
         return this.membersService.getMembers(user.id, workspaceId);
+    }
+    lookupMember(user, workspaceId, query) {
+        return this.membersService.lookupMember(user.id, workspaceId, query.email);
     }
     getMyRole(user, workspaceId) {
         return this.membersService.getMyRole(user.id, workspaceId);
@@ -64,6 +68,22 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], MembersController.prototype, "getMembers", null);
+__decorate([
+    (0, common_1.Get)('lookup'),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(workspace_role_enum_1.WorkspaceRole.Owner),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Lookup user before adding workspace member',
+        description: 'OWNER nhap email de xem user da dang ky va trang thai trong workspace truoc khi them.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, lookup_member_query_dto_1.LookupMemberQueryDto]),
+    __metadata("design:returntype", void 0)
+], MembersController.prototype, "lookupMember", null);
 __decorate([
     (0, common_1.Get)('me'),
     (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),

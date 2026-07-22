@@ -20,7 +20,6 @@ export class TasksRepository {
       | 'description'
       | 'dueDate'
       | 'estimatedHours'
-      | 'priority'
       | 'projectId'
       | 'sprintId'
       | 'status'
@@ -84,12 +83,6 @@ export class TasksRepository {
       });
     }
 
-    if (query.priority) {
-      builder.andWhere('task.priority = :priority', {
-        priority: query.priority,
-      });
-    }
-
     if (query.keyword?.trim()) {
       const keyword = `%${query.keyword.trim()}%`;
       builder.andWhere(
@@ -145,5 +138,9 @@ export class TasksRepository {
   async update(task: Task, data: Partial<Task>) {
     Object.assign(task, data);
     return this.repository.save(task);
+  }
+
+  softDelete(task: Task) {
+    return this.repository.softRemove(task);
   }
 }

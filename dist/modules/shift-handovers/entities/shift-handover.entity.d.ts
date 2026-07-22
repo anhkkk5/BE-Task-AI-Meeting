@@ -1,0 +1,35 @@
+import { HandoverStatus } from '../../../common/enums/handover-status.enum';
+import { Project } from '../../projects/entities/project.entity';
+import { Task } from '../../tasks/entities/task.entity';
+import { User } from '../../users/entities/user.entity';
+import { Workspace } from '../../workspaces/entities/workspace.entity';
+export declare class ShiftHandover {
+    id: string;
+    workspaceId: string;
+    projectId: string;
+    taskId: string | null;
+    senderId: string;
+    receiverId: string;
+    title: string;
+    summary: string | null;
+    completedWork: string | null;
+    remainingWork: string | null;
+    blockers: string | null;
+    nextSteps: string | null;
+    referenceLinks: string | null;
+    dueAt: Date | null;
+    status: HandoverStatus;
+    changeRequest: string | null;
+    rejectionReason: string | null;
+    submittedAt: Date | null;
+    acknowledgedAt: Date | null;
+    rejectedAt: Date | null;
+    workspace: Workspace;
+    project: Project;
+    task: Task | null;
+    sender: User;
+    receiver: User;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+}

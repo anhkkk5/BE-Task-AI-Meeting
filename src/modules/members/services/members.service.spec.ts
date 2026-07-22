@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException } from '@nestjs/common';
 import { WorkspaceMemberStatus } from '../../../common/enums/workspace-member-status.enum';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { User } from '../../users/entities/user.entity';
+import { UserStatus } from '../../users/enums/user-status.enum';
 import { UsersService } from '../../users/services/users.service';
 import { WorkspaceMember } from '../../workspaces/entities/workspace-member.entity';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
@@ -34,6 +35,8 @@ describe('MembersService', () => {
     email: 'member@example.com',
     fullName: 'Nguyen Van A',
     avatarUrl: null,
+    jobTitle: 'Developer',
+    status: UserStatus.Active,
   } as User;
 
   const member = {
@@ -126,6 +129,73 @@ describe('MembersService', () => {
       }),
     ).rejects.toBeInstanceOf(ConflictException);
     expect(workspaceMembersRepository.createMember).not.toHaveBeenCalled();
+  });
+
+  it('looks up registered user before adding member', async () => {
+    usersService.findByEmail.mockResolvedValue(user);
+    workspaceMembersRepository.findByWorkspaceAndUser.mockResolvedValue(null);
+
+    const response = await service.lookupMember(
+      'owner-id',
+      'workspace-id',
+      ' MEMBER@EXAMPLE.COM ',
+    );
+
+    expect(workspaceAccessService.assertWorkspaceOwner).toHaveBeenCalledWith(
+      'owner-id',
+      'workspace-id',
+    );
+    expect(workspaceAccessService.assertWorkspaceActive).toHaveBeenCalledWith(
+      'workspace-id',
+    );
+    expect(usersService.findByEmail).toHaveBeenCalledWith('member@example.com');
+    expect(response.data).toMatchObject({
+      canAdd: true,
+      reason: null,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        status: UserStatus.Active,
+      },
+      existingMember: null,
+    });
+  });
+
+  it('marks lookup as not addable when user is already active member', async () => {
+    usersService.findByEmail.mockResolvedValue(user);
+    workspaceMembersRepository.findByWorkspaceAndUser.mockResolvedValue(member);
+
+    const response = await service.lookupMember(
+      'owner-id',
+      'workspace-id',
+      user.email,
+    );
+
+    expect(response.data.canAdd).toBe(false);
+    expect(response.data.reason).toBe('ALREADY_ACTIVE_MEMBER');
+    expect(response.data.existingMember).toMatchObject({
+      memberId: member.id,
+      role: WorkspaceRole.Member,
+      status: WorkspaceMemberStatus.Active,
+    });
+  });
+
+  it('returns empty lookup result when email is not registered', async () => {
+    usersService.findByEmail.mockResolvedValue(null);
+
+    const response = await service.lookupMember(
+      'owner-id',
+      'workspace-id',
+      'missing@example.com',
+    );
+
+    expect(response.data).toEqual({
+      user: null,
+      existingMember: null,
+      canAdd: false,
+      reason: 'USER_NOT_FOUND',
+    });
   });
 
   it('reactivates removed member without creating duplicate row', async () => {

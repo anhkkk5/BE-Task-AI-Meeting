@@ -193,4 +193,9 @@ export declare class MeetingsController {
         message: string;
         data: null;
     }>;
+    deleteMeeting(user: AuthUser, workspaceId: string, projectId: string, meetingId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
+    }>;
 }

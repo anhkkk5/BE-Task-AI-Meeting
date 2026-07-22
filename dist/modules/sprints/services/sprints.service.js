@@ -12,10 +12,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SprintsService = void 0;
 const common_1 = require("@nestjs/common");
 const sprint_status_enum_1 = require("../../../common/enums/sprint-status.enum");
+const workspace_role_enum_1 = require("../../../common/enums/workspace-role.enum");
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
 const project_access_service_1 = require("../../projects/services/project-access.service");
 const sprints_repository_1 = require("../repositories/sprints.repository");
 const sprint_access_service_1 = require("./sprint-access.service");
+const sprintManagerRoles = [
+    workspace_role_enum_1.WorkspaceRole.Owner,
+    workspace_role_enum_1.WorkspaceRole.ScrumMaster,
+    workspace_role_enum_1.WorkspaceRole.ProjectManager,
+];
 let SprintsService = class SprintsService {
     sprintsRepository;
     sprintAccessService;
@@ -143,6 +149,26 @@ let SprintsService = class SprintsService {
         return {
             success: true,
             message: 'Cancel sprint successfully',
+            data: null,
+        };
+    }
+    async deleteSprint(currentUserId, workspaceId, projectId, sprintId) {
+        await this.assertWritableProject(workspaceId, projectId);
+        await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
+        const sprint = await this.sprintAccessService.assertSprintInProject(sprintId, projectId);
+        if (sprint.status === sprint_status_enum_1.SprintStatus.Active) {
+            throw new common_1.BadRequestException('Hãy kết thúc hoặc hủy sprint đang hoạt động trước khi xóa');
+        }
+        if (sprint.createdBy !== currentUserId) {
+            const role = await this.workspaceAccessService.getUserWorkspaceRole(currentUserId, workspaceId);
+            if (!role || !sprintManagerRoles.includes(role)) {
+                throw new common_1.ForbiddenException('Bạn không có quyền xóa sprint này');
+            }
+        }
+        await this.sprintsRepository.softDeleteWithTasks(sprint);
+        return {
+            success: true,
+            message: 'Xóa sprint thành công',
             data: null,
         };
     }

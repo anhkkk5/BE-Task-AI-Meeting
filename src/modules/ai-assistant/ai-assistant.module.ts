@@ -14,6 +14,10 @@ import {
   AiMeetingSummaryController,
   AiMeetingSummaryDetailController,
 } from './controllers/ai-meeting-summary.controller';
+import {
+  AiPersonalizedMeetingSummaryController,
+  AiPersonalizedMeetingSummaryProjectController,
+} from './controllers/ai-personalized-meeting-summary.controller';
 import { AiPersonalReportController } from './controllers/ai-personal-report.controller';
 import { AiTeamReportController } from './controllers/ai-team-report.controller';
 import { AiPromptLog, AiPromptLogSchema } from './schemas/ai-prompt-log.schema';
@@ -22,9 +26,16 @@ import {
   MeetingSummary,
   MeetingSummarySchema,
 } from './schemas/meeting-summary.schema';
+import {
+  PersonalizedMeetingSummary,
+  PersonalizedMeetingSummarySchema,
+} from './schemas/personalized-meeting-summary.schema';
 import { AiMeetingSummaryAccessService } from './services/ai-meeting-summary-access.service';
 import { AiMeetingSummaryDataBuilderService } from './services/ai-meeting-summary-data-builder.service';
 import { AiMeetingSummaryService } from './services/ai-meeting-summary.service';
+import { AiPersonalizedMeetingSummaryAccessService } from './services/ai-personalized-meeting-summary-access.service';
+import { AiPersonalizedMeetingSummaryDataBuilderService } from './services/ai-personalized-meeting-summary-data-builder.service';
+import { AiPersonalizedMeetingSummaryService } from './services/ai-personalized-meeting-summary.service';
 import { AiPersonalReportService } from './services/ai-personal-report.service';
 import { AiProviderService } from './services/ai-provider.service';
 import { AiReportAccessService } from './services/ai-report-access.service';
@@ -39,6 +50,10 @@ const mongoImports = mongodbConfig().enabled
         { name: AiReport.name, schema: AiReportSchema },
         { name: AiPromptLog.name, schema: AiPromptLogSchema },
         { name: MeetingSummary.name, schema: MeetingSummarySchema },
+        {
+          name: PersonalizedMeetingSummary.name,
+          schema: PersonalizedMeetingSummarySchema,
+        },
       ]),
     ]
   : [];
@@ -59,14 +74,19 @@ const mongoImports = mongodbConfig().enabled
     AiTeamReportController,
     AiMeetingSummaryController,
     AiMeetingSummaryDetailController,
+    AiPersonalizedMeetingSummaryController,
+    AiPersonalizedMeetingSummaryProjectController,
   ],
   providers: [
     AiPersonalReportService,
     AiTeamReportService,
     AiMeetingSummaryService,
+    AiPersonalizedMeetingSummaryService,
     AiProviderService,
     AiMeetingSummaryAccessService,
     AiMeetingSummaryDataBuilderService,
+    AiPersonalizedMeetingSummaryAccessService,
+    AiPersonalizedMeetingSummaryDataBuilderService,
     AiReportAccessService,
     AiReportDataBuilderService,
     AiTeamReportDataBuilderService,

@@ -166,6 +166,22 @@ let MeetingsService = class MeetingsService {
             data: null,
         };
     }
+    async deleteMeeting(currentUserId, workspaceId, projectId, meetingId) {
+        await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
+        await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
+        await this.meetingAccessService.assertUserCanViewMeeting(currentUserId, workspaceId);
+        const meeting = await this.meetingAccessService.assertMeetingInProject(meetingId, projectId);
+        const isManager = await this.meetingAccessService.isMeetingManager(currentUserId, workspaceId);
+        if (!isManager && meeting.createdBy !== currentUserId) {
+            throw new common_1.ForbiddenException('You can not delete this meeting');
+        }
+        await this.meetingsRepository.softDelete(meeting);
+        return {
+            success: true,
+            message: 'Delete meeting successfully',
+            data: null,
+        };
+    }
     async changeMeetingStatus(currentUserId, workspaceId, projectId, meetingId, status) {
         await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
         await this.meetingAccessService.assertUserCanManageMeeting(currentUserId, workspaceId);

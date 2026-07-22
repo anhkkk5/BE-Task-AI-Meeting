@@ -2,7 +2,6 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDateString,
-  IsEnum,
   IsInt,
   IsNumber,
   IsOptional,
@@ -11,7 +10,6 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { TaskPriority } from '../../../common/enums/task-priority.enum';
 
 export class UpdateTaskDto {
   @ApiPropertyOptional({
@@ -35,14 +33,6 @@ export class UpdateTaskDto {
   @IsString()
   @MaxLength(2000)
   description?: string;
-
-  @ApiPropertyOptional({
-    enum: TaskPriority,
-    example: TaskPriority.Urgent,
-  })
-  @IsOptional()
-  @IsEnum(TaskPriority)
-  priority?: TaskPriority;
 
   @ApiPropertyOptional({
     example: '2026-06-28',

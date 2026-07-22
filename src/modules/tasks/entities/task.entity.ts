@@ -9,7 +9,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { TaskPriority } from '../../../common/enums/task-priority.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { Project } from '../../projects/entities/project.entity';
 import { Sprint } from '../../sprints/entities/sprint.entity';
@@ -45,14 +44,6 @@ export class Task {
     default: TaskStatus.Backlog,
   })
   status: TaskStatus;
-
-  @Index()
-  @Column({
-    type: 'enum',
-    enum: TaskPriority,
-    default: TaskPriority.Medium,
-  })
-  priority: TaskPriority;
 
   @Index()
   @Column({ name: 'assignee_id', type: 'varchar', length: 36, nullable: true })

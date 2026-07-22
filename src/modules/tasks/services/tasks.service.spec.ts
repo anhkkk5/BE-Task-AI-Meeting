@@ -1,9 +1,12 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import { TaskPriority } from '../../../common/enums/task-priority.enum';
+import { SprintStatus } from '../../../common/enums/sprint-status.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { Project } from '../../projects/entities/project.entity';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { Sprint } from '../../sprints/entities/sprint.entity';
+import { SprintsRepository } from '../../sprints/repositories/sprints.repository';
 import { WorkspaceMember } from '../../workspaces/entities/workspace-member.entity';
+import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { Task } from '../entities/task.entity';
 import { TasksRepository } from '../repositories/tasks.repository';
@@ -20,6 +23,7 @@ describe('TasksService', () => {
       | 'findBacklogByProject'
       | 'findByProject'
       | 'findBySprint'
+      | 'softDelete'
       | 'update'
     >
   >;
@@ -31,6 +35,7 @@ describe('TasksService', () => {
       | 'assertSprintInProject'
       | 'assertTaskEditable'
       | 'assertTaskInProject'
+      | 'assertUserCanDeleteTask'
       | 'assertUserCanUpdateTaskStatus'
     >
   >;
@@ -47,6 +52,10 @@ describe('TasksService', () => {
       'assertProjectActive' | 'assertProjectInWorkspace'
     >
   >;
+  let workspaceMembersRepository: jest.Mocked<
+    Pick<WorkspaceMembersRepository, 'findActiveByWorkspace'>
+  >;
+  let sprintsRepository: jest.Mocked<Pick<SprintsRepository, 'findByProject'>>;
 
   const project = {
     id: 'project-id',
@@ -62,7 +71,6 @@ describe('TasksService', () => {
     title: 'Code task API',
     description: 'Task module',
     status: TaskStatus.Backlog,
-    priority: TaskPriority.High,
     assigneeId: 'member-id',
     createdBy: 'owner-id',
     dueDate: '2026-06-25',
@@ -79,6 +87,7 @@ describe('TasksService', () => {
       findBacklogByProject: jest.fn(),
       findByProject: jest.fn(),
       findBySprint: jest.fn(),
+      softDelete: jest.fn(),
       update: jest.fn(),
     };
     taskAccessService = {
@@ -87,6 +96,7 @@ describe('TasksService', () => {
       assertSprintInProject: jest.fn(),
       assertTaskEditable: jest.fn(),
       assertTaskInProject: jest.fn(),
+      assertUserCanDeleteTask: jest.fn(),
       assertUserCanUpdateTaskStatus: jest.fn(),
     };
     taskCodeService = {
@@ -100,6 +110,12 @@ describe('TasksService', () => {
       assertProjectActive: jest.fn(),
       assertProjectInWorkspace: jest.fn(),
     };
+    workspaceMembersRepository = {
+      findActiveByWorkspace: jest.fn(),
+    };
+    sprintsRepository = {
+      findByProject: jest.fn(),
+    };
 
     workspaceAccessService.assertWorkspaceMember.mockResolvedValue(
       {} as WorkspaceMember,
@@ -107,6 +123,13 @@ describe('TasksService', () => {
     projectAccessService.assertProjectActive.mockResolvedValue(project);
     projectAccessService.assertProjectInWorkspace.mockResolvedValue(project);
     taskCodeService.generateTaskCode.mockResolvedValue('AGILEAI-1');
+    workspaceMembersRepository.findActiveByWorkspace.mockResolvedValue([]);
+    sprintsRepository.findByProject.mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      limit: 500,
+    });
 
     service = new TasksService(
       tasksRepository as unknown as TasksRepository,
@@ -114,6 +137,8 @@ describe('TasksService', () => {
       taskCodeService as unknown as TaskCodeService,
       workspaceAccessService as unknown as WorkspaceAccessService,
       projectAccessService as unknown as ProjectAccessService,
+      workspaceMembersRepository as unknown as WorkspaceMembersRepository,
+      sprintsRepository as unknown as SprintsRepository,
     );
   });
 
@@ -127,7 +152,6 @@ describe('TasksService', () => {
       {
         title: ' Code task API ',
         description: ' Task module ',
-        priority: TaskPriority.High,
         assigneeId: 'member-id',
         dueDate: '2026-06-25',
         estimatedHours: 6,
@@ -147,7 +171,6 @@ describe('TasksService', () => {
       title: 'Code task API',
       description: 'Task module',
       status: TaskStatus.Backlog,
-      priority: TaskPriority.High,
       assigneeId: 'member-id',
       createdBy: 'owner-id',
       dueDate: '2026-06-25',
@@ -340,5 +363,124 @@ describe('TasksService', () => {
     );
 
     expect(response.data.task.status).toBe(TaskStatus.Cancelled);
+  });
+
+  it('soft deletes a task after checking creator or manager permission', async () => {
+    taskAccessService.assertTaskInProject.mockResolvedValue(task);
+
+    const response = await service.deleteTask(
+      'owner-id',
+      'workspace-id',
+      'project-id',
+      'task-id',
+    );
+
+    expect(projectAccessService.assertProjectInWorkspace).toHaveBeenCalledWith(
+      'project-id',
+      'workspace-id',
+    );
+    expect(taskAccessService.assertUserCanDeleteTask).toHaveBeenCalledWith(
+      'owner-id',
+      'workspace-id',
+      task,
+    );
+    expect(tasksRepository.softDelete).toHaveBeenCalledWith(task);
+    expect(response).toEqual({
+      success: true,
+      message: 'Delete task successfully',
+      data: null,
+    });
+  });
+
+  it('imports valid Excel preview rows into sprint and backlog', async () => {
+    workspaceMembersRepository.findActiveByWorkspace.mockResolvedValue([
+      {
+        userId: 'member-id',
+        user: {
+          email: 'dev@example.com',
+          fullName: 'Dev User',
+        },
+      } as WorkspaceMember,
+    ]);
+    sprintsRepository.findByProject.mockResolvedValue({
+      items: [
+        {
+          id: 'sprint-id',
+          name: 'Sprint 1',
+          status: SprintStatus.Planned,
+        } as Sprint,
+      ],
+      total: 1,
+      page: 1,
+      limit: 500,
+    });
+    taskCodeService.generateTaskCode
+      .mockResolvedValueOnce('AGILEAI-1')
+      .mockResolvedValueOnce('AGILEAI-2');
+    tasksRepository.create.mockImplementation((data) =>
+      Promise.resolve({
+        ...task,
+        ...data,
+        id: data.taskCode.toLowerCase(),
+        createdAt: new Date('2026-06-20T00:00:00.000Z'),
+        updatedAt: new Date('2026-06-20T00:00:00.000Z'),
+        deletedAt: null,
+      }),
+    );
+
+    const response = await service.commitTaskImport(
+      'owner-id',
+      'workspace-id',
+      'project-id',
+      {
+        items: [
+          {
+            rowNumber: 2,
+            title: 'Task trong sprint',
+            sprintName: 'Sprint 1',
+            status: TaskStatus.Todo,
+            assigneeEmail: 'dev@example.com',
+          },
+          {
+            rowNumber: 3,
+            title: 'Task backlog',
+          },
+        ],
+      },
+    );
+
+    expect(tasksRepository.create).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        sprintId: 'sprint-id',
+        status: TaskStatus.Todo,
+        assigneeId: 'member-id',
+      }),
+    );
+    expect(tasksRepository.create).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        sprintId: null,
+        status: TaskStatus.Backlog,
+      }),
+    );
+    expect(response.data.summary.created).toBe(2);
+  });
+
+  it('rejects import rows with invalid assignee email', async () => {
+    workspaceMembersRepository.findActiveByWorkspace.mockResolvedValue([]);
+
+    await expect(
+      service.commitTaskImport('owner-id', 'workspace-id', 'project-id', {
+        items: [
+          {
+            rowNumber: 2,
+            title: 'Task loi assignee',
+            assigneeEmail: 'missing@example.com',
+          },
+        ],
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(tasksRepository.create).not.toHaveBeenCalled();
   });
 });

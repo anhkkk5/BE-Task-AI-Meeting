@@ -62,7 +62,6 @@ let AiReportDataBuilderService = class AiReportDataBuilderService {
             taskCode: task.taskCode,
             title: task.title,
             status: task.status,
-            priority: task.priority,
             sprintId: task.sprintId,
             dueDate: task.dueDate,
             estimatedHours: task.estimatedHours,

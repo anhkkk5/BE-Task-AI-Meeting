@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { TaskPriority } from '../../../common/enums/task-priority.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { DailyUpdatesRepository } from '../../daily-updates/repositories/daily-updates.repository';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
@@ -32,7 +31,6 @@ type TeamTaskInput = {
   taskCode: string;
   title: string;
   status: string;
-  priority: string;
   sprintId: string | null;
   assigneeId: string | null;
   assigneeName: string | null;
@@ -67,7 +65,6 @@ export type TeamReportInputData = {
   taskStats: Record<TaskStatus, number>;
   tasks: TeamTaskInput[];
   overdueTasks: TeamTaskInput[];
-  highPriorityTasks: TeamTaskInput[];
   blockers: {
     userId: string;
     fullName: string;
@@ -147,9 +144,6 @@ export class AiTeamReportDataBuilderService {
       taskStats: this.getTaskStats(tasks),
       tasks,
       overdueTasks: this.getOverdueTasks(tasks, reportDate),
-      highPriorityTasks: tasks.filter((task) =>
-        [TaskPriority.High, TaskPriority.Urgent].includes(task.priority),
-      ),
       blockers: dailyUpdates
         .filter((dailyUpdate) => Boolean(dailyUpdate.blockers?.trim()))
         .map((dailyUpdate) => ({
@@ -212,7 +206,6 @@ export class AiTeamReportDataBuilderService {
       taskCode: task.taskCode,
       title: task.title,
       status: task.status,
-      priority: task.priority,
       sprintId: task.sprintId,
       assigneeId: task.assigneeId,
       assigneeName:

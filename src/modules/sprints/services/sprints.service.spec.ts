@@ -4,6 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { SprintStatus } from '../../../common/enums/sprint-status.enum';
+import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { WorkspaceMember } from '../../workspaces/entities/workspace-member.entity';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
@@ -15,7 +16,10 @@ import { SprintsService } from './sprints.service';
 describe('SprintsService', () => {
   let service: SprintsService;
   let sprintsRepository: jest.Mocked<
-    Pick<SprintsRepository, 'create' | 'findByProject' | 'update'>
+    Pick<
+      SprintsRepository,
+      'create' | 'findByProject' | 'softDeleteWithTasks' | 'update'
+    >
   >;
   let sprintAccessService: jest.Mocked<
     Pick<
@@ -29,7 +33,7 @@ describe('SprintsService', () => {
   let workspaceAccessService: jest.Mocked<
     Pick<
       WorkspaceAccessService,
-      'assertWorkspaceActive' | 'assertWorkspaceMember'
+      'assertWorkspaceActive' | 'assertWorkspaceMember' | 'getUserWorkspaceRole'
     >
   >;
   let projectAccessService: jest.Mocked<
@@ -59,6 +63,7 @@ describe('SprintsService', () => {
     sprintsRepository = {
       create: jest.fn(),
       findByProject: jest.fn(),
+      softDeleteWithTasks: jest.fn(),
       update: jest.fn(),
     };
     sprintAccessService = {
@@ -70,6 +75,7 @@ describe('SprintsService', () => {
     workspaceAccessService = {
       assertWorkspaceActive: jest.fn(),
       assertWorkspaceMember: jest.fn(),
+      getUserWorkspaceRole: jest.fn(),
     };
     projectAccessService = {
       assertProjectActive: jest.fn(),
@@ -268,5 +274,52 @@ describe('SprintsService', () => {
         'sprint-id',
       ),
     ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('allows the creator to delete an inactive sprint', async () => {
+    sprintAccessService.assertSprintInProject.mockResolvedValue(sprint);
+
+    const response = await service.deleteSprint(
+      'owner-id',
+      'workspace-id',
+      'project-id',
+      'sprint-id',
+    );
+
+    expect(sprintsRepository.softDeleteWithTasks).toHaveBeenCalledWith(sprint);
+    expect(response.data).toBeNull();
+  });
+
+  it('does not allow deleting an active sprint', async () => {
+    sprintAccessService.assertSprintInProject.mockResolvedValue({
+      ...sprint,
+      status: SprintStatus.Active,
+    });
+
+    await expect(
+      service.deleteSprint(
+        'owner-id',
+        'workspace-id',
+        'project-id',
+        'sprint-id',
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(sprintsRepository.softDeleteWithTasks).not.toHaveBeenCalled();
+  });
+
+  it('allows a manager to delete a sprint created by another user', async () => {
+    sprintAccessService.assertSprintInProject.mockResolvedValue(sprint);
+    workspaceAccessService.getUserWorkspaceRole.mockResolvedValue(
+      WorkspaceRole.ProjectManager,
+    );
+
+    await service.deleteSprint(
+      'manager-id',
+      'workspace-id',
+      'project-id',
+      'sprint-id',
+    );
+
+    expect(sprintsRepository.softDeleteWithTasks).toHaveBeenCalledWith(sprint);
   });
 });

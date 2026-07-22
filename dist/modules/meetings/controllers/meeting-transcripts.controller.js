@@ -21,6 +21,7 @@ const workspace_role_enum_1 = require("../../../common/enums/workspace-role.enum
 const workspace_member_guard_1 = require("../../../common/guards/workspace-member.guard");
 const workspace_roles_guard_1 = require("../../../common/guards/workspace-roles.guard");
 const access_token_guard_1 = require("../../auth/guards/access-token.guard");
+const append_live_transcript_segment_dto_1 = require("../dto/append-live-transcript-segment.dto");
 const save_meeting_transcript_dto_1 = require("../dto/save-meeting-transcript.dto");
 const meeting_transcripts_service_1 = require("../services/meeting-transcripts.service");
 const meetingManagerRoles = [
@@ -35,6 +36,9 @@ let MeetingTranscriptsController = class MeetingTranscriptsController {
     }
     saveTranscript(user, workspaceId, projectId, meetingId, dto) {
         return this.meetingTranscriptsService.saveTranscript(user.id, workspaceId, projectId, meetingId, dto);
+    }
+    appendLiveSegment(user, workspaceId, projectId, meetingId, dto) {
+        return this.meetingTranscriptsService.appendLiveSegment(user.id, workspaceId, projectId, meetingId, dto);
     }
     getTranscript(user, workspaceId, projectId, meetingId) {
         return this.meetingTranscriptsService.getTranscript(user.id, workspaceId, projectId, meetingId);
@@ -58,6 +62,25 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String, String, save_meeting_transcript_dto_1.SaveMeetingTranscriptDto]),
     __metadata("design:returntype", void 0)
 ], MeetingTranscriptsController.prototype, "saveTranscript", null);
+__decorate([
+    (0, common_1.Post)('live-segments'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Append live transcript segment',
+        description: 'User hien tai gui mot doan transcript tu mic cua minh. Backend tu gan speaker theo JWT de AI biet ai noi gi.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'meetingId', example: 'meeting-uuid' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('meetingId')),
+    __param(4, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String, append_live_transcript_segment_dto_1.AppendLiveTranscriptSegmentDto]),
+    __metadata("design:returntype", void 0)
+], MeetingTranscriptsController.prototype, "appendLiveSegment", null);
 __decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),

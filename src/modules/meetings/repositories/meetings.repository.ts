@@ -133,6 +133,10 @@ export class MeetingsRepository {
     );
   }
 
+  async softDelete(meeting: Meeting) {
+    await this.repository.softRemove(meeting);
+  }
+
   updateTranscriptId(meeting: Meeting, mongoTranscriptId: string) {
     meeting.mongoTranscriptId = mongoTranscriptId;
     return this.repository.save(meeting);

@@ -16,6 +16,7 @@ import { MeetingsModule } from './modules/meetings/meetings.module';
 import { MembersModule } from './modules/members/members.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { SprintsModule } from './modules/sprints/sprints.module';
+import { ShiftHandoversModule } from './modules/shift-handovers/shift-handovers.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { UsersModule } from './modules/users/users.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
@@ -41,6 +42,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     TasksModule,
     DailyUpdatesModule,
     MeetingsModule,
+    ShiftHandoversModule,
     WorkspacesModule,
   ],
   controllers: [AppController],

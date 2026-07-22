@@ -14,7 +14,9 @@ import { REDIS_CLIENT } from './redis.constants';
         const client = new Redis({
           host: config.host,
           port: config.port,
+          username: config.username,
           password: config.password,
+          tls: config.tls ? {} : undefined,
           maxRetriesPerRequest: 3,
         });
 

@@ -142,6 +142,11 @@ export declare class SprintsService {
         message: string;
         data: null;
     }>;
+    deleteSprint(currentUserId: string, workspaceId: string, projectId: string, sprintId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
+    }>;
     private assertWritableProject;
     private assertDateRange;
     private toSprintResponse;

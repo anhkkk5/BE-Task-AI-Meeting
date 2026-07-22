@@ -9,7 +9,6 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { TaskPriority } from '../../../common/enums/task-priority.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 
 export class GetTasksQueryDto {
@@ -36,14 +35,6 @@ export class GetTasksQueryDto {
   @IsOptional()
   @IsUUID()
   assigneeId?: string;
-
-  @ApiPropertyOptional({
-    enum: TaskPriority,
-    example: TaskPriority.High,
-  })
-  @IsOptional()
-  @IsEnum(TaskPriority)
-  priority?: TaskPriority;
 
   @ApiPropertyOptional({
     example: 'api',

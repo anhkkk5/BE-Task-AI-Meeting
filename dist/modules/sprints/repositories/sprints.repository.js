@@ -17,11 +17,14 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const sprint_status_enum_1 = require("../../../common/enums/sprint-status.enum");
+const task_entity_1 = require("../../tasks/entities/task.entity");
 const sprint_entity_1 = require("../entities/sprint.entity");
 let SprintsRepository = class SprintsRepository {
     repository;
-    constructor(repository) {
+    dataSource;
+    constructor(repository, dataSource) {
         this.repository = repository;
+        this.dataSource = dataSource;
     }
     create(data) {
         const sprint = this.repository.create({
@@ -76,11 +79,20 @@ let SprintsRepository = class SprintsRepository {
         Object.assign(sprint, data);
         return this.repository.save(sprint);
     }
+    async softDeleteWithTasks(sprint) {
+        await this.dataSource.transaction(async (manager) => {
+            await manager
+                .getRepository(task_entity_1.Task)
+                .update({ sprintId: sprint.id }, { sprintId: null });
+            await manager.getRepository(sprint_entity_1.Sprint).softRemove(sprint);
+        });
+    }
 };
 exports.SprintsRepository = SprintsRepository;
 exports.SprintsRepository = SprintsRepository = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(sprint_entity_1.Sprint)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.DataSource])
 ], SprintsRepository);
 //# sourceMappingURL=sprints.repository.js.map

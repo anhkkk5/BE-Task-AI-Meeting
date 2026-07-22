@@ -45,7 +45,6 @@ export type PersonalReportInputData = {
         taskCode: string;
         title: string;
         status: string;
-        priority: string;
         sprintId: string | null;
         dueDate: string | null;
         estimatedHours: number | null;
@@ -112,7 +111,6 @@ export declare class AiReportDataBuilderService {
             taskCode: string;
             title: string;
             status: TaskStatus;
-            priority: import("../../../common/enums/task-priority.enum").TaskPriority;
             sprintId: string | null;
             dueDate: string | null;
             estimatedHours: number | null;

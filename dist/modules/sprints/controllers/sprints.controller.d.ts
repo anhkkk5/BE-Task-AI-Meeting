@@ -136,4 +136,9 @@ export declare class SprintsController {
         message: string;
         data: null;
     }>;
+    deleteSprint(user: AuthUser, workspaceId: string, projectId: string, sprintId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
+    }>;
 }

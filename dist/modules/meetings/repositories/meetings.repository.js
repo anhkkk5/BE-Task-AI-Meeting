@@ -100,6 +100,9 @@ let MeetingsRepository = class MeetingsRepository {
         return ((await this.findByIdAndProject(savedMeeting.id, meeting.projectId)) ??
             savedMeeting);
     }
+    async softDelete(meeting) {
+        await this.repository.softRemove(meeting);
+    }
     updateTranscriptId(meeting, mongoTranscriptId) {
         meeting.mongoTranscriptId = mongoTranscriptId;
         return this.repository.save(meeting);

@@ -1,0 +1,36 @@
+
+> backend@0.0.1 start:dev
+> nest start --watch
+
+[2J[3J[H[[90m11:28:01 AM[0m] Starting compilation in watch mode...
+
+[[90m11:28:07 AM[0m] Found 0 errors. Watching for file changes.
+
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] TypeOrmModule dependencies initialized +91ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] MongooseModule dependencies initialized +2ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] RedisModule dependencies initialized +1ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] PassportModule dependencies initialized +1ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] ConfigHostModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] JwtModule dependencies initialized +1ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] JwtModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] ConfigModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] TypeOrmCoreModule dependencies initialized +66ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] TypeOrmModule dependencies initialized +1ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] TypeOrmModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] TypeOrmModule dependencies initialized +1ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] TypeOrmModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] TypeOrmModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] TypeOrmModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] TypeOrmModule dependencies initialized +1ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] TypeOrmModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] TypeOrmModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] UsersModule dependencies initialized +4ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] WorkspacesModule dependencies initialized +1ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] ProjectsModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] SprintsModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] AuthModule dependencies initialized +1ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] MembersModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] ShiftHandoversModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] DailyUpdatesModule dependencies initialized +0ms
+[Nest] 19108  - 07/19/2026, 11:28:10 AM     LOG [InstanceLoader] TasksModule dependencies initialized +0ms

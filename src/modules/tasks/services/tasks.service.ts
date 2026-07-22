@@ -1,11 +1,20 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { TaskPriority } from '../../../common/enums/task-priority.enum';
+import ExcelJS from 'exceljs';
+import { SprintStatus } from '../../../common/enums/sprint-status.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
-import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { Sprint } from '../../sprints/entities/sprint.entity';
+import { SprintsRepository } from '../../sprints/repositories/sprints.repository';
+import { WorkspaceMember } from '../../workspaces/entities/workspace-member.entity';
+import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
+import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { AssignTaskDto } from '../dto/assign-task.dto';
 import { CreateTaskDto } from '../dto/create-task.dto';
 import { GetTasksQueryDto } from '../dto/get-tasks-query.dto';
+import {
+  CommitTaskImportDto,
+  TaskImportItemDto,
+} from '../dto/import-tasks.dto';
 import { MoveTaskSprintDto } from '../dto/move-task-sprint.dto';
 import { UpdateTaskStatusDto } from '../dto/update-task-status.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
@@ -13,6 +22,108 @@ import { Task } from '../entities/task.entity';
 import { TasksRepository } from '../repositories/tasks.repository';
 import { TaskAccessService } from './task-access.service';
 import { TaskCodeService } from './task-code.service';
+
+type UploadedExcelFile = {
+  buffer: Buffer;
+  originalname?: string;
+  mimetype?: string;
+  size?: number;
+};
+
+type ImportField =
+  | 'title'
+  | 'description'
+  | 'sprintId'
+  | 'sprintName'
+  | 'status'
+  | 'assigneeId'
+  | 'assigneeEmail'
+  | 'dueDate'
+  | 'estimatedHours'
+  | 'storyPoints';
+
+type ImportRawRow = Record<ImportField, string>;
+
+type ImportPreviewRow = {
+  rowNumber: number;
+  valid: boolean;
+  errors: string[];
+  data: TaskImportItemDto;
+  raw: ImportRawRow;
+};
+
+type ImportContext = {
+  membersById: Map<string, WorkspaceMember>;
+  membersByEmail: Map<string, WorkspaceMember>;
+  sprintsById: Map<string, Sprint>;
+  sprintsByName: Map<string, Sprint[]>;
+};
+
+const importFields: ImportField[] = [
+  'title',
+  'description',
+  'sprintId',
+  'sprintName',
+  'status',
+  'assigneeId',
+  'assigneeEmail',
+  'dueDate',
+  'estimatedHours',
+  'storyPoints',
+];
+
+const importHeaderAliases: Record<ImportField, string[]> = {
+  title: ['title', 'tieu de', 'ten task', 'task title', 'summary'],
+  description: ['description', 'mo ta', 'noi dung'],
+  sprintId: ['sprint id', 'sprintid'],
+  sprintName: ['sprint name', 'sprint', 'ten sprint'],
+  status: ['status', 'trang thai'],
+  assigneeId: ['assignee id', 'assigneeid', 'nguoi nhan id'],
+  assigneeEmail: [
+    'assignee email',
+    'assignee',
+    'email nguoi nhan',
+    'nguoi nhan',
+  ],
+  dueDate: ['due date', 'duedate', 'han hoan thanh', 'deadline'],
+  estimatedHours: ['estimated hours', 'estimatedhours', 'gio du kien'],
+  storyPoints: ['story points', 'storypoints', 'point'],
+};
+
+const taskStatusLookup = new Map<string, TaskStatus>([
+  ['backlog', TaskStatus.Backlog],
+  ['todo', TaskStatus.Todo],
+  ['canlam', TaskStatus.Todo],
+  ['dangcho', TaskStatus.Todo],
+  ['inprogress', TaskStatus.InProgress],
+  ['danglam', TaskStatus.InProgress],
+  ['review', TaskStatus.Review],
+  ['dangreview', TaskStatus.Review],
+  ['done', TaskStatus.Done],
+  ['hoanthanh', TaskStatus.Done],
+  ['cancelled', TaskStatus.Cancelled],
+  ['canceled', TaskStatus.Cancelled],
+  ['dahuy', TaskStatus.Cancelled],
+]);
+
+const normalizedImportHeaders = new Map<string, ImportField>(
+  importFields.flatMap((field) =>
+    importHeaderAliases[field].map((alias) => [
+      normalizeLookupText(alias),
+      field,
+    ]),
+  ),
+);
+
+function normalizeLookupText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
 
 @Injectable()
 export class TasksService {
@@ -22,6 +133,8 @@ export class TasksService {
     private readonly taskCodeService: TaskCodeService,
     private readonly workspaceAccessService: WorkspaceAccessService,
     private readonly projectAccessService: ProjectAccessService,
+    private readonly workspaceMembersRepository: WorkspaceMembersRepository,
+    private readonly sprintsRepository: SprintsRepository,
   ) {}
 
   async createTask(
@@ -58,7 +171,6 @@ export class TasksService {
       title: dto.title.trim(),
       description: dto.description?.trim() || null,
       status: dto.sprintId ? TaskStatus.Todo : TaskStatus.Backlog,
-      priority: dto.priority ?? TaskPriority.Medium,
       assigneeId: dto.assigneeId ?? null,
       createdBy: currentUserId,
       dueDate: dto.dueDate ?? null,
@@ -71,6 +183,267 @@ export class TasksService {
       message: 'Create task successfully',
       data: {
         task: this.toTaskResponse(task),
+      },
+    };
+  }
+
+  async createTaskImportTemplate(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+  ) {
+    const project = await this.assertWritableProject(workspaceId, projectId);
+    await this.workspaceAccessService.assertWorkspaceMember(
+      currentUserId,
+      workspaceId,
+    );
+    const context = await this.buildImportContext(workspaceId, projectId);
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Agile AI';
+    workbook.created = new Date();
+
+    const sheet = workbook.addWorksheet('Backlog import');
+    sheet.columns = [
+      { header: 'title', key: 'title', width: 36 },
+      { header: 'description', key: 'description', width: 48 },
+      { header: 'sprintName', key: 'sprintName', width: 28 },
+      { header: 'sprintId', key: 'sprintId', width: 40 },
+      { header: 'status', key: 'status', width: 18 },
+      { header: 'assigneeEmail', key: 'assigneeEmail', width: 32 },
+      { header: 'dueDate', key: 'dueDate', width: 16 },
+      { header: 'storyPoints', key: 'storyPoints', width: 14 },
+      { header: 'estimatedHours', key: 'estimatedHours', width: 16 },
+    ];
+
+    sheet.addRow({
+      title: 'Thiết kế backlog giống Jira',
+      description: 'Tạo task trong sprint bằng file Excel',
+      sprintName: 'Sprint 1',
+      sprintId: '',
+      status: 'TODO',
+      assigneeEmail: 'member@example.com',
+      dueDate: '2026-07-20',
+      storyPoints: 3,
+      estimatedHours: 4,
+    });
+    sheet.addRow({
+      title: 'Task chưa gán sprint',
+      description: 'Dòng này sẽ nằm trong Backlog',
+      sprintName: '',
+      sprintId: '',
+      status: 'BACKLOG',
+      assigneeEmail: '',
+      dueDate: '2026-07-22',
+      storyPoints: 2,
+      estimatedHours: 2,
+    });
+
+    sheet.getRow(1).font = { bold: true, color: { argb: '172B4D' } };
+    sheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'E9F2FF' },
+    };
+    sheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+    const guideSheet = workbook.addWorksheet('Hướng dẫn');
+    guideSheet.columns = [
+      { header: 'Mục', key: 'name', width: 28 },
+      { header: 'Giá trị / Ghi chú', key: 'value', width: 90 },
+    ];
+    guideSheet.addRows([
+      {
+        name: 'Project',
+        value: `${project.name ?? project.keyCode} (${project.id})`,
+      },
+      {
+        name: 'Cột bắt buộc',
+        value: 'title. Các cột còn lại có thể để trống.',
+      },
+      {
+        name: 'Status',
+        value:
+          'BACKLOG, TODO, IN_PROGRESS, REVIEW, DONE. Không import CANCELLED.',
+      },
+      {
+        name: 'Priority',
+        value: 'LOW, MEDIUM, HIGH, URGENT.',
+      },
+      {
+        name: 'Sprint',
+        value:
+          'Điền sprintId để chắc chắn nhất. Nếu dùng sprintName thì tên sprint phải không bị trùng.',
+      },
+      {
+        name: 'Assignee',
+        value: 'Điền assigneeEmail của thành viên ACTIVE trong workspace.',
+      },
+      {
+        name: 'Ngày',
+        value: 'Dùng định dạng YYYY-MM-DD, ví dụ 2026-07-20.',
+      },
+    ]);
+    guideSheet.getRow(1).font = { bold: true };
+
+    const sprintSheet = workbook.addWorksheet('Sprints');
+    sprintSheet.columns = [
+      { header: 'sprintName', key: 'name', width: 32 },
+      { header: 'sprintId', key: 'id', width: 40 },
+      { header: 'status', key: 'status', width: 18 },
+    ];
+    [...context.sprintsById.values()].forEach((sprint) => {
+      sprintSheet.addRow({
+        name: sprint.name,
+        id: sprint.id,
+        status: sprint.status,
+      });
+    });
+    sprintSheet.getRow(1).font = { bold: true };
+
+    const memberSheet = workbook.addWorksheet('Members');
+    memberSheet.columns = [
+      { header: 'fullName', key: 'fullName', width: 28 },
+      { header: 'email', key: 'email', width: 34 },
+      { header: 'userId', key: 'userId', width: 40 },
+    ];
+    [...context.membersById.values()].forEach((member) => {
+      memberSheet.addRow({
+        fullName: member.user?.fullName ?? '',
+        email: member.user?.email ?? '',
+        userId: member.userId,
+      });
+    });
+    memberSheet.getRow(1).font = { bold: true };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    return Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+  }
+
+  async previewTaskImport(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    file: UploadedExcelFile | undefined,
+  ) {
+    await this.assertWritableProject(workspaceId, projectId);
+    await this.workspaceAccessService.assertWorkspaceMember(
+      currentUserId,
+      workspaceId,
+    );
+
+    if (!file?.buffer) {
+      throw new BadRequestException('Vui lòng chọn file Excel.');
+    }
+
+    if (file.size && file.size > 2 * 1024 * 1024) {
+      throw new BadRequestException('File Excel không được vượt quá 2MB.');
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(Uint8Array.from(file.buffer).buffer);
+    const worksheet =
+      workbook.getWorksheet('Backlog import') ?? workbook.worksheets[0];
+
+    if (!worksheet) {
+      throw new BadRequestException('File Excel không có worksheet dữ liệu.');
+    }
+
+    const headerMap = this.getImportHeaderMap(worksheet.getRow(1));
+
+    if (!headerMap.has('title')) {
+      throw new BadRequestException('File Excel thiếu cột title.');
+    }
+
+    const context = await this.buildImportContext(workspaceId, projectId);
+    const rows: ImportPreviewRow[] = [];
+
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      const raw = this.readImportRawRow(row, headerMap);
+
+      if (this.isEmptyImportRawRow(raw)) return;
+      rows.push(this.validateImportRawRow(rowNumber, raw, context));
+    });
+
+    if (rows.length > 200) {
+      throw new BadRequestException('Mỗi lần chỉ import tối đa 200 dòng task.');
+    }
+
+    const validRows = rows.filter((row) => row.valid).length;
+
+    return {
+      success: true,
+      message: 'Preview task import successfully',
+      data: {
+        items: rows,
+        summary: {
+          totalRows: rows.length,
+          validRows,
+          invalidRows: rows.length - validRows,
+        },
+      },
+    };
+  }
+
+  async commitTaskImport(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    dto: CommitTaskImportDto,
+  ) {
+    const project = await this.assertWritableProject(workspaceId, projectId);
+    await this.workspaceAccessService.assertWorkspaceMember(
+      currentUserId,
+      workspaceId,
+    );
+    const context = await this.buildImportContext(workspaceId, projectId);
+
+    const checkedRows = dto.items.map((item, index) =>
+      this.validateImportRawRow(
+        item.rowNumber ?? index + 2,
+        this.importItemToRawRow(item),
+        context,
+      ),
+    );
+    const invalidMessages = checkedRows.flatMap((row) =>
+      row.errors.map((error) => `Dòng ${row.rowNumber}: ${error}`),
+    );
+
+    if (invalidMessages.length > 0) {
+      throw new BadRequestException(invalidMessages);
+    }
+
+    const tasks: Task[] = [];
+
+    for (const row of checkedRows) {
+      const item = row.data;
+      const taskCode = await this.taskCodeService.generateTaskCode(project);
+      const task = await this.tasksRepository.create({
+        projectId,
+        sprintId: item.sprintId ?? null,
+        taskCode,
+        title: item.title.trim(),
+        description: item.description?.trim() || null,
+        status:
+          item.status ?? (item.sprintId ? TaskStatus.Todo : TaskStatus.Backlog),
+        assigneeId: item.assigneeId ?? null,
+        createdBy: currentUserId,
+        dueDate: item.dueDate ?? null,
+        estimatedHours: item.estimatedHours ?? null,
+        storyPoints: item.storyPoints ?? null,
+      });
+      tasks.push(task);
+    }
+
+    return {
+      success: true,
+      message: 'Import tasks successfully',
+      data: {
+        items: tasks.map((task) => this.toTaskResponse(task)),
+        summary: {
+          created: tasks.length,
+        },
       },
     };
   }
@@ -215,7 +588,6 @@ export class TasksService {
         dto.description === undefined
           ? task.description
           : dto.description.trim() || null,
-      priority: dto.priority ?? task.priority,
       dueDate: dto.dueDate ?? task.dueDate,
       estimatedHours: dto.estimatedHours ?? task.estimatedHours,
       storyPoints: dto.storyPoints ?? task.storyPoints,
@@ -379,6 +751,453 @@ export class TasksService {
     };
   }
 
+  async deleteTask(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    taskId: string,
+  ) {
+    await this.projectAccessService.assertProjectInWorkspace(
+      projectId,
+      workspaceId,
+    );
+    const task = await this.taskAccessService.assertTaskInProject(
+      taskId,
+      projectId,
+    );
+    await this.taskAccessService.assertUserCanDeleteTask(
+      currentUserId,
+      workspaceId,
+      task,
+    );
+    await this.tasksRepository.softDelete(task);
+
+    return {
+      success: true,
+      message: 'Delete task successfully',
+      data: null,
+    };
+  }
+
+  private async buildImportContext(
+    workspaceId: string,
+    projectId: string,
+  ): Promise<ImportContext> {
+    const [members, sprintsResult] = await Promise.all([
+      this.workspaceMembersRepository.findActiveByWorkspace(workspaceId),
+      this.sprintsRepository.findByProject(projectId, { page: 1, limit: 500 }),
+    ]);
+    const membersById = new Map<string, WorkspaceMember>();
+    const membersByEmail = new Map<string, WorkspaceMember>();
+    const sprintsById = new Map<string, Sprint>();
+    const sprintsByName = new Map<string, Sprint[]>();
+
+    members.forEach((member) => {
+      membersById.set(member.userId, member);
+
+      if (member.user?.email) {
+        membersByEmail.set(member.user.email.trim().toLowerCase(), member);
+      }
+    });
+
+    sprintsResult.items.forEach((sprint) => {
+      sprintsById.set(sprint.id, sprint);
+      const sprintNameKey = normalizeLookupText(sprint.name);
+      const existing = sprintsByName.get(sprintNameKey) ?? [];
+      existing.push(sprint);
+      sprintsByName.set(sprintNameKey, existing);
+    });
+
+    return {
+      membersById,
+      membersByEmail,
+      sprintsById,
+      sprintsByName,
+    };
+  }
+
+  private getImportHeaderMap(row: ExcelJS.Row) {
+    const headerMap = new Map<ImportField, number>();
+
+    row.eachCell((cell, columnNumber) => {
+      const field = normalizedImportHeaders.get(
+        normalizeLookupText(this.cellToText(cell)),
+      );
+
+      if (field && !headerMap.has(field)) {
+        headerMap.set(field, columnNumber);
+      }
+    });
+
+    return headerMap;
+  }
+
+  private readImportRawRow(
+    row: ExcelJS.Row,
+    headerMap: Map<ImportField, number>,
+  ): ImportRawRow {
+    const raw = {} as ImportRawRow;
+
+    importFields.forEach((field) => {
+      const columnNumber = headerMap.get(field);
+      raw[field] = columnNumber
+        ? this.cellToText(row.getCell(columnNumber))
+        : '';
+    });
+
+    return raw;
+  }
+
+  private importItemToRawRow(item: TaskImportItemDto): ImportRawRow {
+    return {
+      title: item.title ?? '',
+      description: item.description ?? '',
+      sprintId: item.sprintId ?? '',
+      sprintName: item.sprintName ?? '',
+      status: item.status ?? '',
+      assigneeId: item.assigneeId ?? '',
+      assigneeEmail: item.assigneeEmail ?? '',
+      dueDate: item.dueDate ?? '',
+      estimatedHours:
+        item.estimatedHours === null || item.estimatedHours === undefined
+          ? ''
+          : String(item.estimatedHours),
+      storyPoints:
+        item.storyPoints === null || item.storyPoints === undefined
+          ? ''
+          : String(item.storyPoints),
+    };
+  }
+
+  private validateImportRawRow(
+    rowNumber: number,
+    raw: ImportRawRow,
+    context: ImportContext,
+  ): ImportPreviewRow {
+    const errors: string[] = [];
+    const title = raw.title.trim();
+    const sprintId = this.resolveImportSprintId(raw, context, errors);
+    const assigneeId = this.resolveImportAssigneeId(raw, context, errors);
+    const status = this.resolveImportStatus(raw.status, sprintId, errors);
+    const dueDate = this.resolveImportDate(raw.dueDate, errors);
+    const estimatedHours = this.resolveImportNumber(
+      raw.estimatedHours,
+      'estimatedHours',
+      errors,
+    );
+    const storyPoints = this.resolveImportInteger(
+      raw.storyPoints,
+      'storyPoints',
+      errors,
+    );
+
+    if (title.length < 2) {
+      errors.push('title phải có ít nhất 2 ký tự.');
+    }
+
+    if (title.length > 200) {
+      errors.push('title không được vượt quá 200 ký tự.');
+    }
+
+    if (raw.description.trim().length > 2000) {
+      errors.push('description không được vượt quá 2000 ký tự.');
+    }
+
+    if (sprintId && status === TaskStatus.Backlog) {
+      errors.push('Task có sprint không được để status BACKLOG.');
+    }
+
+    if (!sprintId && status !== TaskStatus.Backlog) {
+      errors.push('Task chưa gán sprint chỉ được để status BACKLOG.');
+    }
+
+    if (status === TaskStatus.Cancelled) {
+      errors.push('Không import task ở trạng thái CANCELLED.');
+    }
+
+    return {
+      rowNumber,
+      valid: errors.length === 0,
+      errors,
+      data: {
+        rowNumber,
+        title,
+        description: raw.description.trim() || null,
+        sprintId,
+        sprintName: raw.sprintName.trim() || null,
+        status,
+        assigneeId,
+        assigneeEmail: raw.assigneeEmail.trim() || null,
+        dueDate,
+        estimatedHours,
+        storyPoints,
+      },
+      raw,
+    };
+  }
+
+  private resolveImportSprintId(
+    raw: ImportRawRow,
+    context: ImportContext,
+    errors: string[],
+  ) {
+    const sprintId = raw.sprintId.trim();
+    const sprintName = raw.sprintName.trim();
+
+    if (sprintId) {
+      const sprint = context.sprintsById.get(sprintId);
+
+      if (!sprint) {
+        errors.push('sprintId không tồn tại trong project này.');
+        return null;
+      }
+
+      this.assertImportSprintCanReceiveTask(sprint, errors);
+      return sprint.id;
+    }
+
+    if (!sprintName) {
+      return null;
+    }
+
+    const matchedSprints = context.sprintsByName.get(
+      normalizeLookupText(sprintName),
+    );
+
+    if (!matchedSprints?.length) {
+      errors.push('sprintName không khớp sprint nào trong project.');
+      return null;
+    }
+
+    if (matchedSprints.length > 1) {
+      errors.push('sprintName bị trùng, hãy dùng sprintId để tránh nhầm.');
+      return null;
+    }
+
+    const sprint = matchedSprints[0];
+    this.assertImportSprintCanReceiveTask(sprint, errors);
+    return sprint.id;
+  }
+
+  private assertImportSprintCanReceiveTask(sprint: Sprint, errors: string[]) {
+    if (
+      sprint.status === SprintStatus.Completed ||
+      sprint.status === SprintStatus.Cancelled
+    ) {
+      errors.push('Sprint đã hoàn thành/hủy không thể nhận thêm task.');
+    }
+  }
+
+  private resolveImportAssigneeId(
+    raw: ImportRawRow,
+    context: ImportContext,
+    errors: string[],
+  ) {
+    const assigneeId = raw.assigneeId.trim();
+    const assigneeEmail = raw.assigneeEmail.trim().toLowerCase();
+
+    if (assigneeId) {
+      if (!context.membersById.has(assigneeId)) {
+        errors.push('assigneeId không phải thành viên ACTIVE của workspace.');
+        return null;
+      }
+
+      return assigneeId;
+    }
+
+    if (!assigneeEmail) {
+      return null;
+    }
+
+    const member = context.membersByEmail.get(assigneeEmail);
+
+    if (!member) {
+      errors.push('assigneeEmail không phải thành viên ACTIVE của workspace.');
+      return null;
+    }
+
+    return member.userId;
+  }
+
+  private resolveImportStatus(
+    value: string,
+    sprintId: string | null,
+    errors: string[],
+  ) {
+    if (!value.trim()) {
+      return sprintId ? TaskStatus.Todo : TaskStatus.Backlog;
+    }
+
+    const status = taskStatusLookup.get(normalizeLookupText(value));
+
+    if (!status) {
+      errors.push('status không hợp lệ.');
+      return sprintId ? TaskStatus.Todo : TaskStatus.Backlog;
+    }
+
+    return status;
+  }
+
+  private resolveImportDate(value: string, errors: string[]) {
+    const rawValue = value.trim();
+
+    if (!rawValue) {
+      return null;
+    }
+
+    const isoMatch = rawValue.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    const vnMatch = rawValue.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+
+    if (isoMatch) {
+      return this.normalizeDateParts(
+        Number(isoMatch[1]),
+        Number(isoMatch[2]),
+        Number(isoMatch[3]),
+        errors,
+      );
+    }
+
+    if (vnMatch) {
+      return this.normalizeDateParts(
+        Number(vnMatch[3]),
+        Number(vnMatch[2]),
+        Number(vnMatch[1]),
+        errors,
+      );
+    }
+
+    errors.push('dueDate phải theo định dạng YYYY-MM-DD.');
+    return null;
+  }
+
+  private normalizeDateParts(
+    year: number,
+    month: number,
+    day: number,
+    errors: string[],
+  ) {
+    const date = new Date(Date.UTC(year, month - 1, day));
+
+    if (
+      date.getUTCFullYear() !== year ||
+      date.getUTCMonth() !== month - 1 ||
+      date.getUTCDate() !== day
+    ) {
+      errors.push('dueDate không phải ngày hợp lệ.');
+      return null;
+    }
+
+    const monthText = String(month).padStart(2, '0');
+    const dayText = String(day).padStart(2, '0');
+    return `${year}-${monthText}-${dayText}`;
+  }
+
+  private resolveImportNumber(
+    value: string,
+    fieldName: string,
+    errors: string[],
+  ) {
+    const rawValue = value.trim();
+
+    if (!rawValue) {
+      return null;
+    }
+
+    const numberValue = Number(rawValue.replace(',', '.'));
+
+    if (!Number.isFinite(numberValue) || numberValue < 0) {
+      errors.push(`${fieldName} phải là số không âm.`);
+      return null;
+    }
+
+    return numberValue;
+  }
+
+  private resolveImportInteger(
+    value: string,
+    fieldName: string,
+    errors: string[],
+  ) {
+    const numberValue = this.resolveImportNumber(value, fieldName, errors);
+
+    if (numberValue === null) {
+      return null;
+    }
+
+    if (!Number.isInteger(numberValue)) {
+      errors.push(`${fieldName} phải là số nguyên.`);
+      return null;
+    }
+
+    return numberValue;
+  }
+
+  private isEmptyImportRawRow(raw: ImportRawRow) {
+    return importFields.every((field) => raw[field].trim() === '');
+  }
+
+  private cellToText(cell: ExcelJS.Cell) {
+    const value = cell.value;
+
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    if (value instanceof Date) {
+      return this.formatDateOnly(value);
+    }
+
+    if (typeof value === 'object') {
+      const record = value as unknown as Record<string, unknown>;
+
+      if (typeof record.text === 'string') {
+        return record.text.trim();
+      }
+
+      if (record.result instanceof Date) {
+        return this.formatDateOnly(record.result);
+      }
+
+      if (
+        typeof record.result === 'string' ||
+        typeof record.result === 'number'
+      ) {
+        return String(record.result).trim();
+      }
+
+      if (Array.isArray(record.richText)) {
+        return record.richText
+          .map((item) => {
+            if (typeof item !== 'object' || item === null) {
+              return '';
+            }
+
+            const richItem = item as Record<string, unknown>;
+            return typeof richItem.text === 'string' ? richItem.text : '';
+          })
+          .join('')
+          .trim();
+      }
+    }
+
+    if (
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+    ) {
+      return String(value).trim();
+    }
+
+    return '';
+  }
+
+  private formatDateOnly(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   private async assertWritableProject(workspaceId: string, projectId: string) {
     await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
     return this.projectAccessService.assertProjectActive(
@@ -407,7 +1226,6 @@ export class TasksService {
       title: task.title,
       description: task.description,
       status: task.status,
-      priority: task.priority,
       assigneeId: task.assigneeId,
       assignee: task.assignee
         ? {

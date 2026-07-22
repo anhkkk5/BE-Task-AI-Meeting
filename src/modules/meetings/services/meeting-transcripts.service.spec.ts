@@ -6,6 +6,7 @@ import { ProjectAccessService } from '../../projects/services/project-access.ser
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { Meeting } from '../entities/meeting.entity';
 import { MeetingsRepository } from '../repositories/meetings.repository';
+import { MeetingParticipantsRepository } from '../repositories/meeting-participants.repository';
 import { MeetingTranscriptDocument } from '../schemas/meeting-transcript.schema';
 import { MeetingAccessService } from './meeting-access.service';
 import { MeetingTranscriptsService } from './meeting-transcripts.service';
@@ -20,6 +21,9 @@ describe('MeetingTranscriptsService', () => {
   let transcriptModel: jest.Mocked<TranscriptModelMock>;
   let meetingsRepository: jest.Mocked<
     Pick<MeetingsRepository, 'updateTranscriptId'>
+  >;
+  let meetingParticipantsRepository: jest.Mocked<
+    Pick<MeetingParticipantsRepository, 'findByMeetingAndUser'>
   >;
   let meetingAccessService: jest.Mocked<
     Pick<
@@ -66,9 +70,11 @@ describe('MeetingTranscriptsService', () => {
     sprintId: null,
     rawTranscript: 'Nguyen Van A: Daily scrum',
     speakers: [],
+    liveSegments: [],
     createdBy: 'owner-id',
     createdAt: new Date('2026-06-20T00:00:00.000Z'),
     updatedAt: new Date('2026-06-20T00:00:00.000Z'),
+    save: jest.fn().mockResolvedValue(undefined),
   } as unknown as MeetingTranscriptDocument;
 
   beforeEach(() => {
@@ -79,6 +85,9 @@ describe('MeetingTranscriptsService', () => {
     };
     meetingsRepository = {
       updateTranscriptId: jest.fn(),
+    };
+    meetingParticipantsRepository = {
+      findByMeetingAndUser: jest.fn(),
     };
     meetingAccessService = {
       assertMeetingEditable: jest.fn(),
@@ -101,10 +110,18 @@ describe('MeetingTranscriptsService', () => {
       exec: jest.fn().mockResolvedValue(transcript),
     } as never);
     meetingAccessService.assertMeetingInProject.mockResolvedValue(meeting);
+    meetingParticipantsRepository.findByMeetingAndUser.mockResolvedValue({
+      userId: 'owner-id',
+      user: {
+        fullName: 'Nguyen Van A',
+        email: 'owner@example.com',
+      },
+    } as never);
 
     service = new MeetingTranscriptsService(
       transcriptModel as unknown as Model<MeetingTranscriptDocument>,
       meetingsRepository as unknown as MeetingsRepository,
+      meetingParticipantsRepository as unknown as MeetingParticipantsRepository,
       meetingAccessService as unknown as MeetingAccessService,
       workspaceAccessService as unknown as WorkspaceAccessService,
       projectAccessService as unknown as ProjectAccessService,
@@ -115,6 +132,7 @@ describe('MeetingTranscriptsService', () => {
     const disabledService = new MeetingTranscriptsService(
       null,
       meetingsRepository as unknown as MeetingsRepository,
+      meetingParticipantsRepository as unknown as MeetingParticipantsRepository,
       meetingAccessService as unknown as MeetingAccessService,
       workspaceAccessService as unknown as WorkspaceAccessService,
       projectAccessService as unknown as ProjectAccessService,
@@ -185,5 +203,36 @@ describe('MeetingTranscriptsService', () => {
     expect(response.data.transcript.rawTranscript).toBe(
       'Nguyen Van A: Daily scrum',
     );
+  });
+
+  it('appends live segment and rebuilds speaker transcript by current user', async () => {
+    meetingAccessService.assertMeetingInProject.mockResolvedValue({
+      ...meeting,
+      mongoTranscriptId: transcriptId.toString(),
+    });
+
+    const response = await service.appendLiveSegment(
+      'owner-id',
+      'workspace-id',
+      'project-id',
+      'meeting-id',
+      {
+        text: ' Em da import backlog tu Excel ',
+        startedAt: '2026-06-20T08:00:00.000Z',
+      },
+    );
+
+    expect(meetingAccessService.assertUserCanViewMeeting).toHaveBeenCalledWith(
+      'owner-id',
+      'workspace-id',
+    );
+    expect(transcriptModel.findById).toHaveBeenCalledWith(
+      transcriptId.toString(),
+    );
+    expect(transcript.save).toHaveBeenCalled();
+    expect(response.data.transcript.rawTranscript).toContain(
+      'Nguyen Van A: Em da import backlog tu Excel',
+    );
+    expect(response.data.transcript.liveSegments).toHaveLength(1);
   });
 });

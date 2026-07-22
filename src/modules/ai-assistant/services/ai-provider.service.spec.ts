@@ -1,8 +1,56 @@
 import { AiProviderService } from './ai-provider.service';
+import { PersonalizedMeetingSummaryInputData } from './ai-personalized-meeting-summary-data-builder.service';
 import { PersonalReportInputData } from './ai-report-data-builder.service';
 import { TeamReportInputData } from './ai-team-report-data-builder.service';
 
 describe('AiProviderService', () => {
+  const originalAiProvider = process.env.AI_PROVIDER;
+  const originalAiApiKey = process.env.AI_API_KEY;
+  const originalAiModel = process.env.AI_MODEL;
+
+  const restoreEnv = (key: string, value: string | undefined) => {
+    if (value === undefined) {
+      delete process.env[key];
+      return;
+    }
+
+    process.env[key] = value;
+  };
+
+  const mockGroqResponse = (output: object) =>
+    jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: jest.fn().mockResolvedValue(
+        JSON.stringify({
+          model: 'test-groq-model',
+          choices: [
+            {
+              message: {
+                content: JSON.stringify(output),
+              },
+            },
+          ],
+        }),
+      ),
+    } as unknown as Response);
+
+  beforeEach(() => {
+    process.env.AI_PROVIDER = 'mock';
+    delete process.env.AI_API_KEY;
+    delete process.env.AI_MODEL;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  afterAll(() => {
+    restoreEnv('AI_PROVIDER', originalAiProvider);
+    restoreEnv('AI_API_KEY', originalAiApiKey);
+    restoreEnv('AI_MODEL', originalAiModel);
+  });
+
   const inputData: PersonalReportInputData = {
     user: {
       id: 'member-id',
@@ -38,7 +86,6 @@ describe('AiProviderService', () => {
         taskCode: 'AGILEAI-1',
         title: 'Code API tao task',
         status: 'DONE',
-        priority: 'HIGH',
         sprintId: null,
         dueDate: '2026-06-20',
         estimatedHours: 6,
@@ -49,7 +96,6 @@ describe('AiProviderService', () => {
         taskCode: 'AGILEAI-2',
         title: 'Viet test task',
         status: 'IN_PROGRESS',
-        priority: 'MEDIUM',
         sprintId: null,
         dueDate: '2026-06-21',
         estimatedHours: 4,
@@ -131,7 +177,6 @@ describe('AiProviderService', () => {
         taskCode: 'AGILEAI-1',
         title: 'API daily update',
         status: 'DONE',
-        priority: 'HIGH',
         sprintId: 'sprint-id',
         assigneeId: 'member-id',
         assigneeName: 'Nguyen Van A',
@@ -144,7 +189,6 @@ describe('AiProviderService', () => {
         taskCode: 'AGILEAI-2',
         title: 'Meeting Module',
         status: 'IN_PROGRESS',
-        priority: 'URGENT',
         sprintId: 'sprint-id',
         assigneeId: 'member-id-2',
         assigneeName: 'Nguyen Van B',
@@ -159,7 +203,6 @@ describe('AiProviderService', () => {
         taskCode: 'AGILEAI-2',
         title: 'Meeting Module',
         status: 'IN_PROGRESS',
-        priority: 'URGENT',
         sprintId: 'sprint-id',
         assigneeId: 'member-id-2',
         assigneeName: 'Nguyen Van B',
@@ -168,8 +211,76 @@ describe('AiProviderService', () => {
         storyPoints: 5,
       },
     ],
-    highPriorityTasks: [],
     blockers: [],
+  };
+  const personalizedMeetingInputData: PersonalizedMeetingSummaryInputData = {
+    workspace: {
+      id: 'workspace-id',
+      name: 'Agile AI',
+      slug: 'agile-ai',
+    },
+    project: {
+      id: 'project-id',
+      name: 'Project AI',
+      keyCode: 'AGILEAI',
+      status: 'ACTIVE',
+    },
+    sprint: null,
+    meeting: {
+      id: 'meeting-id',
+      title: 'Sprint Planning',
+      description: null,
+      meetingType: 'SPRINT_PLANNING',
+      meetingDate: '2026-06-25',
+      status: 'COMPLETED',
+    },
+    targetUser: {
+      userId: 'member-id',
+      fullName: 'Nguyen Van B',
+      email: 'member2@example.com',
+    },
+    participants: [
+      {
+        userId: 'member-id',
+        fullName: 'Nguyen Van B',
+        email: 'member2@example.com',
+        role: 'PARTICIPANT',
+        attended: true,
+      },
+    ],
+    meetingSummary: {
+      id: 'meeting-summary-id',
+      title: 'Tom tat meeting',
+      summary: 'Team thong nhat sprint goal.',
+      keyPoints: ['Nguyen Van B se lam API task'],
+      decisions: ['Nguyen Van B thong nhat lam API task'],
+      actionItems: [
+        {
+          text: 'Nguyen Van B: Em se lam API task',
+          assigneeName: 'Nguyen Van B',
+          assigneeUserId: null,
+          dueDate: null,
+          status: 'OPEN',
+          source: 'Nguyen Van B: Em se lam API task',
+        },
+      ],
+      risks: [],
+      openQuestions: [],
+      nextSteps: ['Nguyen Van B: Em se lam API task'],
+    },
+    relatedTranscriptSnippets: ['Nguyen Van B: Em se lam API task'],
+    targetActionItems: [
+      {
+        text: 'Nguyen Van B: Em se lam API task',
+        assigneeName: 'Nguyen Van B',
+        assigneeUserId: null,
+        dueDate: null,
+        status: 'OPEN',
+        source: 'Nguyen Van B: Em se lam API task',
+      },
+    ],
+    transcriptId: 'transcript-id',
+    generatedAt: '2026-06-25T00:00:00.000Z',
   };
 
   it('generates deterministic mock report from provided data only', async () => {
@@ -212,5 +323,142 @@ describe('AiProviderService', () => {
     expect(result.output.risks?.join(' ')).toContain('AGILEAI-2');
     expect(result.output.generatedText).not.toContain('password');
     expect(result.output.generatedText).not.toContain('token');
+  });
+
+  it('generates personalized meeting summary without inventing deadline or secrets', async () => {
+    const service = new AiProviderService();
+
+    const result = await service.generatePersonalizedMeetingSummary(
+      'prompt without token',
+      personalizedMeetingInputData,
+    );
+
+    expect(result.model).toContain('mock');
+    expect(result.output.title).toContain('Nguyen Van B');
+    expect(result.output.myActionItems).toHaveLength(1);
+    expect(result.output.myActionItems[0]).toMatchObject({
+      title: 'Nguyen Van B: Em se lam API task',
+      deadline: null,
+      source: 'Nguyen Van B: Em se lam API task',
+    });
+    expect(result.output.generatedText).not.toContain('password');
+    expect(result.output.generatedText).not.toContain('token');
+  });
+
+  it('calls Groq for a personal daily report and preserves its response shape', async () => {
+    process.env.AI_PROVIDER = 'groq';
+    process.env.AI_API_KEY = 'test-api-key';
+    process.env.AI_MODEL = 'test-groq-model';
+    const fetchSpy = mockGroqResponse({
+      title: 'Báo cáo cá nhân',
+      summary: 'Đã hoàn thành API tạo task.',
+      yesterdaySummary: 'Hoàn thành API tạo task.',
+      todayPlanSummary: 'Viết kiểm thử cho task.',
+      completedTasks: ['AGILEAI-1 - Code API tạo task'],
+      inProgressTasks: ['AGILEAI-2 - Viết kiểm thử task'],
+      blockers: ['Cần xác nhận quyền thành viên.'],
+      risks: [],
+      recommendations: ['Xác nhận quyền trước khi tiếp tục.'],
+      generatedText: 'Báo cáo cá nhân đã được tổng hợp.',
+    });
+    const service = new AiProviderService();
+
+    const result = await service.generatePersonalDailyReport(
+      'personal prompt',
+      inputData,
+    );
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [requestUrl, requestInit] = fetchSpy.mock.calls[0];
+    const requestHeaders = new Headers(requestInit?.headers);
+    expect(requestUrl).toBe('https://api.groq.com/openai/v1/chat/completions');
+    expect(requestInit?.method).toBe('POST');
+    expect(requestHeaders.get('Authorization')).toBe('Bearer test-api-key');
+    expect(result.model).toBe('test-groq-model');
+    expect(result.output.title).toBe('Báo cáo cá nhân');
+    expect(result.output.completedTasks).toEqual([
+      'AGILEAI-1 - Code API tạo task',
+    ]);
+  });
+
+  it('calls Groq for a team daily report and normalizes member summaries', async () => {
+    process.env.AI_PROVIDER = 'groq';
+    process.env.AI_API_KEY = 'test-api-key';
+    process.env.AI_MODEL = 'test-groq-model';
+    const fetchSpy = mockGroqResponse({
+      title: 'Báo cáo nhóm Sprint 1',
+      summary: 'Nhóm đang triển khai đúng kế hoạch.',
+      teamProgress: 'Một task hoàn thành, một task đang làm.',
+      completedWork: ['AGILEAI-1 - API daily update'],
+      todayFocus: ['Hoàn thành Meeting Module'],
+      blockers: [],
+      risks: ['AGILEAI-2 đang quá hạn.'],
+      missingDailyUpdates: ['Nguyen Van B chưa gửi cập nhật.'],
+      memberSummaries: [
+        {
+          userId: 'member-id',
+          fullName: 'Nguyen Van A',
+          summary: 'Đã hoàn thành API.',
+          blockers: [],
+        },
+      ],
+      recommendations: ['Rà soát task quá hạn.'],
+      generatedText: 'Báo cáo nhóm đã được tổng hợp.',
+    });
+    const service = new AiProviderService();
+
+    const result = await service.generateTeamDailyReport(
+      'team prompt',
+      teamInputData,
+    );
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(result.model).toBe('test-groq-model');
+    expect(result.output.memberSummaries).toEqual([
+      {
+        userId: 'member-id',
+        fullName: 'Nguyen Van A',
+        summary: 'Đã hoàn thành API.',
+        blockers: [],
+      },
+    ]);
+  });
+
+  it('calls Groq for a personalized meeting summary', async () => {
+    process.env.AI_PROVIDER = 'groq';
+    process.env.AI_API_KEY = 'test-api-key';
+    process.env.AI_MODEL = 'test-groq-model';
+    const fetchSpy = mockGroqResponse({
+      title: 'Tóm tắt dành cho Nguyen Van B',
+      personalSummary: 'Bạn được giao phát triển API task.',
+      relevantDecisions: ['Thống nhất triển khai API task.'],
+      myActionItems: [
+        {
+          title: 'Phát triển API task',
+          assigneeId: 'member-id',
+          assigneeName: 'Nguyen Van B',
+          deadline: null,
+          source: 'Nguyen Van B: Em sẽ làm API task',
+        },
+      ],
+      mentions: ['Nguyen Van B được nhắc trong phần phân công.'],
+      risks: [],
+      nextSteps: ['Bắt đầu phát triển API task.'],
+      generatedText: 'Tóm tắt cá nhân đã được tạo.',
+    });
+    const service = new AiProviderService();
+
+    const result = await service.generatePersonalizedMeetingSummary(
+      'personalized meeting prompt',
+      personalizedMeetingInputData,
+    );
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(result.model).toBe('test-groq-model');
+    expect(result.output.personalSummary).toContain('API task');
+    expect(result.output.myActionItems[0]).toMatchObject({
+      assigneeId: 'member-id',
+      deadline: null,
+    });
   });
 });

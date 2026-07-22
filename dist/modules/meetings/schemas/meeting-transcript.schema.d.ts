@@ -42,6 +42,88 @@ export declare const MeetingTranscriptSpeakerSchema: import("mongoose").Schema<M
         id: string;
     }> | undefined;
 }, MeetingTranscriptSpeaker>;
+export declare class MeetingTranscriptSegment {
+    userId?: string;
+    speakerName?: string;
+    text: string;
+    startedAt: Date;
+    endedAt?: Date | null;
+    confidence?: number | null;
+    source: string;
+}
+export declare const MeetingTranscriptSegmentSchema: import("mongoose").Schema<MeetingTranscriptSegment, import("mongoose").Model<MeetingTranscriptSegment, any, any, any, any, any, MeetingTranscriptSegment>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
+    id: string;
+}, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
+    _id: import("mongoose").Types.ObjectId;
+} & {
+    __v: number;
+}, "id"> & {
+    id: string;
+}, {
+    userId?: import("mongoose").SchemaDefinitionProperty<string | undefined, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    speakerName?: import("mongoose").SchemaDefinitionProperty<string | undefined, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    text?: import("mongoose").SchemaDefinitionProperty<string, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    startedAt?: import("mongoose").SchemaDefinitionProperty<Date, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    endedAt?: import("mongoose").SchemaDefinitionProperty<Date | null | undefined, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    confidence?: import("mongoose").SchemaDefinitionProperty<number | null | undefined, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    source?: import("mongoose").SchemaDefinitionProperty<string, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+}, MeetingTranscriptSegment>;
 export declare class MeetingTranscript {
     meetingId: string;
     workspaceId: string;
@@ -49,6 +131,7 @@ export declare class MeetingTranscript {
     sprintId?: string | null;
     rawTranscript: string;
     speakers: MeetingTranscriptSpeaker[];
+    liveSegments: MeetingTranscriptSegment[];
     createdBy: string;
 }
 export declare const MeetingTranscriptSchema: import("mongoose").Schema<MeetingTranscript, import("mongoose").Model<MeetingTranscript, any, any, any, any, any, MeetingTranscript>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, MeetingTranscript, import("mongoose").Document<unknown, {}, MeetingTranscript, {
@@ -106,6 +189,15 @@ export declare const MeetingTranscriptSchema: import("mongoose").Schema<MeetingT
         id: string;
     }> | undefined;
     speakers?: import("mongoose").SchemaDefinitionProperty<MeetingTranscriptSpeaker[], MeetingTranscript, import("mongoose").Document<unknown, {}, MeetingTranscript, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscript & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & {
+        id: string;
+    }> | undefined;
+    liveSegments?: import("mongoose").SchemaDefinitionProperty<MeetingTranscriptSegment[], MeetingTranscript, import("mongoose").Document<unknown, {}, MeetingTranscript, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscript & {
         _id: import("mongoose").Types.ObjectId;

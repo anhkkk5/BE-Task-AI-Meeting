@@ -17,4 +17,5 @@ export declare class TaskAccessService {
     assertSprintCanReceiveTask(sprintId: string, projectId: string): Promise<Sprint>;
     assertSprintInProject(sprintId: string, projectId: string): Promise<Sprint>;
     assertUserCanUpdateTaskStatus(userId: string, workspaceId: string, task: Task, nextStatus: TaskStatus): Promise<WorkspaceRole>;
+    assertUserCanDeleteTask(userId: string, workspaceId: string, task: Task): Promise<WorkspaceRole>;
 }

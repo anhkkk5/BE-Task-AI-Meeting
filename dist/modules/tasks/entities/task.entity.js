@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Task = void 0;
 const typeorm_1 = require("typeorm");
-const task_priority_enum_1 = require("../../../common/enums/task-priority.enum");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 const project_entity_1 = require("../../projects/entities/project.entity");
 const sprint_entity_1 = require("../../sprints/entities/sprint.entity");
@@ -24,7 +23,6 @@ let Task = class Task {
     title;
     description;
     status;
-    priority;
     assigneeId;
     createdBy;
     dueDate;
@@ -74,15 +72,6 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], Task.prototype, "status", void 0);
-__decorate([
-    (0, typeorm_1.Index)(),
-    (0, typeorm_1.Column)({
-        type: 'enum',
-        enum: task_priority_enum_1.TaskPriority,
-        default: task_priority_enum_1.TaskPriority.Medium,
-    }),
-    __metadata("design:type", String)
-], Task.prototype, "priority", void 0);
 __decorate([
     (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({ name: 'assignee_id', type: 'varchar', length: 36, nullable: true }),

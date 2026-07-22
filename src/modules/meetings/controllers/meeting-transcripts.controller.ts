@@ -12,6 +12,7 @@ import { WorkspaceMemberGuard } from '../../../common/guards/workspace-member.gu
 import { WorkspaceRolesGuard } from '../../../common/guards/workspace-roles.guard';
 import { AccessTokenGuard } from '../../auth/guards/access-token.guard';
 import type { AuthUser } from '../../auth/types/auth-user.type';
+import { AppendLiveTranscriptSegmentDto } from '../dto/append-live-transcript-segment.dto';
 import { SaveMeetingTranscriptDto } from '../dto/save-meeting-transcript.dto';
 import { MeetingTranscriptsService } from '../services/meeting-transcripts.service';
 
@@ -47,6 +48,32 @@ export class MeetingTranscriptsController {
     @Body() dto: SaveMeetingTranscriptDto,
   ) {
     return this.meetingTranscriptsService.saveTranscript(
+      user.id,
+      workspaceId,
+      projectId,
+      meetingId,
+      dto,
+    );
+  }
+
+  @Post('live-segments')
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({
+    summary: 'Append live transcript segment',
+    description:
+      'User hien tai gui mot doan transcript tu mic cua minh. Backend tu gan speaker theo JWT de AI biet ai noi gi.',
+  })
+  @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
+  @ApiParam({ name: 'projectId', example: 'project-uuid' })
+  @ApiParam({ name: 'meetingId', example: 'meeting-uuid' })
+  appendLiveSegment(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('meetingId') meetingId: string,
+    @Body() dto: AppendLiveTranscriptSegmentDto,
+  ) {
+    return this.meetingTranscriptsService.appendLiveSegment(
       user.id,
       workspaceId,
       projectId,

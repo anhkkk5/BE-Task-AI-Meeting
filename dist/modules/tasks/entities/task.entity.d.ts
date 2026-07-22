@@ -1,4 +1,3 @@
-import { TaskPriority } from '../../../common/enums/task-priority.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { Project } from '../../projects/entities/project.entity';
 import { Sprint } from '../../sprints/entities/sprint.entity';
@@ -11,7 +10,6 @@ export declare class Task {
     title: string;
     description: string | null;
     status: TaskStatus;
-    priority: TaskPriority;
     assigneeId: string | null;
     createdBy: string;
     dueDate: string | null;

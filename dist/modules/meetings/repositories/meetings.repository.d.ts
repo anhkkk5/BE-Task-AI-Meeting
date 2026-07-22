@@ -13,6 +13,7 @@ export declare class MeetingsRepository {
         limit: number;
     }>;
     update(meeting: Meeting, data: Partial<Meeting>): Promise<Meeting>;
+    softDelete(meeting: Meeting): Promise<void>;
     updateTranscriptId(meeting: Meeting, mongoTranscriptId: string): Promise<Meeting>;
     updateSummaryId(meeting: Meeting, mongoSummaryId: string): Promise<Meeting>;
     private getRepository;

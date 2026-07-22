@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { MeetingParticipantRole } from '../../../common/enums/meeting-participant-role.enum';
@@ -253,6 +257,44 @@ export class MeetingsService {
     return {
       success: true,
       message: 'Complete meeting successfully',
+      data: null,
+    };
+  }
+
+  async deleteMeeting(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    meetingId: string,
+  ) {
+    await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
+    await this.projectAccessService.assertProjectInWorkspace(
+      projectId,
+      workspaceId,
+    );
+    await this.meetingAccessService.assertUserCanViewMeeting(
+      currentUserId,
+      workspaceId,
+    );
+
+    const meeting = await this.meetingAccessService.assertMeetingInProject(
+      meetingId,
+      projectId,
+    );
+    const isManager = await this.meetingAccessService.isMeetingManager(
+      currentUserId,
+      workspaceId,
+    );
+
+    if (!isManager && meeting.createdBy !== currentUserId) {
+      throw new ForbiddenException('You can not delete this meeting');
+    }
+
+    await this.meetingsRepository.softDelete(meeting);
+
+    return {
+      success: true,
+      message: 'Delete meeting successfully',
       data: null,
     };
   }

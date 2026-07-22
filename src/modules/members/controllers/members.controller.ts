@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -23,6 +24,7 @@ import { AccessTokenGuard } from '../../auth/guards/access-token.guard';
 import type { AuthUser } from '../../auth/types/auth-user.type';
 import { AddMemberDto } from '../dto/add-member.dto';
 import { ChangeMemberRoleDto } from '../dto/change-member-role.dto';
+import { LookupMemberQueryDto } from '../dto/lookup-member-query.dto';
 import { MembersService } from '../services/members.service';
 
 @Controller('workspaces/:workspaceId/members')
@@ -49,6 +51,23 @@ export class MembersController {
     @Param('workspaceId') workspaceId: string,
   ) {
     return this.membersService.getMembers(user.id, workspaceId);
+  }
+
+  @Get('lookup')
+  @WorkspaceRoles(WorkspaceRole.Owner)
+  @UseGuards(WorkspaceRolesGuard)
+  @ApiOperation({
+    summary: 'Lookup user before adding workspace member',
+    description:
+      'OWNER nhap email de xem user da dang ky va trang thai trong workspace truoc khi them.',
+  })
+  @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
+  lookupMember(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Query() query: LookupMemberQueryDto,
+  ) {
+    return this.membersService.lookupMember(user.id, workspaceId, query.email);
   }
 
   @Get('me')

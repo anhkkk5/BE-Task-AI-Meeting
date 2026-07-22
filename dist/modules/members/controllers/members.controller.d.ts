@@ -2,6 +2,7 @@ import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import type { AuthUser } from '../../auth/types/auth-user.type';
 import { AddMemberDto } from '../dto/add-member.dto';
 import { ChangeMemberRoleDto } from '../dto/change-member-role.dto';
+import { LookupMemberQueryDto } from '../dto/lookup-member-query.dto';
 import { MembersService } from '../services/members.service';
 export declare class MembersController {
     private readonly membersService;
@@ -20,6 +21,32 @@ export declare class MembersController {
                 status: import("../../../common/enums/workspace-member-status.enum").WorkspaceMemberStatus;
                 joinedAt: Date | null;
             }[];
+        };
+    }>;
+    lookupMember(user: AuthUser, workspaceId: string, query: LookupMemberQueryDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            user: {
+                id: string;
+                email: string;
+                fullName: string;
+                avatarUrl: string | null;
+                jobTitle: string | null;
+                status: import("../../users/enums/user-status.enum").UserStatus;
+            } | null;
+            existingMember: {
+                memberId: string;
+                userId: string;
+                fullName: string;
+                email: string;
+                avatarUrl: string | null;
+                role: WorkspaceRole;
+                status: import("../../../common/enums/workspace-member-status.enum").WorkspaceMemberStatus;
+                joinedAt: Date | null;
+            } | null;
+            canAdd: boolean;
+            reason: string | null;
         };
     }>;
     getMyRole(user: AuthUser, workspaceId: string): Promise<{

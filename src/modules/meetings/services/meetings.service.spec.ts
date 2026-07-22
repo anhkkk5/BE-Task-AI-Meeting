@@ -18,7 +18,11 @@ describe('MeetingsService', () => {
   let meetingsRepository: jest.Mocked<
     Pick<
       MeetingsRepository,
-      'create' | 'findByIdAndProject' | 'findByProject' | 'update'
+      | 'create'
+      | 'findByIdAndProject'
+      | 'findByProject'
+      | 'softDelete'
+      | 'update'
     >
   >;
   let meetingParticipantsRepository: jest.Mocked<
@@ -31,6 +35,7 @@ describe('MeetingsService', () => {
       | 'assertMeetingInProject'
       | 'assertUserCanManageMeeting'
       | 'assertUserCanViewMeeting'
+      | 'isMeetingManager'
     >
   >;
   let workspaceAccessService: jest.Mocked<
@@ -80,6 +85,7 @@ describe('MeetingsService', () => {
       create: jest.fn(),
       findByIdAndProject: jest.fn(),
       findByProject: jest.fn(),
+      softDelete: jest.fn(),
       update: jest.fn(),
     };
     meetingParticipantsRepository = {
@@ -90,6 +96,7 @@ describe('MeetingsService', () => {
       assertMeetingInProject: jest.fn(),
       assertUserCanManageMeeting: jest.fn(),
       assertUserCanViewMeeting: jest.fn(),
+      isMeetingManager: jest.fn(),
     };
     workspaceAccessService = {
       assertWorkspaceActive: jest.fn(),
@@ -111,7 +118,9 @@ describe('MeetingsService', () => {
       page: 1,
       limit: 20,
     });
+    meetingsRepository.softDelete.mockResolvedValue(undefined);
     meetingsRepository.update.mockResolvedValue(meeting);
+    meetingAccessService.isMeetingManager.mockResolvedValue(true);
 
     service = new MeetingsService(
       dataSource as unknown as DataSource,
@@ -268,6 +277,29 @@ describe('MeetingsService', () => {
     expect(meetingsRepository.update).toHaveBeenCalledWith(meeting, {
       status: MeetingStatus.Cancelled,
     });
+    expect(response.data).toBeNull();
+  });
+
+  it('soft deletes meeting when current user can manage meeting', async () => {
+    meetingAccessService.assertMeetingInProject.mockResolvedValue(meeting);
+    meetingAccessService.isMeetingManager.mockResolvedValue(true);
+
+    const response = await service.deleteMeeting(
+      'owner-id',
+      'workspace-id',
+      'project-id',
+      'meeting-id',
+    );
+
+    expect(meetingAccessService.assertUserCanViewMeeting).toHaveBeenCalledWith(
+      'owner-id',
+      'workspace-id',
+    );
+    expect(meetingAccessService.isMeetingManager).toHaveBeenCalledWith(
+      'owner-id',
+      'workspace-id',
+    );
+    expect(meetingsRepository.softDelete).toHaveBeenCalledWith(meeting);
     expect(response.data).toBeNull();
   });
 });

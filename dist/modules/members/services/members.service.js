@@ -13,6 +13,7 @@ exports.MembersService = void 0;
 const common_1 = require("@nestjs/common");
 const workspace_member_status_enum_1 = require("../../../common/enums/workspace-member-status.enum");
 const workspace_role_enum_1 = require("../../../common/enums/workspace-role.enum");
+const user_status_enum_1 = require("../../users/enums/user-status.enum");
 const users_service_1 = require("../../users/services/users.service");
 const workspace_members_repository_1 = require("../../workspaces/repositories/workspace-members.repository");
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
@@ -66,6 +67,28 @@ let MembersService = class MembersService {
                 member: this.toMemberResponse(member),
             },
         };
+    }
+    async lookupMember(currentUserId, workspaceId, email) {
+        await this.workspaceAccessService.assertWorkspaceOwner(currentUserId, workspaceId);
+        await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
+        const normalizedEmail = email.trim().toLowerCase();
+        const user = await this.usersService.findByEmail(normalizedEmail);
+        if (!user) {
+            return this.lookupResponse(null, null, false, 'USER_NOT_FOUND');
+        }
+        const existingMember = await this.workspaceMembersRepository.findByWorkspaceAndUser(workspaceId, user.id);
+        if (existingMember) {
+            existingMember.user = user;
+        }
+        if (user.status !== user_status_enum_1.UserStatus.Active) {
+            return this.lookupResponse(user, existingMember, false, 'USER_NOT_ACTIVE');
+        }
+        if (existingMember?.status === workspace_member_status_enum_1.WorkspaceMemberStatus.Active) {
+            return this.lookupResponse(user, existingMember, false, 'ALREADY_ACTIVE_MEMBER');
+        }
+        return this.lookupResponse(user, existingMember, true, existingMember?.status === workspace_member_status_enum_1.WorkspaceMemberStatus.Removed
+            ? 'REMOVED_MEMBER_CAN_BE_REACTIVATED'
+            : null);
     }
     async changeMemberRole(currentUserId, workspaceId, memberId, dto) {
         await this.workspaceAccessService.assertWorkspaceOwner(currentUserId, workspaceId);
@@ -136,6 +159,30 @@ let MembersService = class MembersService {
             role: member.role,
             status: member.status,
             joinedAt: member.joinedAt,
+        };
+    }
+    lookupResponse(user, existingMember, canAdd, reason) {
+        return {
+            success: true,
+            message: 'Lookup member successfully',
+            data: {
+                user: user ? this.toUserLookupResponse(user) : null,
+                existingMember: existingMember
+                    ? this.toMemberResponse(existingMember)
+                    : null,
+                canAdd,
+                reason,
+            },
+        };
+    }
+    toUserLookupResponse(user) {
+        return {
+            id: user.id,
+            email: user.email,
+            fullName: user.fullName,
+            avatarUrl: user.avatarUrl,
+            jobTitle: user.jobTitle,
+            status: user.status,
         };
     }
 };

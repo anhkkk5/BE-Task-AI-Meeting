@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { SprintStatus } from '../../../common/enums/sprint-status.enum';
+import { Task } from '../../tasks/entities/task.entity';
 import { GetSprintsQueryDto } from '../dto/get-sprints-query.dto';
 import { Sprint } from '../entities/sprint.entity';
 
@@ -10,6 +11,7 @@ export class SprintsRepository {
   constructor(
     @InjectRepository(Sprint)
     private readonly repository: Repository<Sprint>,
+    private readonly dataSource: DataSource,
   ) {}
 
   create(
@@ -81,5 +83,14 @@ export class SprintsRepository {
   async update(sprint: Sprint, data: Partial<Sprint>) {
     Object.assign(sprint, data);
     return this.repository.save(sprint);
+  }
+
+  async softDeleteWithTasks(sprint: Sprint) {
+    await this.dataSource.transaction(async (manager) => {
+      await manager
+        .getRepository(Task)
+        .update({ sprintId: sprint.id }, { sprintId: null });
+      await manager.getRepository(Sprint).softRemove(sprint);
+    });
   }
 }

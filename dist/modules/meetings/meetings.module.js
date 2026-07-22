@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MeetingsModule = void 0;
 const common_1 = require("@nestjs/common");
+const jwt_1 = require("@nestjs/jwt");
 const mongoose_1 = require("@nestjs/mongoose");
 const typeorm_1 = require("@nestjs/typeorm");
 const workspace_member_guard_1 = require("../../common/guards/workspace-member.guard");
@@ -15,12 +16,14 @@ const workspace_roles_guard_1 = require("../../common/guards/workspace-roles.gua
 const mongodb_config_1 = require("../../config/mongodb.config");
 const projects_module_1 = require("../projects/projects.module");
 const sprints_module_1 = require("../sprints/sprints.module");
+const users_module_1 = require("../users/users.module");
 const workspaces_module_1 = require("../workspaces/workspaces.module");
 const meeting_participants_controller_1 = require("./controllers/meeting-participants.controller");
 const meeting_transcripts_controller_1 = require("./controllers/meeting-transcripts.controller");
 const meetings_controller_1 = require("./controllers/meetings.controller");
 const meeting_participant_entity_1 = require("./entities/meeting-participant.entity");
 const meeting_entity_1 = require("./entities/meeting.entity");
+const meeting_signaling_gateway_1 = require("./gateways/meeting-signaling.gateway");
 const meeting_participants_repository_1 = require("./repositories/meeting-participants.repository");
 const meetings_repository_1 = require("./repositories/meetings.repository");
 const meeting_transcript_schema_1 = require("./schemas/meeting-transcript.schema");
@@ -41,10 +44,12 @@ exports.MeetingsModule = MeetingsModule;
 exports.MeetingsModule = MeetingsModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            jwt_1.JwtModule.register({}),
             typeorm_1.TypeOrmModule.forFeature([meeting_entity_1.Meeting, meeting_participant_entity_1.MeetingParticipant]),
             ...mongoImports,
             projects_module_1.ProjectsModule,
             sprints_module_1.SprintsModule,
+            users_module_1.UsersModule,
             workspaces_module_1.WorkspacesModule,
         ],
         controllers: [
@@ -59,6 +64,7 @@ exports.MeetingsModule = MeetingsModule = __decorate([
             meetings_service_1.MeetingsService,
             meeting_participants_service_1.MeetingParticipantsService,
             meeting_transcripts_service_1.MeetingTranscriptsService,
+            meeting_signaling_gateway_1.MeetingSignalingGateway,
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,
         ],

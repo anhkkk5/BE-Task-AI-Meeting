@@ -1,6 +1,8 @@
 import { MeetingSummaryOutput } from '../schemas/meeting-summary.schema';
+import { PersonalizedMeetingSummaryOutput } from '../schemas/personalized-meeting-summary.schema';
 import { PersonalDailyReportOutput, TeamDailyReportOutput } from '../schemas/ai-report.schema';
 import { MeetingSummaryInputData } from './ai-meeting-summary-data-builder.service';
+import { PersonalizedMeetingSummaryInputData } from './ai-personalized-meeting-summary-data-builder.service';
 import { PersonalReportInputData } from './ai-report-data-builder.service';
 import { TeamReportInputData } from './ai-team-report-data-builder.service';
 export type AiProviderResult<TOutput = PersonalDailyReportOutput> = {
@@ -12,15 +14,33 @@ export declare class AiProviderService {
     generatePersonalDailyReport(prompt: string, inputData: PersonalReportInputData): Promise<AiProviderResult>;
     generateTeamDailyReport(prompt: string, inputData: TeamReportInputData): Promise<AiProviderResult<TeamDailyReportOutput>>;
     generateMeetingSummary(prompt: string, inputData: MeetingSummaryInputData): Promise<AiProviderResult<MeetingSummaryOutput>>;
+    generatePersonalizedMeetingSummary(prompt: string, inputData: PersonalizedMeetingSummaryInputData): Promise<AiProviderResult<PersonalizedMeetingSummaryOutput>>;
     private resolveMockResponse;
     private generateMockResponse;
     private resolveTeamMockResponse;
     private resolveMeetingSummaryMockResponse;
+    private resolvePersonalizedMeetingSummaryMockResponse;
+    private generateGroqPersonalDailyReport;
+    private generateGroqTeamDailyReport;
+    private generateGroqPersonalizedMeetingSummary;
+    private generateGroqMeetingSummary;
+    private callGroqJson;
+    private parseJsonContent;
+    private getGroqModel;
+    private normalizePersonalDailyReportOutput;
+    private normalizeTeamDailyReportOutput;
+    private normalizePersonalizedMeetingSummaryOutput;
+    private normalizeText;
+    private normalizeTextArray;
+    private normalizeMeetingSummaryOutput;
     private generateMeetingSummaryMockResponse;
     private getTranscriptLines;
     private hasDecisionSignal;
     private hasActionSignal;
     private hasRiskSignal;
     private toMeetingActionItem;
+    private generatePersonalizedMeetingSummaryMockResponse;
+    private textMentionsTarget;
+    private toPersonalizedMeetingActionItem;
     private generateTeamMockResponse;
 }

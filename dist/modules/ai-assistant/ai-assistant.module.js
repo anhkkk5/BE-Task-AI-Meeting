@@ -20,14 +20,19 @@ const tasks_module_1 = require("../tasks/tasks.module");
 const users_module_1 = require("../users/users.module");
 const workspaces_module_1 = require("../workspaces/workspaces.module");
 const ai_meeting_summary_controller_1 = require("./controllers/ai-meeting-summary.controller");
+const ai_personalized_meeting_summary_controller_1 = require("./controllers/ai-personalized-meeting-summary.controller");
 const ai_personal_report_controller_1 = require("./controllers/ai-personal-report.controller");
 const ai_team_report_controller_1 = require("./controllers/ai-team-report.controller");
 const ai_prompt_log_schema_1 = require("./schemas/ai-prompt-log.schema");
 const ai_report_schema_1 = require("./schemas/ai-report.schema");
 const meeting_summary_schema_1 = require("./schemas/meeting-summary.schema");
+const personalized_meeting_summary_schema_1 = require("./schemas/personalized-meeting-summary.schema");
 const ai_meeting_summary_access_service_1 = require("./services/ai-meeting-summary-access.service");
 const ai_meeting_summary_data_builder_service_1 = require("./services/ai-meeting-summary-data-builder.service");
 const ai_meeting_summary_service_1 = require("./services/ai-meeting-summary.service");
+const ai_personalized_meeting_summary_access_service_1 = require("./services/ai-personalized-meeting-summary-access.service");
+const ai_personalized_meeting_summary_data_builder_service_1 = require("./services/ai-personalized-meeting-summary-data-builder.service");
+const ai_personalized_meeting_summary_service_1 = require("./services/ai-personalized-meeting-summary.service");
 const ai_personal_report_service_1 = require("./services/ai-personal-report.service");
 const ai_provider_service_1 = require("./services/ai-provider.service");
 const ai_report_access_service_1 = require("./services/ai-report-access.service");
@@ -41,6 +46,10 @@ const mongoImports = (0, mongodb_config_1.mongodbConfig)().enabled
             { name: ai_report_schema_1.AiReport.name, schema: ai_report_schema_1.AiReportSchema },
             { name: ai_prompt_log_schema_1.AiPromptLog.name, schema: ai_prompt_log_schema_1.AiPromptLogSchema },
             { name: meeting_summary_schema_1.MeetingSummary.name, schema: meeting_summary_schema_1.MeetingSummarySchema },
+            {
+                name: personalized_meeting_summary_schema_1.PersonalizedMeetingSummary.name,
+                schema: personalized_meeting_summary_schema_1.PersonalizedMeetingSummarySchema,
+            },
         ]),
     ]
     : [];
@@ -64,14 +73,19 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
             ai_team_report_controller_1.AiTeamReportController,
             ai_meeting_summary_controller_1.AiMeetingSummaryController,
             ai_meeting_summary_controller_1.AiMeetingSummaryDetailController,
+            ai_personalized_meeting_summary_controller_1.AiPersonalizedMeetingSummaryController,
+            ai_personalized_meeting_summary_controller_1.AiPersonalizedMeetingSummaryProjectController,
         ],
         providers: [
             ai_personal_report_service_1.AiPersonalReportService,
             ai_team_report_service_1.AiTeamReportService,
             ai_meeting_summary_service_1.AiMeetingSummaryService,
+            ai_personalized_meeting_summary_service_1.AiPersonalizedMeetingSummaryService,
             ai_provider_service_1.AiProviderService,
             ai_meeting_summary_access_service_1.AiMeetingSummaryAccessService,
             ai_meeting_summary_data_builder_service_1.AiMeetingSummaryDataBuilderService,
+            ai_personalized_meeting_summary_access_service_1.AiPersonalizedMeetingSummaryAccessService,
+            ai_personalized_meeting_summary_data_builder_service_1.AiPersonalizedMeetingSummaryDataBuilderService,
             ai_report_access_service_1.AiReportAccessService,
             ai_report_data_builder_service_1.AiReportDataBuilderService,
             ai_team_report_data_builder_service_1.AiTeamReportDataBuilderService,

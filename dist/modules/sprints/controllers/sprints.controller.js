@@ -56,6 +56,9 @@ let SprintsController = class SprintsController {
     cancelSprint(user, workspaceId, projectId, sprintId) {
         return this.sprintsService.cancelSprint(user.id, workspaceId, projectId, sprintId);
     }
+    deleteSprint(user, workspaceId, projectId, sprintId) {
+        return this.sprintsService.deleteSprint(user.id, workspaceId, projectId, sprintId);
+    }
 };
 exports.SprintsController = SprintsController;
 __decorate([
@@ -189,6 +192,25 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", void 0)
 ], SprintsController.prototype, "cancelSprint", null);
+__decorate([
+    (0, common_1.Delete)(':sprintId'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Xóa sprint',
+        description: 'Người tạo hoặc quản lý được xóa sprint không hoạt động. Task trong sprint sẽ trở về Backlog.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'sprintId', example: 'sprint-uuid' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Xóa sprint thành công.' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('sprintId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String]),
+    __metadata("design:returntype", void 0)
+], SprintsController.prototype, "deleteSprint", null);
 exports.SprintsController = SprintsController = __decorate([
     (0, common_1.Controller)('workspaces/:workspaceId/projects/:projectId/sprints'),
     (0, swagger_1.ApiTags)('Sprints'),

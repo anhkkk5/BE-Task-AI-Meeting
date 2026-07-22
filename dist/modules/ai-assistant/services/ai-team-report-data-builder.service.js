@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiTeamReportDataBuilderService = void 0;
 const common_1 = require("@nestjs/common");
-const task_priority_enum_1 = require("../../../common/enums/task-priority.enum");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 const daily_updates_repository_1 = require("../../daily-updates/repositories/daily-updates.repository");
 const project_access_service_1 = require("../../projects/services/project-access.service");
@@ -72,7 +71,6 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
             taskStats: this.getTaskStats(tasks),
             tasks,
             overdueTasks: this.getOverdueTasks(tasks, reportDate),
-            highPriorityTasks: tasks.filter((task) => [task_priority_enum_1.TaskPriority.High, task_priority_enum_1.TaskPriority.Urgent].includes(task.priority)),
             blockers: dailyUpdates
                 .filter((dailyUpdate) => Boolean(dailyUpdate.blockers?.trim()))
                 .map((dailyUpdate) => ({
@@ -123,7 +121,6 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
             taskCode: task.taskCode,
             title: task.title,
             status: task.status,
-            priority: task.priority,
             sprintId: task.sprintId,
             assigneeId: task.assigneeId,
             assigneeName: task.assignee?.fullName ?? task.assignee?.email ?? task.assigneeId,

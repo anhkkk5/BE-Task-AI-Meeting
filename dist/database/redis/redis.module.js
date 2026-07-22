@@ -28,7 +28,9 @@ exports.RedisModule = RedisModule = __decorate([
                     const client = new ioredis_1.default({
                         host: config.host,
                         port: config.port,
+                        username: config.username,
                         password: config.password,
+                        tls: config.tls ? {} : undefined,
                         maxRetriesPerRequest: 3,
                     });
                     client.on('error', () => undefined);

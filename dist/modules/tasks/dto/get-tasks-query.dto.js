@@ -13,13 +13,11 @@ exports.GetTasksQueryDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
-const task_priority_enum_1 = require("../../../common/enums/task-priority.enum");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 class GetTasksQueryDto {
     sprintId;
     status;
     assigneeId;
-    priority;
     keyword;
     page;
     limit;
@@ -52,15 +50,6 @@ __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], GetTasksQueryDto.prototype, "assigneeId", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        enum: task_priority_enum_1.TaskPriority,
-        example: task_priority_enum_1.TaskPriority.High,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(task_priority_enum_1.TaskPriority),
-    __metadata("design:type", String)
-], GetTasksQueryDto.prototype, "priority", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         example: 'api',

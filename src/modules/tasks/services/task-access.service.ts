@@ -110,4 +110,25 @@ export class TaskAccessService {
 
     throw new ForbiddenException('You can not update this task status');
   }
+
+  async assertUserCanDeleteTask(
+    userId: string,
+    workspaceId: string,
+    task: Task,
+  ) {
+    const role = await this.workspaceAccessService.getUserWorkspaceRole(
+      userId,
+      workspaceId,
+    );
+
+    if (!role) {
+      throw new ForbiddenException('You do not have access to this workspace');
+    }
+
+    if (taskManagerRoles.includes(role) || task.createdBy === userId) {
+      return role;
+    }
+
+    throw new ForbiddenException('You cannot delete this task');
+  }
 }

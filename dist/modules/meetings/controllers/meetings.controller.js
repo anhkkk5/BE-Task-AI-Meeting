@@ -53,6 +53,9 @@ let MeetingsController = class MeetingsController {
     completeMeeting(user, workspaceId, projectId, meetingId) {
         return this.meetingsService.completeMeeting(user.id, workspaceId, projectId, meetingId);
     }
+    deleteMeeting(user, workspaceId, projectId, meetingId) {
+        return this.meetingsService.deleteMeeting(user.id, workspaceId, projectId, meetingId);
+    }
 };
 exports.MeetingsController = MeetingsController;
 __decorate([
@@ -155,6 +158,25 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", void 0)
 ], MeetingsController.prototype, "completeMeeting", null);
+__decorate([
+    (0, common_1.Delete)(':meetingId'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Delete meeting',
+        description: 'Nguoi tao meeting hoac OWNER, SCRUM_MASTER, PROJECT_MANAGER duoc xoa meeting.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'meetingId', example: 'meeting-uuid' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Delete meeting successfully.' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('meetingId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String]),
+    __metadata("design:returntype", void 0)
+], MeetingsController.prototype, "deleteMeeting", null);
 exports.MeetingsController = MeetingsController = __decorate([
     (0, common_1.Controller)('workspaces/:workspaceId/projects/:projectId/meetings'),
     (0, swagger_1.ApiTags)('Meetings'),

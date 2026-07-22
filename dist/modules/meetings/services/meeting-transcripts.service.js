@@ -19,16 +19,19 @@ const project_access_service_1 = require("../../projects/services/project-access
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
 const meeting_transcript_schema_1 = require("../schemas/meeting-transcript.schema");
 const meetings_repository_1 = require("../repositories/meetings.repository");
+const meeting_participants_repository_1 = require("../repositories/meeting-participants.repository");
 const meeting_access_service_1 = require("./meeting-access.service");
 let MeetingTranscriptsService = class MeetingTranscriptsService {
     transcriptModel;
     meetingsRepository;
+    meetingParticipantsRepository;
     meetingAccessService;
     workspaceAccessService;
     projectAccessService;
-    constructor(transcriptModel, meetingsRepository, meetingAccessService, workspaceAccessService, projectAccessService) {
+    constructor(transcriptModel, meetingsRepository, meetingParticipantsRepository, meetingAccessService, workspaceAccessService, projectAccessService) {
         this.transcriptModel = transcriptModel;
         this.meetingsRepository = meetingsRepository;
+        this.meetingParticipantsRepository = meetingParticipantsRepository;
         this.meetingAccessService = meetingAccessService;
         this.workspaceAccessService = workspaceAccessService;
         this.projectAccessService = projectAccessService;
@@ -51,6 +54,7 @@ let MeetingTranscriptsService = class MeetingTranscriptsService {
                 text: speaker.text.trim(),
                 userId: speaker.userId,
             })) ?? [],
+            liveSegments: [],
             createdBy: currentUserId,
         };
         let transcript = null;
@@ -98,6 +102,65 @@ let MeetingTranscriptsService = class MeetingTranscriptsService {
             },
         };
     }
+    async appendLiveSegment(currentUserId, workspaceId, projectId, meetingId, dto) {
+        const transcriptModel = this.getTranscriptModel();
+        await this.meetingAccessService.assertUserCanViewMeeting(currentUserId, workspaceId);
+        await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
+        const meeting = await this.meetingAccessService.assertMeetingInProject(meetingId, projectId);
+        if (meeting.workspaceId !== workspaceId) {
+            throw new common_1.NotFoundException('Meeting transcript not found');
+        }
+        const participant = await this.meetingParticipantsRepository.findByMeetingAndUser(meetingId, currentUserId);
+        const speakerName = participant?.user?.fullName || participant?.user?.email || 'Unknown';
+        const segment = {
+            userId: currentUserId,
+            speakerName,
+            text: dto.text.trim(),
+            startedAt: dto.startedAt ? new Date(dto.startedAt) : new Date(),
+            endedAt: dto.endedAt ? new Date(dto.endedAt) : null,
+            confidence: dto.confidence ?? null,
+            source: dto.source?.trim() || 'browser-speech',
+        };
+        const nextLiveSegments = [segment];
+        const nextSpeakers = this.buildSpeakersFromSegments(nextLiveSegments);
+        const nextRawTranscript = this.buildRawTranscript(nextLiveSegments);
+        let transcript = null;
+        if (meeting.mongoTranscriptId) {
+            transcript = await transcriptModel
+                .findById(meeting.mongoTranscriptId)
+                .exec();
+        }
+        if (!transcript) {
+            transcript = await transcriptModel.create({
+                meetingId,
+                workspaceId,
+                projectId,
+                sprintId: meeting.sprintId,
+                rawTranscript: nextRawTranscript,
+                speakers: nextSpeakers,
+                liveSegments: nextLiveSegments,
+                createdBy: currentUserId,
+            });
+            await this.meetingsRepository.updateTranscriptId(meeting, this.getTranscriptId(transcript));
+        }
+        else {
+            transcript.liveSegments = [
+                ...(transcript.liveSegments ?? []),
+                segment,
+            ].slice(-1000);
+            transcript.speakers = this.buildSpeakersFromSegments(transcript.liveSegments);
+            transcript.rawTranscript = this.buildRawTranscript(transcript.liveSegments);
+            await transcript.save();
+        }
+        return {
+            success: true,
+            message: 'Append live transcript segment successfully',
+            data: {
+                segment,
+                transcript: this.toTranscriptResponse(transcript),
+            },
+        };
+    }
     async findTranscriptForMeeting(meeting) {
         const transcriptModel = this.getTranscriptModel();
         if (!meeting.mongoTranscriptId) {
@@ -130,10 +193,28 @@ let MeetingTranscriptsService = class MeetingTranscriptsService {
             sprintId: transcript.sprintId ?? null,
             rawTranscript: transcript.rawTranscript,
             speakers: transcript.speakers ?? [],
+            liveSegments: transcript.liveSegments ?? [],
             createdBy: transcript.createdBy,
             createdAt: stampedTranscript.createdAt,
             updatedAt: stampedTranscript.updatedAt,
         };
+    }
+    buildSpeakersFromSegments(segments) {
+        return segments.map((segment) => ({
+            userId: segment.userId,
+            speakerName: segment.speakerName,
+            text: segment.text,
+        }));
+    }
+    buildRawTranscript(segments) {
+        return segments
+            .slice()
+            .sort((left, right) => new Date(left.startedAt).getTime() -
+            new Date(right.startedAt).getTime())
+            .map((segment) => [segment.speakerName || 'Unknown', segment.text]
+            .filter(Boolean)
+            .join(': '))
+            .join('\n');
     }
 };
 exports.MeetingTranscriptsService = MeetingTranscriptsService;
@@ -142,6 +223,7 @@ exports.MeetingTranscriptsService = MeetingTranscriptsService = __decorate([
     __param(0, (0, common_1.Optional)()),
     __param(0, (0, mongoose_1.InjectModel)(meeting_transcript_schema_1.MeetingTranscript.name)),
     __metadata("design:paramtypes", [Object, meetings_repository_1.MeetingsRepository,
+        meeting_participants_repository_1.MeetingParticipantsRepository,
         meeting_access_service_1.MeetingAccessService,
         workspace_access_service_1.WorkspaceAccessService,
         project_access_service_1.ProjectAccessService])

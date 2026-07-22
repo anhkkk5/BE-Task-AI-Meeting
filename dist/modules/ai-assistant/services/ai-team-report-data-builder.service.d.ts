@@ -1,4 +1,3 @@
-import { TaskPriority } from '../../../common/enums/task-priority.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { DailyUpdatesRepository } from '../../daily-updates/repositories/daily-updates.repository';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
@@ -28,7 +27,6 @@ type TeamTaskInput = {
     taskCode: string;
     title: string;
     status: string;
-    priority: string;
     sprintId: string | null;
     assigneeId: string | null;
     assigneeName: string | null;
@@ -62,7 +60,6 @@ export type TeamReportInputData = {
     taskStats: Record<TaskStatus, number>;
     tasks: TeamTaskInput[];
     overdueTasks: TeamTaskInput[];
-    highPriorityTasks: TeamTaskInput[];
     blockers: {
         userId: string;
         fullName: string;
@@ -134,7 +131,6 @@ export declare class AiTeamReportDataBuilderService {
             taskCode: string;
             title: string;
             status: TaskStatus;
-            priority: TaskPriority;
             sprintId: string | null;
             assigneeId: string | null;
             assigneeName: string | null;
@@ -143,19 +139,6 @@ export declare class AiTeamReportDataBuilderService {
             storyPoints: number | null;
         }[];
         overdueTasks: TeamTaskInput[];
-        highPriorityTasks: {
-            id: string;
-            taskCode: string;
-            title: string;
-            status: TaskStatus;
-            priority: TaskPriority;
-            sprintId: string | null;
-            assigneeId: string | null;
-            assigneeName: string | null;
-            dueDate: string | null;
-            estimatedHours: number | null;
-            storyPoints: number | null;
-        }[];
         blockers: {
             userId: string;
             fullName: string;
@@ -184,7 +167,6 @@ export declare class AiTeamReportDataBuilderService {
         taskCode: string;
         title: string;
         status: TaskStatus;
-        priority: TaskPriority;
         sprintId: string | null;
         assigneeId: string | null;
         assigneeName: string | null;

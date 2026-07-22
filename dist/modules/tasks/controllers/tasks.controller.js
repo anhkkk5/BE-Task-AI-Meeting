@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TasksController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const swagger_1 = require("@nestjs/swagger");
 const current_user_decorator_1 = require("../../../common/decorators/current-user.decorator");
 const workspace_roles_decorator_1 = require("../../../common/decorators/workspace-roles.decorator");
@@ -24,6 +25,7 @@ const access_token_guard_1 = require("../../auth/guards/access-token.guard");
 const assign_task_dto_1 = require("../dto/assign-task.dto");
 const create_task_dto_1 = require("../dto/create-task.dto");
 const get_tasks_query_dto_1 = require("../dto/get-tasks-query.dto");
+const import_tasks_dto_1 = require("../dto/import-tasks.dto");
 const move_task_sprint_dto_1 = require("../dto/move-task-sprint.dto");
 const update_task_status_dto_1 = require("../dto/update-task-status.dto");
 const update_task_dto_1 = require("../dto/update-task.dto");
@@ -50,6 +52,18 @@ let TasksController = class TasksController {
     getSprintTasks(user, workspaceId, projectId, sprintId) {
         return this.tasksService.getSprintTasks(user.id, workspaceId, projectId, sprintId);
     }
+    async downloadTaskImportTemplate(user, workspaceId, projectId, response) {
+        const buffer = await this.tasksService.createTaskImportTemplate(user.id, workspaceId, projectId);
+        response.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        response.setHeader('Content-Disposition', 'attachment; filename="backlog-import-template.xlsx"');
+        return response.send(buffer);
+    }
+    previewTaskImport(user, workspaceId, projectId, file) {
+        return this.tasksService.previewTaskImport(user.id, workspaceId, projectId, file);
+    }
+    commitTaskImport(user, workspaceId, projectId, dto) {
+        return this.tasksService.commitTaskImport(user.id, workspaceId, projectId, dto);
+    }
     getTaskDetail(user, workspaceId, projectId, taskId) {
         return this.tasksService.getTaskDetail(user.id, workspaceId, projectId, taskId);
     }
@@ -67,6 +81,9 @@ let TasksController = class TasksController {
     }
     cancelTask(user, workspaceId, projectId, taskId) {
         return this.tasksService.cancelTask(user.id, workspaceId, projectId, taskId);
+    }
+    deleteTask(user, workspaceId, projectId, taskId) {
+        return this.tasksService.deleteTask(user.id, workspaceId, projectId, taskId);
     }
 };
 exports.TasksController = TasksController;
@@ -134,6 +151,74 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", void 0)
 ], TasksController.prototype, "getSprintTasks", null);
+__decorate([
+    (0, common_1.Get)('tasks/import/template'),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...taskWriteRoles),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Download Excel backlog import template',
+        description: 'Tai file Excel mau co sheet Backlog import, Sprints, Members de nhap task nhanh giong Jira.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, Object]),
+    __metadata("design:returntype", Promise)
+], TasksController.prototype, "downloadTaskImportTemplate", null);
+__decorate([
+    (0, common_1.Post)('tasks/import/preview'),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...taskWriteRoles),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', { limits: { fileSize: 2 * 1024 * 1024 } })),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Preview Excel backlog import',
+        description: 'Upload file Excel de kiem tra title, sprint, assignee va status truoc khi tao task.',
+    }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            required: ['file'],
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                },
+            },
+        },
+    }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, Object]),
+    __metadata("design:returntype", void 0)
+], TasksController.prototype, "previewTaskImport", null);
+__decorate([
+    (0, common_1.Post)('tasks/import/commit'),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...taskWriteRoles),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Commit Excel backlog import',
+        description: 'Tao task tu cac dong da preview hop le. Task co sprint se vao sprint, task khong co sprint se nam o Backlog.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, import_tasks_dto_1.CommitTaskImportDto]),
+    __metadata("design:returntype", void 0)
+], TasksController.prototype, "commitTaskImport", null);
 __decorate([
     (0, common_1.Get)('tasks/:taskId'),
     (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
@@ -238,6 +323,24 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", void 0)
 ], TasksController.prototype, "cancelTask", null);
+__decorate([
+    (0, common_1.Delete)('tasks/:taskId'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Delete task',
+        description: 'Nguoi tao task hoac OWNER, SCRUM_MASTER, PROJECT_MANAGER duoc xoa task.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'taskId', example: 'task-uuid' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('taskId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String]),
+    __metadata("design:returntype", void 0)
+], TasksController.prototype, "deleteTask", null);
 exports.TasksController = TasksController = __decorate([
     (0, common_1.Controller)('workspaces/:workspaceId/projects/:projectId'),
     (0, swagger_1.ApiTags)('Tasks'),

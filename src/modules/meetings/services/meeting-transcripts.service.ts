@@ -9,11 +9,14 @@ import { Model } from 'mongoose';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { SaveMeetingTranscriptDto } from '../dto/save-meeting-transcript.dto';
+import { AppendLiveTranscriptSegmentDto } from '../dto/append-live-transcript-segment.dto';
 import {
   MeetingTranscript,
   MeetingTranscriptDocument,
+  MeetingTranscriptSegment,
 } from '../schemas/meeting-transcript.schema';
 import { MeetingsRepository } from '../repositories/meetings.repository';
+import { MeetingParticipantsRepository } from '../repositories/meeting-participants.repository';
 import { MeetingAccessService } from './meeting-access.service';
 
 type MeetingTranscriptWithTimestamps = MeetingTranscriptDocument & {
@@ -28,6 +31,7 @@ export class MeetingTranscriptsService {
     @InjectModel(MeetingTranscript.name)
     private readonly transcriptModel: Model<MeetingTranscriptDocument> | null,
     private readonly meetingsRepository: MeetingsRepository,
+    private readonly meetingParticipantsRepository: MeetingParticipantsRepository,
     private readonly meetingAccessService: MeetingAccessService,
     private readonly workspaceAccessService: WorkspaceAccessService,
     private readonly projectAccessService: ProjectAccessService,
@@ -68,6 +72,7 @@ export class MeetingTranscriptsService {
           text: speaker.text.trim(),
           userId: speaker.userId,
         })) ?? [],
+      liveSegments: [],
       createdBy: currentUserId,
     };
 
@@ -141,6 +146,98 @@ export class MeetingTranscriptsService {
     };
   }
 
+  async appendLiveSegment(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    meetingId: string,
+    dto: AppendLiveTranscriptSegmentDto,
+  ) {
+    const transcriptModel = this.getTranscriptModel();
+    await this.meetingAccessService.assertUserCanViewMeeting(
+      currentUserId,
+      workspaceId,
+    );
+    await this.projectAccessService.assertProjectInWorkspace(
+      projectId,
+      workspaceId,
+    );
+    const meeting = await this.meetingAccessService.assertMeetingInProject(
+      meetingId,
+      projectId,
+    );
+
+    if (meeting.workspaceId !== workspaceId) {
+      throw new NotFoundException('Meeting transcript not found');
+    }
+
+    const participant =
+      await this.meetingParticipantsRepository.findByMeetingAndUser(
+        meetingId,
+        currentUserId,
+      );
+    const speakerName =
+      participant?.user?.fullName || participant?.user?.email || 'Unknown';
+    const segment: MeetingTranscriptSegment = {
+      userId: currentUserId,
+      speakerName,
+      text: dto.text.trim(),
+      startedAt: dto.startedAt ? new Date(dto.startedAt) : new Date(),
+      endedAt: dto.endedAt ? new Date(dto.endedAt) : null,
+      confidence: dto.confidence ?? null,
+      source: dto.source?.trim() || 'browser-speech',
+    };
+    const nextLiveSegments = [segment];
+    const nextSpeakers = this.buildSpeakersFromSegments(nextLiveSegments);
+    const nextRawTranscript = this.buildRawTranscript(nextLiveSegments);
+
+    let transcript: MeetingTranscriptDocument | null = null;
+
+    if (meeting.mongoTranscriptId) {
+      transcript = await transcriptModel
+        .findById(meeting.mongoTranscriptId)
+        .exec();
+    }
+
+    if (!transcript) {
+      transcript = await transcriptModel.create({
+        meetingId,
+        workspaceId,
+        projectId,
+        sprintId: meeting.sprintId,
+        rawTranscript: nextRawTranscript,
+        speakers: nextSpeakers,
+        liveSegments: nextLiveSegments,
+        createdBy: currentUserId,
+      });
+      await this.meetingsRepository.updateTranscriptId(
+        meeting,
+        this.getTranscriptId(transcript),
+      );
+    } else {
+      transcript.liveSegments = [
+        ...(transcript.liveSegments ?? []),
+        segment,
+      ].slice(-1000);
+      transcript.speakers = this.buildSpeakersFromSegments(
+        transcript.liveSegments,
+      );
+      transcript.rawTranscript = this.buildRawTranscript(
+        transcript.liveSegments,
+      );
+      await transcript.save();
+    }
+
+    return {
+      success: true,
+      message: 'Append live transcript segment successfully',
+      data: {
+        segment,
+        transcript: this.toTranscriptResponse(transcript),
+      },
+    };
+  }
+
   async findTranscriptForMeeting(meeting: {
     mongoTranscriptId: string | null;
   }) {
@@ -184,9 +281,34 @@ export class MeetingTranscriptsService {
       sprintId: transcript.sprintId ?? null,
       rawTranscript: transcript.rawTranscript,
       speakers: transcript.speakers ?? [],
+      liveSegments: transcript.liveSegments ?? [],
       createdBy: transcript.createdBy,
       createdAt: stampedTranscript.createdAt,
       updatedAt: stampedTranscript.updatedAt,
     };
+  }
+
+  private buildSpeakersFromSegments(segments: MeetingTranscriptSegment[]) {
+    return segments.map((segment) => ({
+      userId: segment.userId,
+      speakerName: segment.speakerName,
+      text: segment.text,
+    }));
+  }
+
+  private buildRawTranscript(segments: MeetingTranscriptSegment[]) {
+    return segments
+      .slice()
+      .sort(
+        (left, right) =>
+          new Date(left.startedAt).getTime() -
+          new Date(right.startedAt).getTime(),
+      )
+      .map((segment) =>
+        [segment.speakerName || 'Unknown', segment.text]
+          .filter(Boolean)
+          .join(': '),
+      )
+      .join('\n');
   }
 }

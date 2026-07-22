@@ -79,6 +79,16 @@ let TaskAccessService = class TaskAccessService {
         }
         throw new common_1.ForbiddenException('You can not update this task status');
     }
+    async assertUserCanDeleteTask(userId, workspaceId, task) {
+        const role = await this.workspaceAccessService.getUserWorkspaceRole(userId, workspaceId);
+        if (!role) {
+            throw new common_1.ForbiddenException('You do not have access to this workspace');
+        }
+        if (taskManagerRoles.includes(role) || task.createdBy === userId) {
+            return role;
+        }
+        throw new common_1.ForbiddenException('You cannot delete this task');
+    }
 };
 exports.TaskAccessService = TaskAccessService;
 exports.TaskAccessService = TaskAccessService = __decorate([

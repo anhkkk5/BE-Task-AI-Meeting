@@ -72,11 +72,6 @@ let TasksRepository = class TasksRepository {
                 assigneeId: query.assigneeId,
             });
         }
-        if (query.priority) {
-            builder.andWhere('task.priority = :priority', {
-                priority: query.priority,
-            });
-        }
         if (query.keyword?.trim()) {
             const keyword = `%${query.keyword.trim()}%`;
             builder.andWhere('(task.title LIKE :keyword OR task.taskCode LIKE :keyword)', { keyword });
@@ -124,6 +119,9 @@ let TasksRepository = class TasksRepository {
     async update(task, data) {
         Object.assign(task, data);
         return this.repository.save(task);
+    }
+    softDelete(task) {
+        return this.repository.softRemove(task);
     }
 };
 exports.TasksRepository = TasksRepository;

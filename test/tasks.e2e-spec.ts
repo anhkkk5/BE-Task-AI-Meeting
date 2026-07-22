@@ -64,6 +64,7 @@ describe('TasksController (e2e)', () => {
       | 'assignTask'
       | 'cancelTask'
       | 'createTask'
+      | 'deleteTask'
       | 'getBacklogTasks'
       | 'getSprintTasks'
       | 'getTaskDetail'
@@ -82,7 +83,6 @@ describe('TasksController (e2e)', () => {
     title: 'Code task API',
     description: 'Build task module',
     status: 'BACKLOG',
-    priority: 'HIGH',
     assigneeId: null,
     createdBy: 'owner-id',
     dueDate: '2026-06-25',
@@ -120,6 +120,11 @@ describe('TasksController (e2e)', () => {
         data: {
           task: taskResponse,
         },
+      }),
+      deleteTask: jest.fn().mockResolvedValue({
+        success: true,
+        message: 'Delete task successfully',
+        data: null,
       }),
       getBacklogTasks: jest.fn().mockResolvedValue({
         success: true,
@@ -266,7 +271,6 @@ describe('TasksController (e2e)', () => {
       .send({
         title: 'Code task API',
         description: 'Build task module',
-        priority: 'HIGH',
         dueDate: '2026-06-25',
         estimatedHours: 6,
         storyPoints: 3,
@@ -282,7 +286,6 @@ describe('TasksController (e2e)', () => {
           {
             title: 'Code task API',
             description: 'Build task module',
-            priority: 'HIGH',
             dueDate: '2026-06-25',
             estimatedHours: 6,
             storyPoints: 3,
@@ -295,7 +298,7 @@ describe('TasksController (e2e)', () => {
   it('gets tasks with filters', () => {
     return request(app.getHttpServer())
       .get(
-        '/api/v1/workspaces/workspace-id/projects/project-id/tasks?status=TODO&priority=HIGH&assigneeId=550e8400-e29b-41d4-a716-446655440000&page=1&limit=10',
+        '/api/v1/workspaces/workspace-id/projects/project-id/tasks?status=TODO&assigneeId=550e8400-e29b-41d4-a716-446655440000&page=1&limit=10',
       )
       .set('Authorization', 'Bearer access-token')
       .expect(200)
@@ -308,7 +311,6 @@ describe('TasksController (e2e)', () => {
           'project-id',
           {
             status: 'TODO',
-            priority: 'HIGH',
             assigneeId: '550e8400-e29b-41d4-a716-446655440000',
             page: 1,
             limit: 10,
@@ -475,6 +477,26 @@ describe('TasksController (e2e)', () => {
           'task-id',
         );
         expect(body.data?.task?.status).toBe('CANCELLED');
+      });
+  });
+
+  it('deletes task', () => {
+    return request(app.getHttpServer())
+      .delete(
+        '/api/v1/workspaces/workspace-id/projects/project-id/tasks/task-id',
+      )
+      .set('Authorization', 'Bearer access-token')
+      .expect(200)
+      .expect((response) => {
+        const body = response.body as TasksE2eResponse;
+
+        expect(tasksService.deleteTask).toHaveBeenCalledWith(
+          'owner-id',
+          'workspace-id',
+          'project-id',
+          'task-id',
+        );
+        expect(body.data).toBeNull();
       });
   });
 });

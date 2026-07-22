@@ -207,6 +207,11 @@ export declare class MeetingsService {
         message: string;
         data: null;
     }>;
+    deleteMeeting(currentUserId: string, workspaceId: string, projectId: string, meetingId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
+    }>;
     private changeMeetingStatus;
     private assertValidMeetingFilters;
     private assertSprintFilter;

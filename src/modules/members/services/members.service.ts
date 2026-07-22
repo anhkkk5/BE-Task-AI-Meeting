@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { WorkspaceMemberStatus } from '../../../common/enums/workspace-member-status.enum';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
+import { User } from '../../users/entities/user.entity';
+import { UserStatus } from '../../users/enums/user-status.enum';
 import { UsersService } from '../../users/services/users.service';
 import { WorkspaceMember } from '../../workspaces/entities/workspace-member.entity';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
@@ -88,6 +90,62 @@ export class MembersService {
         member: this.toMemberResponse(member),
       },
     };
+  }
+
+  async lookupMember(
+    currentUserId: string,
+    workspaceId: string,
+    email: string,
+  ) {
+    await this.workspaceAccessService.assertWorkspaceOwner(
+      currentUserId,
+      workspaceId,
+    );
+    await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await this.usersService.findByEmail(normalizedEmail);
+
+    if (!user) {
+      return this.lookupResponse(null, null, false, 'USER_NOT_FOUND');
+    }
+
+    const existingMember =
+      await this.workspaceMembersRepository.findByWorkspaceAndUser(
+        workspaceId,
+        user.id,
+      );
+
+    if (existingMember) {
+      existingMember.user = user;
+    }
+
+    if (user.status !== UserStatus.Active) {
+      return this.lookupResponse(
+        user,
+        existingMember,
+        false,
+        'USER_NOT_ACTIVE',
+      );
+    }
+
+    if (existingMember?.status === WorkspaceMemberStatus.Active) {
+      return this.lookupResponse(
+        user,
+        existingMember,
+        false,
+        'ALREADY_ACTIVE_MEMBER',
+      );
+    }
+
+    return this.lookupResponse(
+      user,
+      existingMember,
+      true,
+      existingMember?.status === WorkspaceMemberStatus.Removed
+        ? 'REMOVED_MEMBER_CAN_BE_REACTIVATED'
+        : null,
+    );
   }
 
   async changeMemberRole(
@@ -206,6 +264,37 @@ export class MembersService {
       role: member.role,
       status: member.status,
       joinedAt: member.joinedAt,
+    };
+  }
+
+  private lookupResponse(
+    user: User | null,
+    existingMember: WorkspaceMember | null,
+    canAdd: boolean,
+    reason: string | null,
+  ) {
+    return {
+      success: true,
+      message: 'Lookup member successfully',
+      data: {
+        user: user ? this.toUserLookupResponse(user) : null,
+        existingMember: existingMember
+          ? this.toMemberResponse(existingMember)
+          : null,
+        canAdd,
+        reason,
+      },
+    };
+  }
+
+  private toUserLookupResponse(user: User) {
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      avatarUrl: user.avatarUrl,
+      jobTitle: user.jobTitle,
+      status: user.status,
     };
   }
 }

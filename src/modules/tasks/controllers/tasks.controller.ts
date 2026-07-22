@@ -1,20 +1,28 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
   Post,
   Query,
+  Res,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
+  ApiBody,
   ApiBearerAuth,
+  ApiConsumes,
   ApiOperation,
   ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { WorkspaceRoles } from '../../../common/decorators/workspace-roles.decorator';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
@@ -25,10 +33,18 @@ import type { AuthUser } from '../../auth/types/auth-user.type';
 import { AssignTaskDto } from '../dto/assign-task.dto';
 import { CreateTaskDto } from '../dto/create-task.dto';
 import { GetTasksQueryDto } from '../dto/get-tasks-query.dto';
+import { CommitTaskImportDto } from '../dto/import-tasks.dto';
 import { MoveTaskSprintDto } from '../dto/move-task-sprint.dto';
 import { UpdateTaskStatusDto } from '../dto/update-task-status.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { TasksService } from '../services/tasks.service';
+
+type UploadedExcelFile = {
+  buffer: Buffer;
+  originalname?: string;
+  mimetype?: string;
+  size?: number;
+};
 
 const taskWriteRoles = [
   WorkspaceRole.Owner,
@@ -111,6 +127,103 @@ export class TasksController {
       workspaceId,
       projectId,
       sprintId,
+    );
+  }
+
+  @Get('tasks/import/template')
+  @WorkspaceRoles(...taskWriteRoles)
+  @UseGuards(WorkspaceRolesGuard)
+  @ApiOperation({
+    summary: 'Download Excel backlog import template',
+    description:
+      'Tai file Excel mau co sheet Backlog import, Sprints, Members de nhap task nhanh giong Jira.',
+  })
+  @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
+  @ApiParam({ name: 'projectId', example: 'project-uuid' })
+  async downloadTaskImportTemplate(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Res() response: Response,
+  ) {
+    const buffer = await this.tasksService.createTaskImportTemplate(
+      user.id,
+      workspaceId,
+      projectId,
+    );
+
+    response.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    response.setHeader(
+      'Content-Disposition',
+      'attachment; filename="backlog-import-template.xlsx"',
+    );
+    return response.send(buffer);
+  }
+
+  @Post('tasks/import/preview')
+  @WorkspaceRoles(...taskWriteRoles)
+  @UseGuards(WorkspaceRolesGuard)
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 2 * 1024 * 1024 } }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Preview Excel backlog import',
+    description:
+      'Upload file Excel de kiem tra title, sprint, assignee va status truoc khi tao task.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
+  @ApiParam({ name: 'projectId', example: 'project-uuid' })
+  previewTaskImport(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @UploadedFile() file: UploadedExcelFile | undefined,
+  ) {
+    return this.tasksService.previewTaskImport(
+      user.id,
+      workspaceId,
+      projectId,
+      file,
+    );
+  }
+
+  @Post('tasks/import/commit')
+  @WorkspaceRoles(...taskWriteRoles)
+  @UseGuards(WorkspaceRolesGuard)
+  @ApiOperation({
+    summary: 'Commit Excel backlog import',
+    description:
+      'Tao task tu cac dong da preview hop le. Task co sprint se vao sprint, task khong co sprint se nam o Backlog.',
+  })
+  @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
+  @ApiParam({ name: 'projectId', example: 'project-uuid' })
+  commitTaskImport(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Body() dto: CommitTaskImportDto,
+  ) {
+    return this.tasksService.commitTaskImport(
+      user.id,
+      workspaceId,
+      projectId,
+      dto,
     );
   }
 
@@ -247,6 +360,30 @@ export class TasksController {
     @Param('taskId') taskId: string,
   ) {
     return this.tasksService.cancelTask(
+      user.id,
+      workspaceId,
+      projectId,
+      taskId,
+    );
+  }
+
+  @Delete('tasks/:taskId')
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({
+    summary: 'Delete task',
+    description:
+      'Nguoi tao task hoac OWNER, SCRUM_MASTER, PROJECT_MANAGER duoc xoa task.',
+  })
+  @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
+  @ApiParam({ name: 'projectId', example: 'project-uuid' })
+  @ApiParam({ name: 'taskId', example: 'task-uuid' })
+  deleteTask(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('taskId') taskId: string,
+  ) {
+    return this.tasksService.deleteTask(
       user.id,
       workspaceId,
       projectId,

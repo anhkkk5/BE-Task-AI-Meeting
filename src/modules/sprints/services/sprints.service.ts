@@ -1,5 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { SprintStatus } from '../../../common/enums/sprint-status.enum';
+import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { CreateSprintDto } from '../dto/create-sprint.dto';
@@ -8,6 +13,12 @@ import { UpdateSprintDto } from '../dto/update-sprint.dto';
 import { Sprint } from '../entities/sprint.entity';
 import { SprintsRepository } from '../repositories/sprints.repository';
 import { SprintAccessService } from './sprint-access.service';
+
+const sprintManagerRoles = [
+  WorkspaceRole.Owner,
+  WorkspaceRole.ScrumMaster,
+  WorkspaceRole.ProjectManager,
+];
 
 @Injectable()
 export class SprintsService {
@@ -234,6 +245,47 @@ export class SprintsService {
     return {
       success: true,
       message: 'Cancel sprint successfully',
+      data: null,
+    };
+  }
+
+  async deleteSprint(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    sprintId: string,
+  ) {
+    await this.assertWritableProject(workspaceId, projectId);
+    await this.workspaceAccessService.assertWorkspaceMember(
+      currentUserId,
+      workspaceId,
+    );
+    const sprint = await this.sprintAccessService.assertSprintInProject(
+      sprintId,
+      projectId,
+    );
+
+    if (sprint.status === SprintStatus.Active) {
+      throw new BadRequestException(
+        'Hãy kết thúc hoặc hủy sprint đang hoạt động trước khi xóa',
+      );
+    }
+
+    if (sprint.createdBy !== currentUserId) {
+      const role = await this.workspaceAccessService.getUserWorkspaceRole(
+        currentUserId,
+        workspaceId,
+      );
+      if (!role || !sprintManagerRoles.includes(role)) {
+        throw new ForbiddenException('Bạn không có quyền xóa sprint này');
+      }
+    }
+
+    await this.sprintsRepository.softDeleteWithTasks(sprint);
+
+    return {
+      success: true,
+      message: 'Xóa sprint thành công',
       data: null,
     };
   }

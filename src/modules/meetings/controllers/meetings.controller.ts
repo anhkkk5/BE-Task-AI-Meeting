@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -164,6 +165,31 @@ export class MeetingsController {
     @Param('meetingId') meetingId: string,
   ) {
     return this.meetingsService.completeMeeting(
+      user.id,
+      workspaceId,
+      projectId,
+      meetingId,
+    );
+  }
+
+  @Delete(':meetingId')
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({
+    summary: 'Delete meeting',
+    description:
+      'Nguoi tao meeting hoac OWNER, SCRUM_MASTER, PROJECT_MANAGER duoc xoa meeting.',
+  })
+  @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
+  @ApiParam({ name: 'projectId', example: 'project-uuid' })
+  @ApiParam({ name: 'meetingId', example: 'meeting-uuid' })
+  @ApiResponse({ status: 200, description: 'Delete meeting successfully.' })
+  deleteMeeting(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('meetingId') meetingId: string,
+  ) {
+    return this.meetingsService.deleteMeeting(
       user.id,
       workspaceId,
       projectId,
