@@ -10,7 +10,12 @@ export type AiProviderResult<TOutput = PersonalDailyReportOutput> = {
     rawResponse: string;
     output: TOutput;
 };
+export type ProjectAssistantOutput = {
+    answer: string;
+    suggestedQuestions: string[];
+};
 export declare class AiProviderService {
+    generateProjectAssistantAnswer(prompt: string, fallback: ProjectAssistantOutput): Promise<AiProviderResult<ProjectAssistantOutput>>;
     generatePersonalDailyReport(prompt: string, inputData: PersonalReportInputData): Promise<AiProviderResult>;
     generateTeamDailyReport(prompt: string, inputData: TeamReportInputData): Promise<AiProviderResult<TeamDailyReportOutput>>;
     generateMeetingSummary(prompt: string, inputData: MeetingSummaryInputData): Promise<AiProviderResult<MeetingSummaryOutput>>;

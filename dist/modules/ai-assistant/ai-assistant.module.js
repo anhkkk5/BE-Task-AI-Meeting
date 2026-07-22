@@ -23,6 +23,7 @@ const workspaces_module_1 = require("../workspaces/workspaces.module");
 const ai_meeting_summary_controller_1 = require("./controllers/ai-meeting-summary.controller");
 const ai_personalized_meeting_summary_controller_1 = require("./controllers/ai-personalized-meeting-summary.controller");
 const ai_personal_report_controller_1 = require("./controllers/ai-personal-report.controller");
+const ai_project_assistant_controller_1 = require("./controllers/ai-project-assistant.controller");
 const ai_team_report_controller_1 = require("./controllers/ai-team-report.controller");
 const ai_prompt_log_schema_1 = require("./schemas/ai-prompt-log.schema");
 const ai_report_schema_1 = require("./schemas/ai-report.schema");
@@ -35,6 +36,7 @@ const ai_personalized_meeting_summary_access_service_1 = require("./services/ai-
 const ai_personalized_meeting_summary_data_builder_service_1 = require("./services/ai-personalized-meeting-summary-data-builder.service");
 const ai_personalized_meeting_summary_service_1 = require("./services/ai-personalized-meeting-summary.service");
 const ai_personal_report_service_1 = require("./services/ai-personal-report.service");
+const ai_project_assistant_service_1 = require("./services/ai-project-assistant.service");
 const ai_provider_service_1 = require("./services/ai-provider.service");
 const ai_report_access_service_1 = require("./services/ai-report-access.service");
 const ai_report_data_builder_service_1 = require("./services/ai-report-data-builder.service");
@@ -77,6 +79,7 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
         ],
         controllers: [
             ai_personal_report_controller_1.AiPersonalReportController,
+            ai_project_assistant_controller_1.AiProjectAssistantController,
             ai_team_report_controller_1.AiTeamReportController,
             ai_meeting_summary_controller_1.AiMeetingSummaryController,
             ai_meeting_summary_controller_1.AiMeetingSummaryDetailController,
@@ -85,6 +88,7 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
         ],
         providers: [
             ai_personal_report_service_1.AiPersonalReportService,
+            ai_project_assistant_service_1.AiProjectAssistantService,
             ai_team_report_service_1.AiTeamReportService,
             ai_meeting_summary_service_1.AiMeetingSummaryService,
             ai_personalized_meeting_summary_service_1.AiPersonalizedMeetingSummaryService,

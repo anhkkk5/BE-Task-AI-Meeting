@@ -9,6 +9,39 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiProviderService = void 0;
 const common_1 = require("@nestjs/common");
 let AiProviderService = class AiProviderService {
+    async generateProjectAssistantAnswer(prompt, fallback) {
+        const provider = process.env.AI_PROVIDER ?? 'mock';
+        const apiKey = process.env.AI_API_KEY ?? '';
+        if (provider !== 'groq' || !apiKey) {
+            return {
+                model: 'mock-project-assistant',
+                rawResponse: JSON.stringify(fallback),
+                output: fallback,
+            };
+        }
+        const model = this.getGroqModel();
+        const output = await this.callGroqJson({
+            apiKey,
+            model,
+            system: 'Bạn là trợ lý quản lý dự án Agile. Chỉ trả về JSON tiếng Việt có dấu. Chỉ dùng dữ liệu được cung cấp, không suy đoán người, ngày, trạng thái hoặc số liệu.',
+            user: [
+                prompt,
+                '',
+                'Trả về đúng JSON: {"answer":"câu trả lời ngắn, rõ và có hành động tiếp theo","suggestedQuestions":["tối đa 4 câu hỏi tiếp theo"]}',
+            ].join('\n'),
+        });
+        const answer = output.answer?.trim() || fallback.answer;
+        const suggestedQuestions = Array.isArray(output.suggestedQuestions)
+            ? output.suggestedQuestions
+                .filter((item) => typeof item === 'string' && Boolean(item.trim()))
+                .slice(0, 4)
+            : fallback.suggestedQuestions;
+        return {
+            model,
+            rawResponse: JSON.stringify(output),
+            output: { answer, suggestedQuestions },
+        };
+    }
     async generatePersonalDailyReport(prompt, inputData) {
         const provider = process.env.AI_PROVIDER ?? 'mock';
         const apiKey = process.env.AI_API_KEY ?? '';
