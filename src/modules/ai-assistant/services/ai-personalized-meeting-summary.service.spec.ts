@@ -10,6 +10,7 @@ import { MeetingParticipantsRepository } from '../../meetings/repositories/meeti
 import { MeetingAccessService } from '../../meetings/services/meeting-access.service';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
+import { AiUserPreferencesService } from '../../users/services/ai-user-preferences.service';
 import { AiPromptLogDocument } from '../schemas/ai-prompt-log.schema';
 import {
   MeetingSummaryDocument,
@@ -86,6 +87,9 @@ describe('AiPersonalizedMeetingSummaryService', () => {
       WorkspaceAccessService,
       'assertWorkspaceMember' | 'getUserWorkspaceRole'
     >
+  >;
+  let aiUserPreferencesService: jest.Mocked<
+    Pick<AiUserPreferencesService, 'getResolvedPreferences'>
   >;
   let service: AiPersonalizedMeetingSummaryService;
 
@@ -278,6 +282,13 @@ describe('AiPersonalizedMeetingSummaryService', () => {
       assertWorkspaceMember: jest.fn(),
       getUserWorkspaceRole: jest.fn(),
     };
+    aiUserPreferencesService = {
+      getResolvedPreferences: jest.fn().mockResolvedValue({
+        responseStyle: 'BALANCED',
+        tone: 'PROFESSIONAL',
+        focusAreas: ['PROGRESS', 'BLOCKERS', 'DECISIONS', 'ACTION_ITEMS'],
+      }),
+    } as never;
 
     personalizedModel.create.mockResolvedValue(personalizedSummary);
     personalizedModel.find.mockReturnValue(
@@ -326,6 +337,7 @@ describe('AiPersonalizedMeetingSummaryService', () => {
       projectAccessService as unknown as ProjectAccessService,
       promptBuilderService,
       workspaceAccessService as unknown as WorkspaceAccessService,
+      aiUserPreferencesService as unknown as AiUserPreferencesService,
     );
   });
 
@@ -449,6 +461,7 @@ describe('AiPersonalizedMeetingSummaryService', () => {
       projectAccessService as unknown as ProjectAccessService,
       promptBuilderService,
       workspaceAccessService as unknown as WorkspaceAccessService,
+      aiUserPreferencesService as unknown as AiUserPreferencesService,
     );
 
     await expect(

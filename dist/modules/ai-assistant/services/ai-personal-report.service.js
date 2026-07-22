@@ -20,6 +20,7 @@ const ai_report_type_enum_1 = require("../../../common/enums/ai-report-type.enum
 const project_access_service_1 = require("../../projects/services/project-access.service");
 const sprint_access_service_1 = require("../../sprints/services/sprint-access.service");
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
+const ai_user_preferences_service_1 = require("../../users/services/ai-user-preferences.service");
 const ai_prompt_log_schema_1 = require("../schemas/ai-prompt-log.schema");
 const ai_report_schema_1 = require("../schemas/ai-report.schema");
 const ai_provider_service_1 = require("./ai-provider.service");
@@ -36,7 +37,8 @@ let AiPersonalReportService = class AiPersonalReportService {
     promptBuilderService;
     sprintAccessService;
     workspaceAccessService;
-    constructor(aiReportModel, aiPromptLogModel, aiProviderService, aiReportAccessService, dataBuilderService, projectAccessService, promptBuilderService, sprintAccessService, workspaceAccessService) {
+    aiUserPreferencesService;
+    constructor(aiReportModel, aiPromptLogModel, aiProviderService, aiReportAccessService, dataBuilderService, projectAccessService, promptBuilderService, sprintAccessService, workspaceAccessService, aiUserPreferencesService) {
         this.aiReportModel = aiReportModel;
         this.aiPromptLogModel = aiPromptLogModel;
         this.aiProviderService = aiProviderService;
@@ -46,6 +48,7 @@ let AiPersonalReportService = class AiPersonalReportService {
         this.promptBuilderService = promptBuilderService;
         this.sprintAccessService = sprintAccessService;
         this.workspaceAccessService = workspaceAccessService;
+        this.aiUserPreferencesService = aiUserPreferencesService;
     }
     generateMyPersonalDailyReport(currentUserId, workspaceId, projectId, dto) {
         return this.generateReport({
@@ -161,7 +164,8 @@ let AiPersonalReportService = class AiPersonalReportService {
             reportDate: params.dto.reportDate,
             sprintId: params.dto.sprintId,
         });
-        const prompt = this.promptBuilderService.buildPersonalDailyReportPrompt(inputData);
+        const preferences = await this.aiUserPreferencesService.getResolvedPreferences(params.targetUserId);
+        const prompt = this.promptBuilderService.buildPersonalDailyReportPrompt(inputData, preferences);
         const startedAt = Date.now();
         try {
             const aiResult = await this.aiProviderService.generatePersonalDailyReport(prompt, inputData);
@@ -326,6 +330,7 @@ exports.AiPersonalReportService = AiPersonalReportService = __decorate([
         project_access_service_1.ProjectAccessService,
         prompt_builder_service_1.PromptBuilderService,
         sprint_access_service_1.SprintAccessService,
-        workspace_access_service_1.WorkspaceAccessService])
+        workspace_access_service_1.WorkspaceAccessService,
+        ai_user_preferences_service_1.AiUserPreferencesService])
 ], AiPersonalReportService);
 //# sourceMappingURL=ai-personal-report.service.js.map

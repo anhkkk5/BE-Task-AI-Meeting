@@ -17,6 +17,7 @@ import { MeetingParticipantsRepository } from '../../meetings/repositories/meeti
 import { MeetingAccessService } from '../../meetings/services/meeting-access.service';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
+import { AiUserPreferencesService } from '../../users/services/ai-user-preferences.service';
 import { GeneratePersonalizedMeetingSummaryDto } from '../dto/generate-personalized-meeting-summary.dto';
 import { GetMyMeetingActionItemsQueryDto } from '../dto/get-my-meeting-action-items-query.dto';
 import {
@@ -75,6 +76,7 @@ export class AiPersonalizedMeetingSummaryService {
     private readonly projectAccessService: ProjectAccessService,
     private readonly promptBuilderService: PromptBuilderService,
     private readonly workspaceAccessService: WorkspaceAccessService,
+    private readonly aiUserPreferencesService: AiUserPreferencesService,
   ) {}
 
   async generateMyPersonalizedMeetingSummary(
@@ -454,9 +456,14 @@ export class AiPersonalizedMeetingSummaryService {
         sourceSummary,
         targetUserId: params.targetUserId,
       });
+    const preferences =
+      await this.aiUserPreferencesService.getResolvedPreferences(
+        params.targetUserId,
+      );
     const prompt =
       this.promptBuilderService.buildPersonalizedMeetingSummaryPrompt(
         inputData,
+        preferences,
       );
     const startedAt = Date.now();
 

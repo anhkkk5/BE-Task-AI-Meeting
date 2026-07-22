@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -9,7 +16,9 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { AccessTokenGuard } from '../../auth/guards/access-token.guard';
 import type { AuthUser } from '../../auth/types/auth-user.type';
 import { ChangePasswordDto } from '../dto/change-password.dto';
+import { UpdateAiUserPreferencesDto } from '../dto/update-ai-user-preferences.dto';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
+import { AiUserPreferencesService } from '../services/ai-user-preferences.service';
 import { UsersService } from '../services/users.service';
 
 @Controller('users')
@@ -17,7 +26,31 @@ import { UsersService } from '../services/users.service';
 @ApiBearerAuth()
 @UseGuards(AccessTokenGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly aiUserPreferencesService: AiUserPreferencesService,
+  ) {}
+
+  @Get('me/ai-preferences')
+  @ApiOperation({ summary: 'Xem cấu hình cá nhân hóa AI' })
+  getAiPreferences(@CurrentUser() user: AuthUser) {
+    return this.aiUserPreferencesService.getPreferences(user.id);
+  }
+
+  @Patch('me/ai-preferences')
+  @ApiOperation({ summary: 'Cập nhật cấu hình cá nhân hóa AI' })
+  updateAiPreferences(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpdateAiUserPreferencesDto,
+  ) {
+    return this.aiUserPreferencesService.updatePreferences(user.id, dto);
+  }
+
+  @Delete('me/ai-preferences')
+  @ApiOperation({ summary: 'Khôi phục cấu hình AI mặc định' })
+  resetAiPreferences(@CurrentUser() user: AuthUser) {
+    return this.aiUserPreferencesService.resetPreferences(user.id);
+  }
 
   @Get('me')
   @ApiOperation({

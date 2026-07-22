@@ -18,12 +18,25 @@ const swagger_1 = require("@nestjs/swagger");
 const current_user_decorator_1 = require("../../../common/decorators/current-user.decorator");
 const access_token_guard_1 = require("../../auth/guards/access-token.guard");
 const change_password_dto_1 = require("../dto/change-password.dto");
+const update_ai_user_preferences_dto_1 = require("../dto/update-ai-user-preferences.dto");
 const update_profile_dto_1 = require("../dto/update-profile.dto");
+const ai_user_preferences_service_1 = require("../services/ai-user-preferences.service");
 const users_service_1 = require("../services/users.service");
 let UsersController = class UsersController {
     usersService;
-    constructor(usersService) {
+    aiUserPreferencesService;
+    constructor(usersService, aiUserPreferencesService) {
         this.usersService = usersService;
+        this.aiUserPreferencesService = aiUserPreferencesService;
+    }
+    getAiPreferences(user) {
+        return this.aiUserPreferencesService.getPreferences(user.id);
+    }
+    updateAiPreferences(user, dto) {
+        return this.aiUserPreferencesService.updatePreferences(user.id, dto);
+    }
+    resetAiPreferences(user) {
+        return this.aiUserPreferencesService.resetPreferences(user.id);
     }
     getProfile(user) {
         return this.usersService.getProfile(user.id);
@@ -36,6 +49,31 @@ let UsersController = class UsersController {
     }
 };
 exports.UsersController = UsersController;
+__decorate([
+    (0, common_1.Get)('me/ai-preferences'),
+    (0, swagger_1.ApiOperation)({ summary: 'Xem cấu hình cá nhân hóa AI' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getAiPreferences", null);
+__decorate([
+    (0, common_1.Patch)('me/ai-preferences'),
+    (0, swagger_1.ApiOperation)({ summary: 'Cập nhật cấu hình cá nhân hóa AI' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, update_ai_user_preferences_dto_1.UpdateAiUserPreferencesDto]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "updateAiPreferences", null);
+__decorate([
+    (0, common_1.Delete)('me/ai-preferences'),
+    (0, swagger_1.ApiOperation)({ summary: 'Khôi phục cấu hình AI mặc định' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "resetAiPreferences", null);
 __decorate([
     (0, common_1.Get)('me'),
     (0, swagger_1.ApiOperation)({
@@ -87,6 +125,7 @@ exports.UsersController = UsersController = __decorate([
     (0, swagger_1.ApiTags)('Users'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard),
-    __metadata("design:paramtypes", [users_service_1.UsersService])
+    __metadata("design:paramtypes", [users_service_1.UsersService,
+        ai_user_preferences_service_1.AiUserPreferencesService])
 ], UsersController);
 //# sourceMappingURL=users.controller.js.map

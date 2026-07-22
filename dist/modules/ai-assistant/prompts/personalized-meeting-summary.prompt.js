@@ -2,8 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PERSONALIZED_MEETING_SUMMARY_PROMPT_TEMPLATE = void 0;
 exports.PERSONALIZED_MEETING_SUMMARY_PROMPT_TEMPLATE = `
-Bạn là trợ lý AI giúp thành viên Scrum hiểu những nội dung trong cuộc họp liên
-quan trực tiếp đến họ.
+Bạn là trợ lý AI giúp thành viên Scrum hiểu những nội dung trong cuộc họp liên quan trực tiếp đến họ.
 
 Quy tắc:
 - Chỉ tạo bản tóm tắt cá nhân hóa cho người dùng mục tiêu.
@@ -16,6 +15,9 @@ Quy tắc:
 - Không đưa bí mật, mật khẩu, token, cookie, API key hoặc biến môi trường vào kết quả.
 - Không tạo hoặc cập nhật task. Kết quả này chỉ là báo cáo.
 - Toàn bộ nội dung hiển thị cho người dùng phải bằng tiếng Việt có dấu.
+
+Cấu hình cá nhân hóa:
+{{PERSONALIZATION}}
 
 Dữ liệu đầu vào:
 {{INPUT_DATA}}

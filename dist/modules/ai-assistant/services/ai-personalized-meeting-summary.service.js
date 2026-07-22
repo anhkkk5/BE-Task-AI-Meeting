@@ -22,6 +22,7 @@ const meeting_participants_repository_1 = require("../../meetings/repositories/m
 const meeting_access_service_1 = require("../../meetings/services/meeting-access.service");
 const project_access_service_1 = require("../../projects/services/project-access.service");
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
+const ai_user_preferences_service_1 = require("../../users/services/ai-user-preferences.service");
 const ai_prompt_log_schema_1 = require("../schemas/ai-prompt-log.schema");
 const meeting_summary_schema_1 = require("../schemas/meeting-summary.schema");
 const personalized_meeting_summary_schema_1 = require("../schemas/personalized-meeting-summary.schema");
@@ -41,10 +42,11 @@ let AiPersonalizedMeetingSummaryService = class AiPersonalizedMeetingSummaryServ
     projectAccessService;
     promptBuilderService;
     workspaceAccessService;
+    aiUserPreferencesService;
     rateLimitWindowMs = 10 * 60 * 1000;
     rateLimitMax = 5;
     generateHits = new Map();
-    constructor(personalizedSummaryModel, meetingSummaryModel, aiPromptLogModel, accessService, dataBuilderService, aiProviderService, meetingAccessService, meetingParticipantsRepository, projectAccessService, promptBuilderService, workspaceAccessService) {
+    constructor(personalizedSummaryModel, meetingSummaryModel, aiPromptLogModel, accessService, dataBuilderService, aiProviderService, meetingAccessService, meetingParticipantsRepository, projectAccessService, promptBuilderService, workspaceAccessService, aiUserPreferencesService) {
         this.personalizedSummaryModel = personalizedSummaryModel;
         this.meetingSummaryModel = meetingSummaryModel;
         this.aiPromptLogModel = aiPromptLogModel;
@@ -56,6 +58,7 @@ let AiPersonalizedMeetingSummaryService = class AiPersonalizedMeetingSummaryServ
         this.projectAccessService = projectAccessService;
         this.promptBuilderService = promptBuilderService;
         this.workspaceAccessService = workspaceAccessService;
+        this.aiUserPreferencesService = aiUserPreferencesService;
     }
     async generateMyPersonalizedMeetingSummary(currentUserId, workspaceId, projectId, meetingId, dto = {}) {
         this.getPersonalizedSummaryModel();
@@ -261,7 +264,8 @@ let AiPersonalizedMeetingSummaryService = class AiPersonalizedMeetingSummaryServ
             sourceSummary,
             targetUserId: params.targetUserId,
         });
-        const prompt = this.promptBuilderService.buildPersonalizedMeetingSummaryPrompt(inputData);
+        const preferences = await this.aiUserPreferencesService.getResolvedPreferences(params.targetUserId);
+        const prompt = this.promptBuilderService.buildPersonalizedMeetingSummaryPrompt(inputData, preferences);
         const startedAt = Date.now();
         try {
             const aiResult = await this.aiProviderService.generatePersonalizedMeetingSummary(prompt, inputData);
@@ -456,6 +460,7 @@ exports.AiPersonalizedMeetingSummaryService = AiPersonalizedMeetingSummaryServic
         meeting_participants_repository_1.MeetingParticipantsRepository,
         project_access_service_1.ProjectAccessService,
         prompt_builder_service_1.PromptBuilderService,
-        workspace_access_service_1.WorkspaceAccessService])
+        workspace_access_service_1.WorkspaceAccessService,
+        ai_user_preferences_service_1.AiUserPreferencesService])
 ], AiPersonalizedMeetingSummaryService);
 //# sourceMappingURL=ai-personalized-meeting-summary.service.js.map

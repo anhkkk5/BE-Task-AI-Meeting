@@ -12,9 +12,15 @@ const meeting_summary_prompt_1 = require("../prompts/meeting-summary.prompt");
 const personal_daily_report_prompt_1 = require("../prompts/personal-daily-report.prompt");
 const personalized_meeting_summary_prompt_1 = require("../prompts/personalized-meeting-summary.prompt");
 const team_daily_report_prompt_1 = require("../prompts/team-daily-report.prompt");
+const ai_focus_area_enum_1 = require("../../users/enums/ai-focus-area.enum");
+const ai_response_style_enum_1 = require("../../users/enums/ai-response-style.enum");
+const ai_tone_enum_1 = require("../../users/enums/ai-tone.enum");
+const ai_user_preferences_type_1 = require("../../users/types/ai-user-preferences.type");
 let PromptBuilderService = class PromptBuilderService {
-    buildPersonalDailyReportPrompt(inputData) {
-        return personal_daily_report_prompt_1.personalDailyReportPromptTemplate.replace('{{INPUT_DATA}}', JSON.stringify(inputData, null, 2));
+    buildPersonalDailyReportPrompt(inputData, preferences = ai_user_preferences_type_1.DEFAULT_AI_USER_PREFERENCES) {
+        return personal_daily_report_prompt_1.personalDailyReportPromptTemplate
+            .replace('{{PERSONALIZATION}}', this.buildPersonalization(preferences))
+            .replace('{{INPUT_DATA}}', JSON.stringify(inputData, null, 2));
     }
     buildTeamDailyReportPrompt(inputData) {
         return team_daily_report_prompt_1.TEAM_DAILY_REPORT_PROMPT_TEMPLATE.replace('{{INPUT_DATA}}', JSON.stringify(inputData, null, 2));
@@ -22,8 +28,33 @@ let PromptBuilderService = class PromptBuilderService {
     buildMeetingSummaryPrompt(inputData) {
         return meeting_summary_prompt_1.MEETING_SUMMARY_PROMPT_TEMPLATE.replace('{{INPUT_DATA}}', JSON.stringify(inputData, null, 2));
     }
-    buildPersonalizedMeetingSummaryPrompt(inputData) {
-        return personalized_meeting_summary_prompt_1.PERSONALIZED_MEETING_SUMMARY_PROMPT_TEMPLATE.replace('{{INPUT_DATA}}', JSON.stringify(inputData, null, 2));
+    buildPersonalizedMeetingSummaryPrompt(inputData, preferences = ai_user_preferences_type_1.DEFAULT_AI_USER_PREFERENCES) {
+        return personalized_meeting_summary_prompt_1.PERSONALIZED_MEETING_SUMMARY_PROMPT_TEMPLATE.replace('{{PERSONALIZATION}}', this.buildPersonalization(preferences)).replace('{{INPUT_DATA}}', JSON.stringify(inputData, null, 2));
+    }
+    buildPersonalization(preferences) {
+        const styles = {
+            [ai_response_style_enum_1.AiResponseStyle.Concise]: 'Ngắn gọn, chỉ giữ thông tin thiết yếu.',
+            [ai_response_style_enum_1.AiResponseStyle.Balanced]: 'Cân bằng giữa súc tích và đủ bối cảnh.',
+            [ai_response_style_enum_1.AiResponseStyle.Detailed]: 'Chi tiết, giải thích rõ bối cảnh và liên hệ.',
+        };
+        const tones = {
+            [ai_tone_enum_1.AiTone.Professional]: 'Chuyên nghiệp, trung lập.',
+            [ai_tone_enum_1.AiTone.Direct]: 'Thẳng vào vấn đề, rõ ràng.',
+            [ai_tone_enum_1.AiTone.Supportive]: 'Tích cực, hỗ trợ nhưng không né tránh vấn đề.',
+        };
+        const focusLabels = {
+            [ai_focus_area_enum_1.AiFocusArea.Progress]: 'tiến độ',
+            [ai_focus_area_enum_1.AiFocusArea.Blockers]: 'vướng mắc',
+            [ai_focus_area_enum_1.AiFocusArea.Deadlines]: 'thời hạn',
+            [ai_focus_area_enum_1.AiFocusArea.Decisions]: 'quyết định',
+            [ai_focus_area_enum_1.AiFocusArea.ActionItems]: 'việc cần làm',
+        };
+        return [
+            `Mức chi tiết: ${styles[preferences.responseStyle]}`,
+            `Giọng điệu: ${tones[preferences.tone]}`,
+            `Nội dung ưu tiên: ${preferences.focusAreas.map((item) => focusLabels[item]).join(', ')}.`,
+            'Cấu hình chỉ ảnh hưởng cách trình bày; không được bỏ qua dữ liệu quan trọng hoặc tự tạo dữ liệu.',
+        ].join('\n');
     }
 };
 exports.PromptBuilderService = PromptBuilderService;

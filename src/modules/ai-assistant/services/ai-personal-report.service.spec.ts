@@ -5,6 +5,7 @@ import { AiReportType } from '../../../common/enums/ai-report-type.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { SprintAccessService } from '../../sprints/services/sprint-access.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
+import { AiUserPreferencesService } from '../../users/services/ai-user-preferences.service';
 import { AiPromptLogDocument } from '../schemas/ai-prompt-log.schema';
 import {
   AiReportDocument,
@@ -52,6 +53,9 @@ describe('AiPersonalReportService', () => {
   >;
   let workspaceAccessService: jest.Mocked<
     Pick<WorkspaceAccessService, 'assertWorkspaceMember'>
+  >;
+  let aiUserPreferencesService: jest.Mocked<
+    Pick<AiUserPreferencesService, 'getResolvedPreferences'>
   >;
   let service: AiPersonalReportService;
 
@@ -145,6 +149,13 @@ describe('AiPersonalReportService', () => {
     workspaceAccessService = {
       assertWorkspaceMember: jest.fn(),
     };
+    aiUserPreferencesService = {
+      getResolvedPreferences: jest.fn().mockResolvedValue({
+        responseStyle: 'BALANCED',
+        tone: 'PROFESSIONAL',
+        focusAreas: ['PROGRESS', 'BLOCKERS', 'DECISIONS', 'ACTION_ITEMS'],
+      }),
+    } as never;
 
     reportModel.create.mockResolvedValue(report);
     reportModel.find.mockReturnValue({
@@ -184,6 +195,7 @@ describe('AiPersonalReportService', () => {
       promptBuilderService,
       sprintAccessService as unknown as SprintAccessService,
       workspaceAccessService as unknown as WorkspaceAccessService,
+      aiUserPreferencesService as unknown as AiUserPreferencesService,
     );
   });
 
@@ -296,6 +308,7 @@ describe('AiPersonalReportService', () => {
       promptBuilderService,
       sprintAccessService as unknown as SprintAccessService,
       workspaceAccessService as unknown as WorkspaceAccessService,
+      aiUserPreferencesService as unknown as AiUserPreferencesService,
     );
 
     await expect(

@@ -12,6 +12,7 @@ import { AiReportType } from '../../../common/enums/ai-report-type.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { SprintAccessService } from '../../sprints/services/sprint-access.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
+import { AiUserPreferencesService } from '../../users/services/ai-user-preferences.service';
 import { GeneratePersonalReportDto } from '../dto/generate-personal-report.dto';
 import { GetAiReportsQueryDto } from '../dto/get-ai-reports-query.dto';
 import {
@@ -57,6 +58,7 @@ export class AiPersonalReportService {
     private readonly promptBuilderService: PromptBuilderService,
     private readonly sprintAccessService: SprintAccessService,
     private readonly workspaceAccessService: WorkspaceAccessService,
+    private readonly aiUserPreferencesService: AiUserPreferencesService,
   ) {}
 
   generateMyPersonalDailyReport(
@@ -283,8 +285,14 @@ export class AiPersonalReportService {
         reportDate: params.dto.reportDate,
         sprintId: params.dto.sprintId,
       });
-    const prompt =
-      this.promptBuilderService.buildPersonalDailyReportPrompt(inputData);
+    const preferences =
+      await this.aiUserPreferencesService.getResolvedPreferences(
+        params.targetUserId,
+      );
+    const prompt = this.promptBuilderService.buildPersonalDailyReportPrompt(
+      inputData,
+      preferences,
+    );
     const startedAt = Date.now();
 
     try {

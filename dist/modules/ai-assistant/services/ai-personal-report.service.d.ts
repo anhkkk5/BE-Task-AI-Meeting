@@ -4,6 +4,7 @@ import { AiReportType } from '../../../common/enums/ai-report-type.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { SprintAccessService } from '../../sprints/services/sprint-access.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
+import { AiUserPreferencesService } from '../../users/services/ai-user-preferences.service';
 import { GeneratePersonalReportDto } from '../dto/generate-personal-report.dto';
 import { GetAiReportsQueryDto } from '../dto/get-ai-reports-query.dto';
 import { AiPromptLogDocument } from '../schemas/ai-prompt-log.schema';
@@ -22,7 +23,8 @@ export declare class AiPersonalReportService {
     private readonly promptBuilderService;
     private readonly sprintAccessService;
     private readonly workspaceAccessService;
-    constructor(aiReportModel: Model<AiReportDocument> | null, aiPromptLogModel: Model<AiPromptLogDocument> | null, aiProviderService: AiProviderService, aiReportAccessService: AiReportAccessService, dataBuilderService: AiReportDataBuilderService, projectAccessService: ProjectAccessService, promptBuilderService: PromptBuilderService, sprintAccessService: SprintAccessService, workspaceAccessService: WorkspaceAccessService);
+    private readonly aiUserPreferencesService;
+    constructor(aiReportModel: Model<AiReportDocument> | null, aiPromptLogModel: Model<AiPromptLogDocument> | null, aiProviderService: AiProviderService, aiReportAccessService: AiReportAccessService, dataBuilderService: AiReportDataBuilderService, projectAccessService: ProjectAccessService, promptBuilderService: PromptBuilderService, sprintAccessService: SprintAccessService, workspaceAccessService: WorkspaceAccessService, aiUserPreferencesService: AiUserPreferencesService);
     generateMyPersonalDailyReport(currentUserId: string, workspaceId: string, projectId: string, dto: GeneratePersonalReportDto): Promise<{
         success: boolean;
         message: string;

@@ -10,8 +10,10 @@ Nhiem vu:
 - Neu thieu du lieu, ghi ro "Chua co du lieu".
 - Khong tu tao task, blocker, deadline, nguoi phu trach hoac thong tin ngoai input.
 - Khong de xuat thay doi database.
-- Van phong ngan gon, ro rang, chuyen nghiep.
 - Bao cao bang tieng Viet.
+
+CAU HINH CA NHAN HOA:
+{{PERSONALIZATION}}
 
 INPUT_DATA:
 {{INPUT_DATA}}

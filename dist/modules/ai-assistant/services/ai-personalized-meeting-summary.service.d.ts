@@ -4,6 +4,7 @@ import { MeetingParticipantsRepository } from '../../meetings/repositories/meeti
 import { MeetingAccessService } from '../../meetings/services/meeting-access.service';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
+import { AiUserPreferencesService } from '../../users/services/ai-user-preferences.service';
 import { GeneratePersonalizedMeetingSummaryDto } from '../dto/generate-personalized-meeting-summary.dto';
 import { GetMyMeetingActionItemsQueryDto } from '../dto/get-my-meeting-action-items-query.dto';
 import { AiPromptLogDocument } from '../schemas/ai-prompt-log.schema';
@@ -25,10 +26,11 @@ export declare class AiPersonalizedMeetingSummaryService {
     private readonly projectAccessService;
     private readonly promptBuilderService;
     private readonly workspaceAccessService;
+    private readonly aiUserPreferencesService;
     private readonly rateLimitWindowMs;
     private readonly rateLimitMax;
     private readonly generateHits;
-    constructor(personalizedSummaryModel: Model<PersonalizedMeetingSummaryDocument> | null, meetingSummaryModel: Model<MeetingSummaryDocument> | null, aiPromptLogModel: Model<AiPromptLogDocument> | null, accessService: AiPersonalizedMeetingSummaryAccessService, dataBuilderService: AiPersonalizedMeetingSummaryDataBuilderService, aiProviderService: AiProviderService, meetingAccessService: MeetingAccessService, meetingParticipantsRepository: MeetingParticipantsRepository, projectAccessService: ProjectAccessService, promptBuilderService: PromptBuilderService, workspaceAccessService: WorkspaceAccessService);
+    constructor(personalizedSummaryModel: Model<PersonalizedMeetingSummaryDocument> | null, meetingSummaryModel: Model<MeetingSummaryDocument> | null, aiPromptLogModel: Model<AiPromptLogDocument> | null, accessService: AiPersonalizedMeetingSummaryAccessService, dataBuilderService: AiPersonalizedMeetingSummaryDataBuilderService, aiProviderService: AiProviderService, meetingAccessService: MeetingAccessService, meetingParticipantsRepository: MeetingParticipantsRepository, projectAccessService: ProjectAccessService, promptBuilderService: PromptBuilderService, workspaceAccessService: WorkspaceAccessService, aiUserPreferencesService: AiUserPreferencesService);
     generateMyPersonalizedMeetingSummary(currentUserId: string, workspaceId: string, projectId: string, meetingId: string, dto?: GeneratePersonalizedMeetingSummaryDto): Promise<{
         success: boolean;
         message: string;
