@@ -40,7 +40,7 @@ exports.TasksModule = TasksModule = __decorate([
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,
         ],
-        exports: [task_access_service_1.TaskAccessService, tasks_repository_1.TasksRepository],
+        exports: [task_access_service_1.TaskAccessService, tasks_repository_1.TasksRepository, tasks_service_1.TasksService],
     })
 ], TasksModule);
 //# sourceMappingURL=tasks.module.js.map

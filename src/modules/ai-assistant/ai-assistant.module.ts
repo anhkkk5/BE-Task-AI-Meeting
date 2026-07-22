@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkspaceMemberGuard } from '../../common/guards/workspace-member.guard';
 import { WorkspaceRolesGuard } from '../../common/guards/workspace-roles.guard';
 import { mongodbConfig } from '../../config/mongodb.config';
@@ -45,6 +46,9 @@ import { AiTeamReportService } from './services/ai-team-report.service';
 import { PromptBuilderService } from './services/prompt-builder.service';
 import { AutoMeetingSummaryListener } from './listeners/auto-meeting-summary.listener';
 import { AiDailyReportSchedulerService } from './schedulers/ai-daily-report-scheduler.service';
+import { MeetingActionItemReview } from './entities/meeting-action-item-review.entity';
+import { MeetingActionItemReviewsRepository } from './repositories/meeting-action-item-reviews.repository';
+import { AiMeetingActionItemReviewService } from './services/ai-meeting-action-item-review.service';
 
 const mongoImports = mongodbConfig().enabled
   ? [
@@ -63,6 +67,7 @@ const mongoImports = mongodbConfig().enabled
 @Module({
   imports: [
     ...mongoImports,
+    TypeOrmModule.forFeature([MeetingActionItemReview]),
     DailyUpdatesModule,
     MeetingsModule,
     ProjectsModule,
@@ -95,6 +100,8 @@ const mongoImports = mongodbConfig().enabled
     PromptBuilderService,
     AutoMeetingSummaryListener,
     AiDailyReportSchedulerService,
+    AiMeetingActionItemReviewService,
+    MeetingActionItemReviewsRepository,
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,
   ],

@@ -23,6 +23,9 @@ const workspace_roles_guard_1 = require("../../../common/guards/workspace-roles.
 const access_token_guard_1 = require("../../auth/guards/access-token.guard");
 const generate_meeting_summary_dto_1 = require("../dto/generate-meeting-summary.dto");
 const get_meeting_summaries_query_dto_1 = require("../dto/get-meeting-summaries-query.dto");
+const approve_meeting_action_item_dto_1 = require("../dto/approve-meeting-action-item.dto");
+const reject_meeting_action_item_dto_1 = require("../dto/reject-meeting-action-item.dto");
+const ai_meeting_action_item_review_service_1 = require("../services/ai-meeting-action-item-review.service");
 const ai_meeting_summary_service_1 = require("../services/ai-meeting-summary.service");
 const managerRoles = [
     workspace_role_enum_1.WorkspaceRole.Owner,
@@ -112,11 +115,22 @@ exports.AiMeetingSummaryController = AiMeetingSummaryController = __decorate([
 ], AiMeetingSummaryController);
 let AiMeetingSummaryDetailController = class AiMeetingSummaryDetailController {
     aiMeetingSummaryService;
-    constructor(aiMeetingSummaryService) {
+    actionItemReviewService;
+    constructor(aiMeetingSummaryService, actionItemReviewService) {
         this.aiMeetingSummaryService = aiMeetingSummaryService;
+        this.actionItemReviewService = actionItemReviewService;
     }
     getMeetingSummaryDetail(user, workspaceId, projectId, summaryId) {
         return this.aiMeetingSummaryService.getMeetingSummaryDetail(user.id, workspaceId, projectId, summaryId);
+    }
+    getActionItems(user, workspaceId, projectId, summaryId) {
+        return this.actionItemReviewService.getActionItems(user.id, workspaceId, projectId, summaryId);
+    }
+    approveActionItem(user, workspaceId, projectId, summaryId, actionItemIndex, dto) {
+        return this.actionItemReviewService.approveActionItem(user.id, workspaceId, projectId, summaryId, actionItemIndex, dto);
+    }
+    rejectActionItem(user, workspaceId, projectId, summaryId, actionItemIndex, dto) {
+        return this.actionItemReviewService.rejectActionItem(user.id, workspaceId, projectId, summaryId, actionItemIndex, dto);
     }
 };
 exports.AiMeetingSummaryDetailController = AiMeetingSummaryDetailController;
@@ -134,11 +148,58 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", void 0)
 ], AiMeetingSummaryDetailController.prototype, "getMeetingSummaryDetail", null);
+__decorate([
+    (0, common_1.Get)(':summaryId/action-items'),
+    (0, swagger_1.ApiOperation)({ summary: 'Lấy danh sách action item và trạng thái duyệt' }),
+    (0, swagger_1.ApiParam)({ name: 'summaryId', example: 'mongo-summary-id' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('summaryId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String]),
+    __metadata("design:returntype", void 0)
+], AiMeetingSummaryDetailController.prototype, "getActionItems", null);
+__decorate([
+    (0, common_1.Post)(':summaryId/action-items/:actionItemIndex/approve'),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...managerRoles),
+    (0, swagger_1.ApiOperation)({ summary: 'Duyệt action item và tạo thành task' }),
+    (0, swagger_1.ApiParam)({ name: 'summaryId', example: 'mongo-summary-id' }),
+    (0, swagger_1.ApiParam)({ name: 'actionItemIndex', example: 0 }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('summaryId')),
+    __param(4, (0, common_1.Param)('actionItemIndex', common_1.ParseIntPipe)),
+    __param(5, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String, Number, approve_meeting_action_item_dto_1.ApproveMeetingActionItemDto]),
+    __metadata("design:returntype", void 0)
+], AiMeetingSummaryDetailController.prototype, "approveActionItem", null);
+__decorate([
+    (0, common_1.Post)(':summaryId/action-items/:actionItemIndex/reject'),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...managerRoles),
+    (0, swagger_1.ApiOperation)({ summary: 'Từ chối action item' }),
+    (0, swagger_1.ApiParam)({ name: 'summaryId', example: 'mongo-summary-id' }),
+    (0, swagger_1.ApiParam)({ name: 'actionItemIndex', example: 0 }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('summaryId')),
+    __param(4, (0, common_1.Param)('actionItemIndex', common_1.ParseIntPipe)),
+    __param(5, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String, Number, reject_meeting_action_item_dto_1.RejectMeetingActionItemDto]),
+    __metadata("design:returntype", void 0)
+], AiMeetingSummaryDetailController.prototype, "rejectActionItem", null);
 exports.AiMeetingSummaryDetailController = AiMeetingSummaryDetailController = __decorate([
     (0, common_1.Controller)('workspaces/:workspaceId/projects/:projectId/ai/meeting-summaries'),
     (0, swagger_1.ApiTags)('AI Meeting Summaries'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard, workspace_member_guard_1.WorkspaceMemberGuard),
-    __metadata("design:paramtypes", [ai_meeting_summary_service_1.AiMeetingSummaryService])
+    __metadata("design:paramtypes", [ai_meeting_summary_service_1.AiMeetingSummaryService,
+        ai_meeting_action_item_review_service_1.AiMeetingActionItemReviewService])
 ], AiMeetingSummaryDetailController);
 //# sourceMappingURL=ai-meeting-summary.controller.js.map

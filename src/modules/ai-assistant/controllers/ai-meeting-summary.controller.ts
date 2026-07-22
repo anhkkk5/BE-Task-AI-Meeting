@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Query,
   UseGuards,
@@ -23,6 +24,9 @@ import { AccessTokenGuard } from '../../auth/guards/access-token.guard';
 import type { AuthUser } from '../../auth/types/auth-user.type';
 import { GenerateMeetingSummaryDto } from '../dto/generate-meeting-summary.dto';
 import { GetMeetingSummariesQueryDto } from '../dto/get-meeting-summaries-query.dto';
+import { ApproveMeetingActionItemDto } from '../dto/approve-meeting-action-item.dto';
+import { RejectMeetingActionItemDto } from '../dto/reject-meeting-action-item.dto';
+import { AiMeetingActionItemReviewService } from '../services/ai-meeting-action-item-review.service';
 import { AiMeetingSummaryService } from '../services/ai-meeting-summary.service';
 
 const managerRoles = [
@@ -127,6 +131,7 @@ export class AiMeetingSummaryController {
 export class AiMeetingSummaryDetailController {
   constructor(
     private readonly aiMeetingSummaryService: AiMeetingSummaryService,
+    private readonly actionItemReviewService: AiMeetingActionItemReviewService,
   ) {}
 
   @Get(':summaryId')
@@ -145,6 +150,71 @@ export class AiMeetingSummaryDetailController {
       workspaceId,
       projectId,
       summaryId,
+    );
+  }
+
+  @Get(':summaryId/action-items')
+  @ApiOperation({ summary: 'Lấy danh sách action item và trạng thái duyệt' })
+  @ApiParam({ name: 'summaryId', example: 'mongo-summary-id' })
+  getActionItems(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('summaryId') summaryId: string,
+  ) {
+    return this.actionItemReviewService.getActionItems(
+      user.id,
+      workspaceId,
+      projectId,
+      summaryId,
+    );
+  }
+
+  @Post(':summaryId/action-items/:actionItemIndex/approve')
+  @UseGuards(WorkspaceRolesGuard)
+  @WorkspaceRoles(...managerRoles)
+  @ApiOperation({ summary: 'Duyệt action item và tạo thành task' })
+  @ApiParam({ name: 'summaryId', example: 'mongo-summary-id' })
+  @ApiParam({ name: 'actionItemIndex', example: 0 })
+  approveActionItem(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('summaryId') summaryId: string,
+    @Param('actionItemIndex', ParseIntPipe) actionItemIndex: number,
+    @Body() dto: ApproveMeetingActionItemDto,
+  ) {
+    return this.actionItemReviewService.approveActionItem(
+      user.id,
+      workspaceId,
+      projectId,
+      summaryId,
+      actionItemIndex,
+      dto,
+    );
+  }
+
+  @Post(':summaryId/action-items/:actionItemIndex/reject')
+  @UseGuards(WorkspaceRolesGuard)
+  @WorkspaceRoles(...managerRoles)
+  @ApiOperation({ summary: 'Từ chối action item' })
+  @ApiParam({ name: 'summaryId', example: 'mongo-summary-id' })
+  @ApiParam({ name: 'actionItemIndex', example: 0 })
+  rejectActionItem(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('summaryId') summaryId: string,
+    @Param('actionItemIndex', ParseIntPipe) actionItemIndex: number,
+    @Body() dto: RejectMeetingActionItemDto,
+  ) {
+    return this.actionItemReviewService.rejectActionItem(
+      user.id,
+      workspaceId,
+      projectId,
+      summaryId,
+      actionItemIndex,
+      dto,
     );
   }
 }

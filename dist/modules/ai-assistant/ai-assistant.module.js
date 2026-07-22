@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiAssistantModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
+const typeorm_1 = require("@nestjs/typeorm");
 const workspace_member_guard_1 = require("../../common/guards/workspace-member.guard");
 const workspace_roles_guard_1 = require("../../common/guards/workspace-roles.guard");
 const mongodb_config_1 = require("../../config/mongodb.config");
@@ -42,6 +43,9 @@ const ai_team_report_service_1 = require("./services/ai-team-report.service");
 const prompt_builder_service_1 = require("./services/prompt-builder.service");
 const auto_meeting_summary_listener_1 = require("./listeners/auto-meeting-summary.listener");
 const ai_daily_report_scheduler_service_1 = require("./schedulers/ai-daily-report-scheduler.service");
+const meeting_action_item_review_entity_1 = require("./entities/meeting-action-item-review.entity");
+const meeting_action_item_reviews_repository_1 = require("./repositories/meeting-action-item-reviews.repository");
+const ai_meeting_action_item_review_service_1 = require("./services/ai-meeting-action-item-review.service");
 const mongoImports = (0, mongodb_config_1.mongodbConfig)().enabled
     ? [
         mongoose_1.MongooseModule.forFeature([
@@ -62,6 +66,7 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
     (0, common_1.Module)({
         imports: [
             ...mongoImports,
+            typeorm_1.TypeOrmModule.forFeature([meeting_action_item_review_entity_1.MeetingActionItemReview]),
             daily_updates_module_1.DailyUpdatesModule,
             meetings_module_1.MeetingsModule,
             projects_module_1.ProjectsModule,
@@ -94,6 +99,8 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
             prompt_builder_service_1.PromptBuilderService,
             auto_meeting_summary_listener_1.AutoMeetingSummaryListener,
             ai_daily_report_scheduler_service_1.AiDailyReportSchedulerService,
+            ai_meeting_action_item_review_service_1.AiMeetingActionItemReviewService,
+            meeting_action_item_reviews_repository_1.MeetingActionItemReviewsRepository,
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,
         ],

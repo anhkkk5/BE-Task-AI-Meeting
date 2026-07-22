@@ -28,6 +28,6 @@ import { TasksService } from './services/tasks.service';
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,
   ],
-  exports: [TaskAccessService, TasksRepository],
+  exports: [TaskAccessService, TasksRepository, TasksService],
 })
 export class TasksModule {}
