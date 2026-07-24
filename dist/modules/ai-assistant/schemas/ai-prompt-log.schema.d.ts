@@ -19,97 +19,97 @@ export declare const AiPromptLogSchema: import("mongoose").Schema<AiPromptLog, i
     _id: import("mongoose").Types.ObjectId;
 } & {
     __v: number;
-}, "id"> & {
+}, "id"> & import("mongoose").HydratedDocumentOverrides<{
     id: string;
-}, {
+}>, {
     workspaceId?: import("mongoose").SchemaDefinitionProperty<string, AiPromptLog, import("mongoose").Document<unknown, {}, AiPromptLog, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiPromptLog & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     projectId?: import("mongoose").SchemaDefinitionProperty<string, AiPromptLog, import("mongoose").Document<unknown, {}, AiPromptLog, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiPromptLog & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     userId?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, AiPromptLog, import("mongoose").Document<unknown, {}, AiPromptLog, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiPromptLog & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     feature?: import("mongoose").SchemaDefinitionProperty<AiReportType, AiPromptLog, import("mongoose").Document<unknown, {}, AiPromptLog, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiPromptLog & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     aiModel?: import("mongoose").SchemaDefinitionProperty<string | undefined, AiPromptLog, import("mongoose").Document<unknown, {}, AiPromptLog, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiPromptLog & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     prompt?: import("mongoose").SchemaDefinitionProperty<string | undefined, AiPromptLog, import("mongoose").Document<unknown, {}, AiPromptLog, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiPromptLog & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     response?: import("mongoose").SchemaDefinitionProperty<string | undefined, AiPromptLog, import("mongoose").Document<unknown, {}, AiPromptLog, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiPromptLog & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     responseTimeMs?: import("mongoose").SchemaDefinitionProperty<number | undefined, AiPromptLog, import("mongoose").Document<unknown, {}, AiPromptLog, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiPromptLog & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     success?: import("mongoose").SchemaDefinitionProperty<boolean, AiPromptLog, import("mongoose").Document<unknown, {}, AiPromptLog, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiPromptLog & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     errorMessage?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, AiPromptLog, import("mongoose").Document<unknown, {}, AiPromptLog, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiPromptLog & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
 }, AiPromptLog>;

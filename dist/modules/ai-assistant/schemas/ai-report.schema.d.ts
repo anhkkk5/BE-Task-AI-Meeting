@@ -51,106 +51,106 @@ export declare const AiReportSchema: import("mongoose").Schema<AiReport, import(
     _id: import("mongoose").Types.ObjectId;
 } & {
     __v: number;
-}, "id"> & {
+}, "id"> & import("mongoose").HydratedDocumentOverrides<{
     id: string;
-}, {
+}>, {
     workspaceId?: import("mongoose").SchemaDefinitionProperty<string, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     projectId?: import("mongoose").SchemaDefinitionProperty<string, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     sprintId?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     userId?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     reportType?: import("mongoose").SchemaDefinitionProperty<AiReportType, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     reportDate?: import("mongoose").SchemaDefinitionProperty<string, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     inputData?: import("mongoose").SchemaDefinitionProperty<Record<string, unknown>, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     aiOutput?: import("mongoose").SchemaDefinitionProperty<PersonalDailyReportOutput | TeamDailyReportOutput, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     aiModel?: import("mongoose").SchemaDefinitionProperty<string | undefined, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     status?: import("mongoose").SchemaDefinitionProperty<AiReportStatus, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     createdBy?: import("mongoose").SchemaDefinitionProperty<string, AiReport, import("mongoose").Document<unknown, {}, AiReport, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AiReport & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
 }, AiReport>;

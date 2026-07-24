@@ -46,7 +46,12 @@ exports.AppModule = AppModule = __decorate([
             }),
             typeorm_1.TypeOrmModule.forRoot((0, database_config_1.mysqlConfig)()),
             ...((0, mongodb_config_1.mongodbConfig)().enabled
-                ? [mongoose_1.MongooseModule.forRoot((0, mongodb_config_1.mongodbConfig)().uri)]
+                ? [
+                    mongoose_1.MongooseModule.forRoot((0, mongodb_config_1.mongodbConfig)().uri, {
+                        lazyConnection: true,
+                        serverSelectionTimeoutMS: 5_000,
+                    }),
+                ]
                 : []),
             redis_module_1.RedisModule,
             schedule_1.ScheduleModule.forRoot(),

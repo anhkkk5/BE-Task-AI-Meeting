@@ -34,63 +34,63 @@ export declare const MeetingSummaryActionItemSchema: import("mongoose").Schema<M
     _id: import("mongoose").Types.ObjectId;
 } & {
     __v: number;
-}, "id"> & {
+}, "id"> & import("mongoose").HydratedDocumentOverrides<{
     id: string;
-}, {
+}>, {
     text?: import("mongoose").SchemaDefinitionProperty<string, MeetingSummaryActionItemSchemaClass, import("mongoose").Document<unknown, {}, MeetingSummaryActionItemSchemaClass, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummaryActionItemSchemaClass & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     assigneeName?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, MeetingSummaryActionItemSchemaClass, import("mongoose").Document<unknown, {}, MeetingSummaryActionItemSchemaClass, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummaryActionItemSchemaClass & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     assigneeUserId?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, MeetingSummaryActionItemSchemaClass, import("mongoose").Document<unknown, {}, MeetingSummaryActionItemSchemaClass, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummaryActionItemSchemaClass & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     dueDate?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, MeetingSummaryActionItemSchemaClass, import("mongoose").Document<unknown, {}, MeetingSummaryActionItemSchemaClass, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummaryActionItemSchemaClass & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     status?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, MeetingSummaryActionItemSchemaClass, import("mongoose").Document<unknown, {}, MeetingSummaryActionItemSchemaClass, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummaryActionItemSchemaClass & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     source?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, MeetingSummaryActionItemSchemaClass, import("mongoose").Document<unknown, {}, MeetingSummaryActionItemSchemaClass, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummaryActionItemSchemaClass & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
 }, MeetingSummaryActionItemSchemaClass>;
 export declare class MeetingSummary {
     workspaceId: string;
@@ -117,160 +117,160 @@ export declare const MeetingSummarySchema: import("mongoose").Schema<MeetingSumm
     _id: import("mongoose").Types.ObjectId;
 } & {
     __v: number;
-}, "id"> & {
+}, "id"> & import("mongoose").HydratedDocumentOverrides<{
     id: string;
-}, {
+}>, {
     workspaceId?: import("mongoose").SchemaDefinitionProperty<string, MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     projectId?: import("mongoose").SchemaDefinitionProperty<string, MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     sprintId?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     meetingId?: import("mongoose").SchemaDefinitionProperty<string, MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     transcriptId?: import("mongoose").SchemaDefinitionProperty<string, MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     title?: import("mongoose").SchemaDefinitionProperty<string, MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     summary?: import("mongoose").SchemaDefinitionProperty<string, MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     keyPoints?: import("mongoose").SchemaDefinitionProperty<string[], MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     decisions?: import("mongoose").SchemaDefinitionProperty<string[], MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     actionItems?: import("mongoose").SchemaDefinitionProperty<MeetingSummaryActionItem[], MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     risks?: import("mongoose").SchemaDefinitionProperty<string[], MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     openQuestions?: import("mongoose").SchemaDefinitionProperty<string[], MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     nextSteps?: import("mongoose").SchemaDefinitionProperty<string[], MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     aiOutput?: import("mongoose").SchemaDefinitionProperty<MeetingSummaryOutput, MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     aiModel?: import("mongoose").SchemaDefinitionProperty<string | undefined, MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     status?: import("mongoose").SchemaDefinitionProperty<AiReportStatus, MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     createdBy?: import("mongoose").SchemaDefinitionProperty<string, MeetingSummary, import("mongoose").Document<unknown, {}, MeetingSummary, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingSummary & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
 }, MeetingSummary>;

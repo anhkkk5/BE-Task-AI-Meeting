@@ -11,36 +11,36 @@ export declare const MeetingTranscriptSpeakerSchema: import("mongoose").Schema<M
     _id: import("mongoose").Types.ObjectId;
 } & {
     __v: number;
-}, "id"> & {
+}, "id"> & import("mongoose").HydratedDocumentOverrides<{
     id: string;
-}, {
+}>, {
     userId?: import("mongoose").SchemaDefinitionProperty<string | undefined, MeetingTranscriptSpeaker, import("mongoose").Document<unknown, {}, MeetingTranscriptSpeaker, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSpeaker & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     speakerName?: import("mongoose").SchemaDefinitionProperty<string | undefined, MeetingTranscriptSpeaker, import("mongoose").Document<unknown, {}, MeetingTranscriptSpeaker, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSpeaker & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     text?: import("mongoose").SchemaDefinitionProperty<string, MeetingTranscriptSpeaker, import("mongoose").Document<unknown, {}, MeetingTranscriptSpeaker, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSpeaker & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
 }, MeetingTranscriptSpeaker>;
 export declare class MeetingTranscriptSegment {
     chunkId?: string;
@@ -58,81 +58,81 @@ export declare const MeetingTranscriptSegmentSchema: import("mongoose").Schema<M
     _id: import("mongoose").Types.ObjectId;
 } & {
     __v: number;
-}, "id"> & {
+}, "id"> & import("mongoose").HydratedDocumentOverrides<{
     id: string;
-}, {
+}>, {
     chunkId?: import("mongoose").SchemaDefinitionProperty<string | undefined, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     userId?: import("mongoose").SchemaDefinitionProperty<string | undefined, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     speakerName?: import("mongoose").SchemaDefinitionProperty<string | undefined, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     text?: import("mongoose").SchemaDefinitionProperty<string, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     startedAt?: import("mongoose").SchemaDefinitionProperty<Date, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     endedAt?: import("mongoose").SchemaDefinitionProperty<Date | null | undefined, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     confidence?: import("mongoose").SchemaDefinitionProperty<number | null | undefined, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     source?: import("mongoose").SchemaDefinitionProperty<string, MeetingTranscriptSegment, import("mongoose").Document<unknown, {}, MeetingTranscriptSegment, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscriptSegment & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
 }, MeetingTranscriptSegment>;
 export declare class MeetingTranscript {
     meetingId: string;
@@ -150,79 +150,79 @@ export declare const MeetingTranscriptSchema: import("mongoose").Schema<MeetingT
     _id: import("mongoose").Types.ObjectId;
 } & {
     __v: number;
-}, "id"> & {
+}, "id"> & import("mongoose").HydratedDocumentOverrides<{
     id: string;
-}, {
+}>, {
     meetingId?: import("mongoose").SchemaDefinitionProperty<string, MeetingTranscript, import("mongoose").Document<unknown, {}, MeetingTranscript, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscript & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     workspaceId?: import("mongoose").SchemaDefinitionProperty<string, MeetingTranscript, import("mongoose").Document<unknown, {}, MeetingTranscript, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscript & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     projectId?: import("mongoose").SchemaDefinitionProperty<string, MeetingTranscript, import("mongoose").Document<unknown, {}, MeetingTranscript, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscript & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     sprintId?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, MeetingTranscript, import("mongoose").Document<unknown, {}, MeetingTranscript, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscript & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     rawTranscript?: import("mongoose").SchemaDefinitionProperty<string, MeetingTranscript, import("mongoose").Document<unknown, {}, MeetingTranscript, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscript & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     speakers?: import("mongoose").SchemaDefinitionProperty<MeetingTranscriptSpeaker[], MeetingTranscript, import("mongoose").Document<unknown, {}, MeetingTranscript, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscript & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     liveSegments?: import("mongoose").SchemaDefinitionProperty<MeetingTranscriptSegment[], MeetingTranscript, import("mongoose").Document<unknown, {}, MeetingTranscript, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscript & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
     createdBy?: import("mongoose").SchemaDefinitionProperty<string, MeetingTranscript, import("mongoose").Document<unknown, {}, MeetingTranscript, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingTranscript & {
         _id: import("mongoose").Types.ObjectId;
     } & {
         __v: number;
-    }, "id"> & {
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
-    }> | undefined;
+    }>> | undefined;
 }, MeetingTranscript>;
