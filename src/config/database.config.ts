@@ -1,5 +1,7 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
+const isMysqlSslEnabled = (): boolean => process.env.MYSQL_SSL === 'true';
+
 export const mysqlConfig = (): TypeOrmModuleOptions => ({
   type: 'mysql',
   host: process.env.MYSQL_HOST ?? 'localhost',
@@ -11,4 +13,11 @@ export const mysqlConfig = (): TypeOrmModuleOptions => ({
   migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
   synchronize: false,
   autoLoadEntities: true,
+  extra: {
+    ssl: isMysqlSslEnabled()
+      ? {
+          rejectUnauthorized: false,
+        }
+      : undefined,
+  },
 });

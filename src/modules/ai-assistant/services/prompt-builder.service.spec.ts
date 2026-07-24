@@ -16,6 +16,10 @@ describe('PromptBuilderService personalization', () => {
     expect(prompt).toContain('Ngắn gọn');
     expect(prompt).toContain('Thẳng vào vấn đề');
     expect(prompt).toContain('vướng mắc, thời hạn');
+    expect(prompt).toContain('Bạn là trợ lý AI');
+    expect(prompt).toContain('Chưa có dữ liệu');
+    expect(prompt).toContain('tiếng Việt có dấu');
+    expect(prompt).not.toContain('Ban la tro ly AI');
     expect(prompt).not.toContain('{{PERSONALIZATION}}');
   });
 
@@ -25,5 +29,16 @@ describe('PromptBuilderService personalization', () => {
     expect(prompt).toContain('Cân bằng');
     expect(prompt).toContain('Chuyên nghiệp');
     expect(prompt).not.toContain('{{PERSONALIZATION}}');
+  });
+
+  it('builds team and meeting prompts with accented Vietnamese instructions', () => {
+    const teamPrompt = service.buildTeamDailyReportPrompt({} as never);
+    const meetingPrompt = service.buildMeetingSummaryPrompt({} as never);
+
+    expect(teamPrompt).toContain('báo cáo giao ban nhóm');
+    expect(teamPrompt).toContain('tiếng Việt có dấu');
+    expect(teamPrompt).not.toContain('Bao cao bang tieng Viet');
+    expect(meetingPrompt).toContain('tóm tắt ngắn gọn');
+    expect(meetingPrompt).toContain('tiếng Việt có dấu');
   });
 });

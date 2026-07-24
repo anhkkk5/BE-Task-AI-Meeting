@@ -31,7 +31,12 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     }),
     TypeOrmModule.forRoot(mysqlConfig()),
     ...(mongodbConfig().enabled
-      ? [MongooseModule.forRoot(mongodbConfig().uri)]
+      ? [
+          MongooseModule.forRoot(mongodbConfig().uri, {
+            lazyConnection: true,
+            serverSelectionTimeoutMS: 5_000,
+          }),
+        ]
       : []),
     RedisModule,
     ScheduleModule.forRoot(),
