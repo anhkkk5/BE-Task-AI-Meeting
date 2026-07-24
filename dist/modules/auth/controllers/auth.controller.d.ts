@@ -90,5 +90,6 @@ export declare class AuthController {
     private clearRefreshTokenCookie;
     private getRefreshTokenFromCookie;
     private getRefreshTokenCookieOptions;
+    private getRefreshTokenCookieBaseOptions;
     private getRefreshTokenCookieMaxAge;
 }

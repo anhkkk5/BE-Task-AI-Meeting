@@ -132,11 +132,10 @@ export class AuthController {
   }
 
   private clearRefreshTokenCookie(response: Response) {
-    response.clearCookie(REFRESH_TOKEN_COOKIE, {
-      path: '/api/v1/auth',
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    });
+    response.clearCookie(
+      REFRESH_TOKEN_COOKIE,
+      this.getRefreshTokenCookieBaseOptions(),
+    );
   }
 
   private getRefreshTokenFromCookie(request: Request) {
@@ -160,11 +159,39 @@ export class AuthController {
 
   private getRefreshTokenCookieOptions(): CookieOptions {
     return {
+      ...this.getRefreshTokenCookieBaseOptions(),
       httpOnly: true,
       maxAge: this.getRefreshTokenCookieMaxAge(),
+    };
+  }
+
+  private getRefreshTokenCookieBaseOptions(): CookieOptions {
+    const isProduction =
+      process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+    const configuredSameSite = process.env.REFRESH_COOKIE_SAME_SITE?.trim()
+      .toLowerCase();
+    const sameSite: 'lax' | 'strict' | 'none' =
+      configuredSameSite === 'lax' ||
+      configuredSameSite === 'strict' ||
+      configuredSameSite === 'none'
+        ? configuredSameSite
+        : isProduction
+          ? 'none'
+          : 'lax';
+    const configuredSecure = process.env.REFRESH_COOKIE_SECURE?.trim()
+      .toLowerCase();
+    const secure =
+      configuredSecure === 'true'
+        ? true
+        : configuredSecure === 'false'
+          ? false
+          : sameSite === 'none' || isProduction;
+
+    return {
+      httpOnly: true,
       path: '/api/v1/auth',
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      sameSite,
+      secure,
     };
   }
 

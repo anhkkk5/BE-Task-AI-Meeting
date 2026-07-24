@@ -58,11 +58,7 @@ let AuthController = class AuthController {
         response.cookie(REFRESH_TOKEN_COOKIE, refreshToken, this.getRefreshTokenCookieOptions());
     }
     clearRefreshTokenCookie(response) {
-        response.clearCookie(REFRESH_TOKEN_COOKIE, {
-            path: '/api/v1/auth',
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production',
-        });
+        response.clearCookie(REFRESH_TOKEN_COOKIE, this.getRefreshTokenCookieBaseOptions());
     }
     getRefreshTokenFromCookie(request) {
         const cookieHeader = request.headers.cookie;
@@ -78,11 +74,34 @@ let AuthController = class AuthController {
     }
     getRefreshTokenCookieOptions() {
         return {
+            ...this.getRefreshTokenCookieBaseOptions(),
             httpOnly: true,
             maxAge: this.getRefreshTokenCookieMaxAge(),
+        };
+    }
+    getRefreshTokenCookieBaseOptions() {
+        const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+        const configuredSameSite = process.env.REFRESH_COOKIE_SAME_SITE?.trim()
+            .toLowerCase();
+        const sameSite = configuredSameSite === 'lax' ||
+            configuredSameSite === 'strict' ||
+            configuredSameSite === 'none'
+            ? configuredSameSite
+            : isProduction
+                ? 'none'
+                : 'lax';
+        const configuredSecure = process.env.REFRESH_COOKIE_SECURE?.trim()
+            .toLowerCase();
+        const secure = configuredSecure === 'true'
+            ? true
+            : configuredSecure === 'false'
+                ? false
+                : sameSite === 'none' || isProduction;
+        return {
+            httpOnly: true,
             path: '/api/v1/auth',
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production',
+            sameSite,
+            secure,
         };
     }
     getRefreshTokenCookieMaxAge() {

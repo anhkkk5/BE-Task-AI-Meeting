@@ -45,7 +45,10 @@ export class GroqTranscriptionService {
     }
 
     const model =
-      process.env.GROQ_TRANSCRIPTION_MODEL || 'whisper-large-v3-turbo';
+      process.env.GROQ_TRANSCRIPTION_MODEL || 'whisper-large-v3';
+    const prompt =
+      process.env.GROQ_TRANSCRIPTION_PROMPT?.trim() ||
+      'Cuộc họp công việc bằng tiếng Việt. Viết đúng chính tả tiếng Việt có dấu; giữ nguyên tên riêng, mã công việc và các thuật ngữ Agile, Scrum, Sprint, Backlog, API.';
     const timeoutMs = Number(
       process.env.GROQ_TRANSCRIPTION_TIMEOUT_MS || 45000,
     );
@@ -60,6 +63,7 @@ export class GroqTranscriptionService {
       'language',
       process.env.GROQ_TRANSCRIPTION_LANGUAGE || 'vi',
     );
+    formData.append('prompt', prompt);
     formData.append('response_format', 'verbose_json');
     formData.append('temperature', '0');
 

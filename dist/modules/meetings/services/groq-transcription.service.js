@@ -26,12 +26,15 @@ let GroqTranscriptionService = class GroqTranscriptionService {
         if (!apiKey) {
             throw new common_1.ServiceUnavailableException('Chua cau hinh GROQ_API_KEY cho chuyen am thanh thanh van ban');
         }
-        const model = process.env.GROQ_TRANSCRIPTION_MODEL || 'whisper-large-v3-turbo';
+        const model = process.env.GROQ_TRANSCRIPTION_MODEL || 'whisper-large-v3';
+        const prompt = process.env.GROQ_TRANSCRIPTION_PROMPT?.trim() ||
+            'Cuộc họp công việc bằng tiếng Việt. Viết đúng chính tả tiếng Việt có dấu; giữ nguyên tên riêng, mã công việc và các thuật ngữ Agile, Scrum, Sprint, Backlog, API.';
         const timeoutMs = Number(process.env.GROQ_TRANSCRIPTION_TIMEOUT_MS || 45000);
         const formData = new FormData();
         formData.append('file', new Blob([new Uint8Array(file.buffer)], { type: file.mimetype }), file.originalname || `meeting-audio-${Date.now()}.webm`);
         formData.append('model', model);
         formData.append('language', process.env.GROQ_TRANSCRIPTION_LANGUAGE || 'vi');
+        formData.append('prompt', prompt);
         formData.append('response_format', 'verbose_json');
         formData.append('temperature', '0');
         const controller = new AbortController();
