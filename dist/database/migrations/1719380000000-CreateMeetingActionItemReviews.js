@@ -29,7 +29,7 @@ class CreateMeetingActionItemReviews1719380000000 {
         PRIMARY KEY (\`id\`),
         CONSTRAINT \`FK_action_item_review_task\` FOREIGN KEY (\`created_task_id\`) REFERENCES \`tasks\`(\`id\`) ON DELETE SET NULL,
         CONSTRAINT \`FK_action_item_review_reviewer\` FOREIGN KEY (\`reviewed_by\`) REFERENCES \`users\`(\`id\`) ON DELETE SET NULL
-      ) ENGINE=InnoDB
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     }
     async down(queryRunner) {
