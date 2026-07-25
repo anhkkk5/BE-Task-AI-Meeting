@@ -116,7 +116,7 @@ describe('MeetingTranscriptsService', () => {
       }),
     };
 
-    transcriptModel.create.mockResolvedValue(transcript);
+    transcriptModel.create.mockResolvedValue(transcript as never);
     transcriptModel.findById.mockReturnValue({
       exec: jest.fn().mockResolvedValue(transcript),
     } as never);

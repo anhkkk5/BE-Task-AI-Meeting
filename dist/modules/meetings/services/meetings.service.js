@@ -162,18 +162,40 @@ let MeetingsService = class MeetingsService {
         };
     }
     async completeMeeting(currentUserId, workspaceId, projectId, meetingId) {
-        await this.changeMeetingStatus(currentUserId, workspaceId, projectId, meetingId, meeting_status_enum_1.MeetingStatus.Completed);
+        await this.changeMeetingStatus(currentUserId, workspaceId, projectId, meetingId, meeting_status_enum_1.MeetingStatus.Completed, { actualEndTime: new Date() });
         this.meetingLifecycleService.publishMeetingCompleted({
             currentUserId,
             workspaceId,
             projectId,
             meetingId,
+            reason: 'MANUAL',
         });
         return {
             success: true,
             message: 'Complete meeting successfully',
             data: null,
         };
+    }
+    async markMeetingInProgress(projectId, meetingId) {
+        return this.meetingsRepository.markInProgress(meetingId, projectId);
+    }
+    async autoCompleteMeeting(meeting) {
+        if (meeting.status === meeting_status_enum_1.MeetingStatus.Completed) {
+            return false;
+        }
+        await this.meetingsRepository.update(meeting, {
+            status: meeting_status_enum_1.MeetingStatus.Completed,
+            actualEndTime: new Date(),
+            autoCompleted: true,
+        });
+        this.meetingLifecycleService.publishMeetingCompleted({
+            currentUserId: meeting.createdBy,
+            workspaceId: meeting.workspaceId,
+            projectId: meeting.projectId,
+            meetingId: meeting.id,
+            reason: 'AUTO',
+        });
+        return true;
     }
     async deleteMeeting(currentUserId, workspaceId, projectId, meetingId) {
         await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
@@ -191,13 +213,17 @@ let MeetingsService = class MeetingsService {
             data: null,
         };
     }
-    async changeMeetingStatus(currentUserId, workspaceId, projectId, meetingId, status) {
+    async changeMeetingStatus(currentUserId, workspaceId, projectId, meetingId, status, extraData = {}) {
         await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
         await this.meetingAccessService.assertUserCanManageMeeting(currentUserId, workspaceId);
         await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
         const meeting = await this.meetingAccessService.assertMeetingInProject(meetingId, projectId);
         this.meetingAccessService.assertMeetingEditable(meeting);
-        await this.meetingsRepository.update(meeting, { status });
+        if (status === meeting_status_enum_1.MeetingStatus.Completed &&
+            meeting.status === meeting_status_enum_1.MeetingStatus.Completed) {
+            throw new common_1.ConflictException('Cuoc hop nay da duoc ket thuc');
+        }
+        await this.meetingsRepository.update(meeting, { status, ...extraData });
     }
     async assertValidMeetingFilters(projectId, query) {
         if (query.fromDate && query.toDate) {
@@ -271,6 +297,9 @@ let MeetingsService = class MeetingsService {
             meetingDate: meeting.meetingDate,
             startTime: meeting.startTime,
             endTime: meeting.endTime,
+            actualStartTime: meeting.actualStartTime,
+            actualEndTime: meeting.actualEndTime,
+            autoCompleted: meeting.autoCompleted,
             status: meeting.status,
             createdBy: meeting.createdBy,
             creator: meeting.creator

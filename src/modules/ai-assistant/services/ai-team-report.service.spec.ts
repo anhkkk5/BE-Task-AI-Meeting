@@ -101,8 +101,15 @@ describe('AiTeamReportService', () => {
     },
     tasks: [],
     overdueTasks: [],
-    highPriorityTasks: [],
     blockers: [],
+    handovers: [],
+    handoverStats: {
+      total: 0,
+      acknowledged: 0,
+      pending: 0,
+      changesRequested: 0,
+      rejected: 0,
+    },
   };
   const report = {
     _id: reportId,
@@ -151,7 +158,7 @@ describe('AiTeamReportService', () => {
       assertSprintInProject: jest.fn(),
     };
 
-    reportModel.create.mockResolvedValue(report);
+    reportModel.create.mockResolvedValue(report as never);
     reportModel.find.mockReturnValue({
       sort: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
@@ -168,7 +175,9 @@ describe('AiTeamReportService', () => {
       sort: jest.fn().mockReturnThis(),
       exec: jest.fn().mockResolvedValue(report),
     } as never);
-    dataBuilderService.buildTeamReportInput.mockResolvedValue(inputData);
+    dataBuilderService.buildTeamReportInput.mockResolvedValue(
+      inputData as never,
+    );
     promptBuilderService.buildTeamDailyReportPrompt.mockReturnValue(
       'safe team prompt',
     );
@@ -185,7 +194,7 @@ describe('AiTeamReportService', () => {
       aiReportAccessService as unknown as AiReportAccessService,
       dataBuilderService as unknown as AiTeamReportDataBuilderService,
       projectAccessService as unknown as ProjectAccessService,
-      promptBuilderService,
+      promptBuilderService as unknown as PromptBuilderService,
       sprintAccessService as unknown as SprintAccessService,
     );
   });
@@ -329,7 +338,7 @@ describe('AiTeamReportService', () => {
       aiReportAccessService as unknown as AiReportAccessService,
       dataBuilderService as unknown as AiTeamReportDataBuilderService,
       projectAccessService as unknown as ProjectAccessService,
-      promptBuilderService,
+      promptBuilderService as unknown as PromptBuilderService,
       sprintAccessService as unknown as SprintAccessService,
     );
 

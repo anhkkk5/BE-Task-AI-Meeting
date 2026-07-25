@@ -33,6 +33,7 @@ const meeting_transcripts_service_1 = require("./services/meeting-transcripts.se
 const meetings_service_1 = require("./services/meetings.service");
 const groq_transcription_service_1 = require("./services/groq-transcription.service");
 const meeting_lifecycle_service_1 = require("./services/meeting-lifecycle.service");
+const meeting_auto_complete_scheduler_service_1 = require("./schedulers/meeting-auto-complete-scheduler.service");
 const mongoImports = (0, mongodb_config_1.mongodbConfig)().enabled
     ? [
         mongoose_1.MongooseModule.forFeature([
@@ -68,6 +69,7 @@ exports.MeetingsModule = MeetingsModule = __decorate([
             meeting_transcripts_service_1.MeetingTranscriptsService,
             groq_transcription_service_1.GroqTranscriptionService,
             meeting_lifecycle_service_1.MeetingLifecycleService,
+            meeting_auto_complete_scheduler_service_1.MeetingAutoCompleteSchedulerService,
             meeting_signaling_gateway_1.MeetingSignalingGateway,
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,

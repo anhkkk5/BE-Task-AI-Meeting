@@ -94,6 +94,30 @@ let MeetingsRepository = class MeetingsRepository {
             .getManyAndCount();
         return { items, total, page, limit };
     }
+    async markInProgress(meetingId, projectId) {
+        const result = await this.repository
+            .createQueryBuilder()
+            .update(meeting_entity_1.Meeting)
+            .set({ status: meeting_status_enum_1.MeetingStatus.InProgress, actualStartTime: new Date() })
+            .where('id = :meetingId', { meetingId })
+            .andWhere('project_id = :projectId', { projectId })
+            .andWhere('status = :status', { status: meeting_status_enum_1.MeetingStatus.Scheduled })
+            .andWhere('deleted_at IS NULL')
+            .execute();
+        return result.affected === 1;
+    }
+    findDueForAutoComplete(cutoff, limit = 200) {
+        return this.repository
+            .createQueryBuilder('meeting')
+            .where('meeting.status IN (:...statuses)', {
+            statuses: [meeting_status_enum_1.MeetingStatus.Scheduled, meeting_status_enum_1.MeetingStatus.InProgress],
+        })
+            .andWhere('meeting.deletedAt IS NULL')
+            .andWhere(`COALESCE(meeting.end_time, TIMESTAMP(meeting.meeting_date, '23:59:59')) <= :cutoff`, { cutoff })
+            .orderBy('meeting.meetingDate', 'ASC')
+            .take(limit)
+            .getMany();
+    }
     async update(meeting, data) {
         Object.assign(meeting, data);
         const savedMeeting = await this.repository.save(meeting);

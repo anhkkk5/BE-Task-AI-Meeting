@@ -12,6 +12,8 @@ export declare class MeetingsRepository {
         page: number;
         limit: number;
     }>;
+    markInProgress(meetingId: string, projectId: string): Promise<boolean>;
+    findDueForAutoComplete(cutoff: Date, limit?: number): Promise<Meeting[]>;
     update(meeting: Meeting, data: Partial<Meeting>): Promise<Meeting>;
     softDelete(meeting: Meeting): Promise<void>;
     updateTranscriptId(meeting: Meeting, mongoTranscriptId: string): Promise<Meeting>;

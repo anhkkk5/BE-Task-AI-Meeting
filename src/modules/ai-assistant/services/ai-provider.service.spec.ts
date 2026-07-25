@@ -107,6 +107,11 @@ describe('AiProviderService', () => {
       inProgress: ['AGILEAI-2 - Viet test task'],
       overdue: [],
     },
+    handovers: {
+      given: [],
+      received: [],
+      pendingForMe: 0,
+    },
   };
   const teamInputData: TeamReportInputData = {
     workspace: {
@@ -212,12 +217,18 @@ describe('AiProviderService', () => {
       },
     ],
     blockers: [],
+    handovers: [],
+    handoverStats: {
+      total: 0,
+      acknowledged: 0,
+      pending: 0,
+      changesRequested: 0,
+      rejected: 0,
+    },
   };
   const personalizedMeetingInputData: PersonalizedMeetingSummaryInputData = {
     workspace: {
       id: 'workspace-id',
-      name: 'Agile AI',
-      slug: 'agile-ai',
     },
     project: {
       id: 'project-id',

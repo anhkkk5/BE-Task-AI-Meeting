@@ -23,18 +23,21 @@ const user_status_enum_1 = require("../../users/enums/user-status.enum");
 const users_service_1 = require("../../users/services/users.service");
 const meeting_status_enum_1 = require("../../../common/enums/meeting-status.enum");
 const meeting_access_service_1 = require("../services/meeting-access.service");
+const meetings_service_1 = require("../services/meetings.service");
 let MeetingSignalingGateway = MeetingSignalingGateway_1 = class MeetingSignalingGateway {
     jwtService;
     usersService;
     meetingAccessService;
+    meetingsService;
     server;
     logger = new common_1.Logger(MeetingSignalingGateway_1.name);
     rooms = new Map();
     waitingRooms = new Map();
-    constructor(jwtService, usersService, meetingAccessService) {
+    constructor(jwtService, usersService, meetingAccessService, meetingsService) {
         this.jwtService = jwtService;
         this.usersService = usersService;
         this.meetingAccessService = meetingAccessService;
+        this.meetingsService = meetingsService;
     }
     async handleConnection(client) {
         try {
@@ -76,7 +79,7 @@ let MeetingSignalingGateway = MeetingSignalingGateway_1 = class MeetingSignaling
             });
             return;
         }
-        const participant = await this.addParticipantToRoom(client, meetingId, roomKey, canManage);
+        const participant = await this.addParticipantToRoom(client, meetingId, projectId, roomKey, canManage);
         client.emit('join-requests', {
             items: this.getWaitingParticipants(roomKey),
         });
@@ -117,14 +120,14 @@ let MeetingSignalingGateway = MeetingSignalingGateway_1 = class MeetingSignaling
             this.emitJoinRequestCancelled(roomKey, targetSocketId);
             return;
         }
-        const participant = await this.addParticipantToRoom(waiting.client, waiting.meetingId, roomKey, false);
+        const participant = await this.addParticipantToRoom(waiting.client, waiting.meetingId, waiting.projectId, roomKey, false);
         waiting.client.emit('join-request-approved', {
             meetingId: waiting.meetingId,
         });
         waiting.client.to(roomKey).emit('participant-joined', participant);
         this.emitJoinRequestCancelled(roomKey, targetSocketId);
     }
-    async addParticipantToRoom(client, meetingId, roomKey, canManage) {
+    async addParticipantToRoom(client, meetingId, projectId, roomKey, canManage) {
         const user = this.getSocketUser(client);
         const room = this.getOrCreateRoom(roomKey);
         const participant = {
@@ -148,7 +151,23 @@ let MeetingSignalingGateway = MeetingSignalingGateway_1 = class MeetingSignaling
             self: participant,
             participants: existingParticipants,
         });
+        await this.markMeetingStarted(meetingId, projectId, roomKey);
         return participant;
+    }
+    async markMeetingStarted(meetingId, projectId, roomKey) {
+        try {
+            const started = await this.meetingsService.markMeetingInProgress(projectId, meetingId);
+            if (started) {
+                this.server.to(roomKey).emit('meeting-status-changed', {
+                    meetingId,
+                    status: meeting_status_enum_1.MeetingStatus.InProgress,
+                });
+                this.logger.log(`Cuoc hop ${meetingId} da bat dau`);
+            }
+        }
+        catch (error) {
+            this.logger.error(`Khong the danh dau cuoc hop ${meetingId} dang dien ra`, error instanceof Error ? error.stack : String(error));
+        }
     }
     leaveMeeting(client) {
         this.leaveCurrentMeeting(client);
@@ -248,7 +267,11 @@ let MeetingSignalingGateway = MeetingSignalingGateway_1 = class MeetingSignaling
         return { workspaceId, projectId, meetingId };
     }
     isMeetingJoinable(meeting) {
-        if (meeting.status !== meeting_status_enum_1.MeetingStatus.Scheduled) {
+        const openStatuses = [
+            meeting_status_enum_1.MeetingStatus.Scheduled,
+            meeting_status_enum_1.MeetingStatus.InProgress,
+        ];
+        if (!meeting.status || !openStatuses.includes(meeting.status)) {
             return false;
         }
         const endTime = meeting.endTime
@@ -434,6 +457,7 @@ exports.MeetingSignalingGateway = MeetingSignalingGateway = MeetingSignalingGate
     }),
     __metadata("design:paramtypes", [jwt_1.JwtService,
         users_service_1.UsersService,
-        meeting_access_service_1.MeetingAccessService])
+        meeting_access_service_1.MeetingAccessService,
+        meetings_service_1.MeetingsService])
 ], MeetingSignalingGateway);
 //# sourceMappingURL=meeting-signaling.gateway.js.map

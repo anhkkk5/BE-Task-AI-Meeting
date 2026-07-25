@@ -204,13 +204,15 @@ describe('AiMeetingSummaryService', () => {
       buildMeetingSummaryPrompt: jest.fn(),
     };
 
-    summaryModel.create.mockResolvedValue(summary);
+    summaryModel.create.mockResolvedValue(summary as never);
     summaryModel.find.mockReturnValue(queryResult([summary]) as never);
     summaryModel.countDocuments.mockReturnValue(queryResult(1) as never);
     summaryModel.findById.mockReturnValue(queryResult(summary) as never);
     summaryModel.findOne.mockReturnValue(queryResult(summary) as never);
     meetingAccessService.assertMeetingInProject.mockResolvedValue(meeting);
-    dataBuilderService.buildMeetingSummaryInput.mockResolvedValue(inputData);
+    dataBuilderService.buildMeetingSummaryInput.mockResolvedValue(
+      inputData as never,
+    );
     promptBuilderService.buildMeetingSummaryPrompt.mockReturnValue(
       'safe meeting prompt',
     );
@@ -229,7 +231,7 @@ describe('AiMeetingSummaryService', () => {
       meetingAccessService as unknown as MeetingAccessService,
       meetingsRepository as unknown as MeetingsRepository,
       projectAccessService as unknown as ProjectAccessService,
-      promptBuilderService,
+      promptBuilderService as unknown as PromptBuilderService,
     );
   });
 
@@ -354,7 +356,7 @@ describe('AiMeetingSummaryService', () => {
       meetingAccessService as unknown as MeetingAccessService,
       meetingsRepository as unknown as MeetingsRepository,
       projectAccessService as unknown as ProjectAccessService,
-      promptBuilderService,
+      promptBuilderService as unknown as PromptBuilderService,
     );
 
     await expect(

@@ -80,6 +80,35 @@ let ShiftHandoversRepository = class ShiftHandoversRepository {
             .getManyAndCount();
         return { items, total, page, limit };
     }
+    findByProjectAndDate(projectId, reportDate) {
+        return this.handovers
+            .createQueryBuilder('handover')
+            .leftJoinAndSelect('handover.task', 'task')
+            .leftJoinAndSelect('handover.sender', 'sender')
+            .leftJoinAndSelect('handover.receiver', 'receiver')
+            .where('handover.projectId = :projectId', { projectId })
+            .andWhere('handover.taskId IS NOT NULL')
+            .andWhere('handover.deletedAt IS NULL')
+            .andWhere('DATE(handover.createdAt) = :reportDate', { reportDate })
+            .orderBy('handover.createdAt', 'DESC')
+            .getMany();
+    }
+    findPendingByReceiver(receiverId, workspaceId) {
+        const builder = this.handovers
+            .createQueryBuilder('handover')
+            .leftJoinAndSelect('handover.task', 'task')
+            .leftJoinAndSelect('handover.sender', 'sender')
+            .where('handover.receiverId = :receiverId', { receiverId })
+            .andWhere('handover.taskId IS NOT NULL')
+            .andWhere('handover.deletedAt IS NULL')
+            .andWhere('handover.status IN (:...statuses)', {
+            statuses: [handover_status_enum_1.HandoverStatus.Pending, handover_status_enum_1.HandoverStatus.ChangesRequested],
+        });
+        if (workspaceId) {
+            builder.andWhere('handover.workspaceId = :workspaceId', { workspaceId });
+        }
+        return builder.orderBy('handover.createdAt', 'DESC').getMany();
+    }
     updateHandover(handover, data) {
         Object.assign(handover, data);
         return this.handovers.save(handover);

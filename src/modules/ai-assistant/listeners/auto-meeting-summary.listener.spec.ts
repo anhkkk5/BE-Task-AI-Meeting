@@ -21,6 +21,7 @@ describe('AutoMeetingSummaryListener', () => {
     workspaceId: 'workspace-id',
     projectId: 'project-id',
     meetingId: 'meeting-id',
+    reason: 'MANUAL',
   };
 
   beforeEach(() => {

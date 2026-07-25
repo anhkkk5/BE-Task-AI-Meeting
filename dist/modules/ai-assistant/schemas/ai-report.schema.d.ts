@@ -11,6 +11,7 @@ export type PersonalDailyReportOutput = {
     inProgressTasks?: string[];
     blockers?: string[];
     risks?: string[];
+    handoverSummary?: string;
     recommendations?: string[];
     generatedText: string;
 };
@@ -23,6 +24,7 @@ export type TeamDailyReportOutput = {
     blockers?: string[];
     risks?: string[];
     missingDailyUpdates?: string[];
+    handoverSummary?: string;
     memberSummaries?: {
         userId: string;
         fullName: string;

@@ -27,6 +27,7 @@ import { MeetingTranscriptsService } from './services/meeting-transcripts.servic
 import { MeetingsService } from './services/meetings.service';
 import { GroqTranscriptionService } from './services/groq-transcription.service';
 import { MeetingLifecycleService } from './services/meeting-lifecycle.service';
+import { MeetingAutoCompleteSchedulerService } from './schedulers/meeting-auto-complete-scheduler.service';
 
 const mongoImports = mongodbConfig().enabled
   ? [
@@ -60,6 +61,7 @@ const mongoImports = mongodbConfig().enabled
     MeetingTranscriptsService,
     GroqTranscriptionService,
     MeetingLifecycleService,
+    MeetingAutoCompleteSchedulerService,
     MeetingSignalingGateway,
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,

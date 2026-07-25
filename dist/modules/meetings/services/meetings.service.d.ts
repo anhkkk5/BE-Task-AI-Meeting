@@ -8,6 +8,7 @@ import { WorkspaceAccessService } from '../../workspaces/services/workspace-acce
 import { CreateMeetingDto } from '../dto/create-meeting.dto';
 import { GetMeetingsQueryDto } from '../dto/get-meetings-query.dto';
 import { UpdateMeetingDto } from '../dto/update-meeting.dto';
+import { Meeting } from '../entities/meeting.entity';
 import { MeetingParticipantsRepository } from '../repositories/meeting-participants.repository';
 import { MeetingsRepository } from '../repositories/meetings.repository';
 import { MeetingAccessService } from './meeting-access.service';
@@ -37,6 +38,9 @@ export declare class MeetingsService {
                 meetingDate: string;
                 startTime: Date | null;
                 endTime: Date | null;
+                actualStartTime: Date | null;
+                actualEndTime: Date | null;
+                autoCompleted: boolean;
                 status: MeetingStatus;
                 createdBy: string;
                 creator: {
@@ -80,6 +84,9 @@ export declare class MeetingsService {
                 meetingDate: string;
                 startTime: Date | null;
                 endTime: Date | null;
+                actualStartTime: Date | null;
+                actualEndTime: Date | null;
+                autoCompleted: boolean;
                 status: MeetingStatus;
                 createdBy: string;
                 creator: {
@@ -128,6 +135,9 @@ export declare class MeetingsService {
                 meetingDate: string;
                 startTime: Date | null;
                 endTime: Date | null;
+                actualStartTime: Date | null;
+                actualEndTime: Date | null;
+                autoCompleted: boolean;
                 status: MeetingStatus;
                 createdBy: string;
                 creator: {
@@ -171,6 +181,9 @@ export declare class MeetingsService {
                 meetingDate: string;
                 startTime: Date | null;
                 endTime: Date | null;
+                actualStartTime: Date | null;
+                actualEndTime: Date | null;
+                autoCompleted: boolean;
                 status: MeetingStatus;
                 createdBy: string;
                 creator: {
@@ -209,6 +222,8 @@ export declare class MeetingsService {
         message: string;
         data: null;
     }>;
+    markMeetingInProgress(projectId: string, meetingId: string): Promise<boolean>;
+    autoCompleteMeeting(meeting: Meeting): Promise<boolean>;
     deleteMeeting(currentUserId: string, workspaceId: string, projectId: string, meetingId: string): Promise<{
         success: boolean;
         message: string;

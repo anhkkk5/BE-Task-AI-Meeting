@@ -24,5 +24,6 @@ import { ShiftHandoversService } from './services/shift-handovers.service';
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,
   ],
+  exports: [ShiftHandoversRepository],
 })
 export class ShiftHandoversModule {}

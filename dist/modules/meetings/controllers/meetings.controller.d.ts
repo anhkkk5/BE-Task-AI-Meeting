@@ -21,6 +21,9 @@ export declare class MeetingsController {
                 meetingDate: string;
                 startTime: Date | null;
                 endTime: Date | null;
+                actualStartTime: Date | null;
+                actualEndTime: Date | null;
+                autoCompleted: boolean;
                 status: import("../../../common/enums/meeting-status.enum").MeetingStatus;
                 createdBy: string;
                 creator: {
@@ -64,6 +67,9 @@ export declare class MeetingsController {
                 meetingDate: string;
                 startTime: Date | null;
                 endTime: Date | null;
+                actualStartTime: Date | null;
+                actualEndTime: Date | null;
+                autoCompleted: boolean;
                 status: import("../../../common/enums/meeting-status.enum").MeetingStatus;
                 createdBy: string;
                 creator: {
@@ -112,6 +118,9 @@ export declare class MeetingsController {
                 meetingDate: string;
                 startTime: Date | null;
                 endTime: Date | null;
+                actualStartTime: Date | null;
+                actualEndTime: Date | null;
+                autoCompleted: boolean;
                 status: import("../../../common/enums/meeting-status.enum").MeetingStatus;
                 createdBy: string;
                 creator: {
@@ -155,6 +164,9 @@ export declare class MeetingsController {
                 meetingDate: string;
                 startTime: Date | null;
                 endTime: Date | null;
+                actualStartTime: Date | null;
+                actualEndTime: Date | null;
+                autoCompleted: boolean;
                 status: import("../../../common/enums/meeting-status.enum").MeetingStatus;
                 createdBy: string;
                 creator: {

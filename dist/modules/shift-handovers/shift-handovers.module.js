@@ -36,6 +36,7 @@ exports.ShiftHandoversModule = ShiftHandoversModule = __decorate([
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,
         ],
+        exports: [shift_handovers_repository_1.ShiftHandoversRepository],
     })
 ], ShiftHandoversModule);
 //# sourceMappingURL=shift-handovers.module.js.map

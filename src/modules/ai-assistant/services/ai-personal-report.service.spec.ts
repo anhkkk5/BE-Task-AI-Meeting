@@ -97,6 +97,11 @@ describe('AiPersonalReportService', () => {
       inProgress: [],
       overdue: [],
     },
+    handovers: {
+      given: [],
+      received: [],
+      pendingForMe: 0,
+    },
   };
   const report = {
     _id: reportId,
@@ -157,7 +162,7 @@ describe('AiPersonalReportService', () => {
       }),
     } as never;
 
-    reportModel.create.mockResolvedValue(report);
+    reportModel.create.mockResolvedValue(report as never);
     reportModel.find.mockReturnValue({
       sort: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
@@ -174,7 +179,7 @@ describe('AiPersonalReportService', () => {
       exec: jest.fn().mockResolvedValue(null),
     } as never);
     dataBuilderService.buildPersonalDailyReportInput.mockResolvedValue(
-      inputData,
+      inputData as never,
     );
     promptBuilderService.buildPersonalDailyReportPrompt.mockReturnValue(
       'safe prompt',
@@ -192,7 +197,7 @@ describe('AiPersonalReportService', () => {
       aiReportAccessService as unknown as AiReportAccessService,
       dataBuilderService as unknown as AiReportDataBuilderService,
       projectAccessService as unknown as ProjectAccessService,
-      promptBuilderService,
+      promptBuilderService as unknown as PromptBuilderService,
       sprintAccessService as unknown as SprintAccessService,
       workspaceAccessService as unknown as WorkspaceAccessService,
       aiUserPreferencesService as unknown as AiUserPreferencesService,
@@ -305,7 +310,7 @@ describe('AiPersonalReportService', () => {
       aiReportAccessService as unknown as AiReportAccessService,
       dataBuilderService as unknown as AiReportDataBuilderService,
       projectAccessService as unknown as ProjectAccessService,
-      promptBuilderService,
+      promptBuilderService as unknown as PromptBuilderService,
       sprintAccessService as unknown as SprintAccessService,
       workspaceAccessService as unknown as WorkspaceAccessService,
       aiUserPreferencesService as unknown as AiUserPreferencesService,

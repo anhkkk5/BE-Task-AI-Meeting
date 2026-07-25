@@ -14,6 +14,8 @@ export declare class ShiftHandoversRepository {
         page: number;
         limit: number;
     }>;
+    findByProjectAndDate(projectId: string, reportDate: string): Promise<ShiftHandover[]>;
+    findPendingByReceiver(receiverId: string, workspaceId?: string): Promise<ShiftHandover[]>;
     updateHandover(handover: ShiftHandover, data: Partial<ShiftHandover>): Promise<ShiftHandover>;
     softDeleteHandover(handover: ShiftHandover): Promise<ShiftHandover>;
     acceptAndTransferTask(handover: ShiftHandover): Promise<boolean>;

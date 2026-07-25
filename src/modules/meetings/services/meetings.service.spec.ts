@@ -15,7 +15,9 @@ import { MeetingsService } from './meetings.service';
 
 describe('MeetingsService', () => {
   let service: MeetingsService;
-  let dataSource: jest.Mocked<Pick<DataSource, 'transaction'>>;
+  // DataSource.transaction la ham overload tra Promise, dung jest.Mock de
+  // tranh phai dung lai toan bo chu ky overload trong test.
+  let dataSource: { transaction: jest.Mock };
   let meetingsRepository: jest.Mocked<
     Pick<
       MeetingsRepository,
@@ -69,6 +71,9 @@ describe('MeetingsService', () => {
     meetingDate: '2026-06-20',
     startTime: new Date('2026-06-20T08:00:00.000Z'),
     endTime: new Date('2026-06-20T09:00:00.000Z'),
+    actualStartTime: null,
+    actualEndTime: null,
+    autoCompleted: false,
     status: MeetingStatus.Scheduled,
     createdBy: 'owner-id',
     mongoTranscriptId: null,
@@ -77,7 +82,7 @@ describe('MeetingsService', () => {
     createdAt: new Date('2026-06-20T00:00:00.000Z'),
     updatedAt: new Date('2026-06-20T00:00:00.000Z'),
     deletedAt: null,
-  } as Meeting;
+  } as unknown as Meeting;
 
   beforeEach(() => {
     dataSource = {
@@ -300,6 +305,7 @@ describe('MeetingsService', () => {
 
     expect(meetingsRepository.update).toHaveBeenCalledWith(meeting, {
       status: MeetingStatus.Completed,
+      actualEndTime: expect.any(Date) as unknown as Date,
     });
     expect(
       meetingLifecycleService.publishMeetingCompleted,
@@ -308,6 +314,7 @@ describe('MeetingsService', () => {
       workspaceId: 'workspace-id',
       projectId: 'project-id',
       meetingId: 'meeting-id',
+      reason: 'MANUAL',
     });
     expect(meetingsRepository.update.mock.invocationCallOrder[0]).toBeLessThan(
       meetingLifecycleService.publishMeetingCompleted.mock

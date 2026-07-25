@@ -2,10 +2,24 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { DailyUpdatesRepository } from '../../daily-updates/repositories/daily-updates.repository';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { ShiftHandoversRepository } from '../../shift-handovers/repositories/shift-handovers.repository';
 import { SprintAccessService } from '../../sprints/services/sprint-access.service';
 import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { UsersService } from '../../users/services/users.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
+
+/** Mot lan ban giao cong viec, rut gon cho AI doc. */
+export type ReportHandoverItem = {
+  id: string;
+  taskCode: string | null;
+  taskTitle: string | null;
+  status: string;
+  counterpartName: string | null;
+  completedWork: string | null;
+  remainingWork: string | null;
+  blockers: string | null;
+  notes: string | null;
+};
 
 export type PersonalReportInputData = {
   user: {
@@ -57,6 +71,15 @@ export type PersonalReportInputData = {
     inProgress: string[];
     overdue: string[];
   };
+  /**
+   * Ban giao cong viec trong ngay. Thieu du lieu nay thi bao cao AI se noi sai
+   * ve tien do: viec da chuyen tay nguoi khac van bi tinh la cua nguoi cu.
+   */
+  handovers: {
+    given: ReportHandoverItem[];
+    received: ReportHandoverItem[];
+    pendingForMe: number;
+  };
 };
 
 type BuildInputParams = {
@@ -76,6 +99,7 @@ export class AiReportDataBuilderService {
     private readonly tasksRepository: TasksRepository,
     private readonly usersService: UsersService,
     private readonly workspaceAccessService: WorkspaceAccessService,
+    private readonly shiftHandoversRepository: ShiftHandoversRepository,
   ) {}
 
   async buildPersonalDailyReportInput(params: BuildInputParams) {
@@ -120,6 +144,16 @@ export class AiReportDataBuilderService {
       page: 1,
       limit: 100,
     });
+    const dayHandovers =
+      await this.shiftHandoversRepository.findByProjectAndDate(
+        params.projectId,
+        reportDate,
+      );
+    const pendingHandovers =
+      await this.shiftHandoversRepository.findPendingByReceiver(
+        params.targetUserId,
+        params.workspaceId,
+      );
     const normalizedTasks = tasks.items.map((task) => ({
       id: task.id,
       taskCode: task.taskCode,
@@ -171,6 +205,19 @@ export class AiReportDataBuilderService {
           }
         : null,
       tasks: normalizedTasks,
+      handovers: {
+        given: dayHandovers
+          .filter((handover) => handover.senderId === params.targetUserId)
+          .map((handover) =>
+            this.toHandoverItem(handover, handover.receiver?.fullName ?? null),
+          ),
+        received: dayHandovers
+          .filter((handover) => handover.receiverId === params.targetUserId)
+          .map((handover) =>
+            this.toHandoverItem(handover, handover.sender?.fullName ?? null),
+          ),
+        pendingForMe: pendingHandovers.length,
+      },
       taskSummary: {
         completed: normalizedTasks
           .filter((task) => task.status === TaskStatus.Done)
@@ -190,6 +237,32 @@ export class AiReportDataBuilderService {
           .map((task) => `${task.taskCode} - ${task.title}`),
       },
     } satisfies PersonalReportInputData;
+  }
+
+  /** Rut gon ban giao ve dung phan AI can, tranh nhoi ca entity vao prompt. */
+  private toHandoverItem(
+    handover: {
+      id: string;
+      status: string;
+      completedWork?: string | null;
+      remainingWork?: string | null;
+      blockers?: string | null;
+      notes?: string | null;
+      task?: { taskCode?: string | null; title?: string | null } | null;
+    },
+    counterpartName: string | null,
+  ): ReportHandoverItem {
+    return {
+      id: handover.id,
+      taskCode: handover.task?.taskCode ?? null,
+      taskTitle: handover.task?.title ?? null,
+      status: handover.status,
+      counterpartName,
+      completedWork: handover.completedWork ?? null,
+      remainingWork: handover.remainingWork ?? null,
+      blockers: handover.blockers ?? null,
+      notes: handover.notes ?? null,
+    };
   }
 
   private normalizeDate(value: string) {

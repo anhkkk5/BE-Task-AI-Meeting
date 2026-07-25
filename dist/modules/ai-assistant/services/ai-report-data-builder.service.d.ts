@@ -1,10 +1,22 @@
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { DailyUpdatesRepository } from '../../daily-updates/repositories/daily-updates.repository';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { ShiftHandoversRepository } from '../../shift-handovers/repositories/shift-handovers.repository';
 import { SprintAccessService } from '../../sprints/services/sprint-access.service';
 import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { UsersService } from '../../users/services/users.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
+export type ReportHandoverItem = {
+    id: string;
+    taskCode: string | null;
+    taskTitle: string | null;
+    status: string;
+    counterpartName: string | null;
+    completedWork: string | null;
+    remainingWork: string | null;
+    blockers: string | null;
+    notes: string | null;
+};
 export type PersonalReportInputData = {
     user: {
         id: string;
@@ -55,6 +67,11 @@ export type PersonalReportInputData = {
         inProgress: string[];
         overdue: string[];
     };
+    handovers: {
+        given: ReportHandoverItem[];
+        received: ReportHandoverItem[];
+        pendingForMe: number;
+    };
 };
 type BuildInputParams = {
     workspaceId: string;
@@ -70,7 +87,8 @@ export declare class AiReportDataBuilderService {
     private readonly tasksRepository;
     private readonly usersService;
     private readonly workspaceAccessService;
-    constructor(dailyUpdatesRepository: DailyUpdatesRepository, projectAccessService: ProjectAccessService, sprintAccessService: SprintAccessService, tasksRepository: TasksRepository, usersService: UsersService, workspaceAccessService: WorkspaceAccessService);
+    private readonly shiftHandoversRepository;
+    constructor(dailyUpdatesRepository: DailyUpdatesRepository, projectAccessService: ProjectAccessService, sprintAccessService: SprintAccessService, tasksRepository: TasksRepository, usersService: UsersService, workspaceAccessService: WorkspaceAccessService, shiftHandoversRepository: ShiftHandoversRepository);
     buildPersonalDailyReportInput(params: BuildInputParams): Promise<{
         user: {
             id: string;
@@ -116,12 +134,18 @@ export declare class AiReportDataBuilderService {
             estimatedHours: number | null;
             storyPoints: number | null;
         }[];
+        handovers: {
+            given: ReportHandoverItem[];
+            received: ReportHandoverItem[];
+            pendingForMe: number;
+        };
         taskSummary: {
             completed: string[];
             inProgress: string[];
             overdue: string[];
         };
     }>;
+    private toHandoverItem;
     private normalizeDate;
 }
 export {};

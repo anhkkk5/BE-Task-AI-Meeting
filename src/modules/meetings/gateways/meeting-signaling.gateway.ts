@@ -17,6 +17,7 @@ import { UsersService } from '../../users/services/users.service';
 import type { JwtPayload } from '../../auth/types/jwt-payload.type';
 import { MeetingStatus } from '../../../common/enums/meeting-status.enum';
 import { MeetingAccessService } from '../services/meeting-access.service';
+import { MeetingsService } from '../services/meetings.service';
 
 type SignalingUser = {
   id: string;
@@ -104,6 +105,7 @@ export class MeetingSignalingGateway
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly meetingAccessService: MeetingAccessService,
+    private readonly meetingsService: MeetingsService,
   ) {}
 
   async handleConnection(client: AuthenticatedSocket) {
@@ -173,6 +175,7 @@ export class MeetingSignalingGateway
     const participant = await this.addParticipantToRoom(
       client,
       meetingId,
+      projectId,
       roomKey,
       canManage,
     );
@@ -239,6 +242,7 @@ export class MeetingSignalingGateway
     const participant = await this.addParticipantToRoom(
       waiting.client,
       waiting.meetingId,
+      waiting.projectId,
       roomKey,
       false,
     );
@@ -253,6 +257,7 @@ export class MeetingSignalingGateway
   private async addParticipantToRoom(
     client: AuthenticatedSocket,
     meetingId: string,
+    projectId: string,
     roomKey: string,
     canManage: boolean,
   ) {
@@ -281,8 +286,39 @@ export class MeetingSignalingGateway
       self: participant,
       participants: existingParticipants,
     });
+    await this.markMeetingStarted(meetingId, projectId, roomKey);
 
     return participant;
+  }
+
+  /**
+   * Danh dau cuoc hop da bat dau khi nguoi dau tien vao phong.
+   * Loi o day chi ghi log: khong duoc lam that bai viec vao phong hop.
+   */
+  private async markMeetingStarted(
+    meetingId: string,
+    projectId: string,
+    roomKey: string,
+  ) {
+    try {
+      const started = await this.meetingsService.markMeetingInProgress(
+        projectId,
+        meetingId,
+      );
+
+      if (started) {
+        this.server.to(roomKey).emit('meeting-status-changed', {
+          meetingId,
+          status: MeetingStatus.InProgress,
+        });
+        this.logger.log(`Cuoc hop ${meetingId} da bat dau`);
+      }
+    } catch (error) {
+      this.logger.error(
+        `Khong the danh dau cuoc hop ${meetingId} dang dien ra`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
   }
 
   @SubscribeMessage('leave-meeting')
@@ -437,7 +473,14 @@ export class MeetingSignalingGateway
     endTime?: Date | string | null;
     meetingDate?: string;
   }) {
-    if (meeting.status !== MeetingStatus.Scheduled) {
+    // IN_PROGRESS phai duoc vao: nguoi bi mat ket noi giua buoi hop can vao lai.
+    // Chi khi cuoc hop duoc chot (COMPLETED) thi phong moi that su dong.
+    const openStatuses: string[] = [
+      MeetingStatus.Scheduled,
+      MeetingStatus.InProgress,
+    ];
+
+    if (!meeting.status || !openStatuses.includes(meeting.status)) {
       return false;
     }
 

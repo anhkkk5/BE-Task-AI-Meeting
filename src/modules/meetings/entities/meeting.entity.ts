@@ -60,6 +60,18 @@ export class Meeting {
   @Column({ name: 'end_time', type: 'datetime', nullable: true })
   endTime: Date | null;
 
+  /** Thoi diem nguoi dau tien vao phong, khac voi startTime la gio du kien. */
+  @Column({ name: 'actual_start_time', type: 'datetime', nullable: true })
+  actualStartTime: Date | null;
+
+  /** Thoi diem cuoc hop duoc chot, khac voi endTime la gio du kien. */
+  @Column({ name: 'actual_end_time', type: 'datetime', nullable: true })
+  actualEndTime: Date | null;
+
+  /** True khi cuoc hop do scheduler tu chot thay vi nguoi dung bam. */
+  @Column({ name: 'auto_completed', type: 'boolean', default: false })
+  autoCompleted: boolean;
+
   @Index()
   @Column({
     type: 'enum',

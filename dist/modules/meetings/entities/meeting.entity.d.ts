@@ -16,6 +16,9 @@ export declare class Meeting {
     meetingDate: string;
     startTime: Date | null;
     endTime: Date | null;
+    actualStartTime: Date | null;
+    actualEndTime: Date | null;
+    autoCompleted: boolean;
     status: MeetingStatus;
     createdBy: string;
     mongoTranscriptId: string | null;

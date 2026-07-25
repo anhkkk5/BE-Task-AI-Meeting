@@ -1,6 +1,8 @@
+import { HandoverStatus } from '../../../common/enums/handover-status.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { DailyUpdatesRepository } from '../../daily-updates/repositories/daily-updates.repository';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { ShiftHandoversRepository } from '../../shift-handovers/repositories/shift-handovers.repository';
 import { SprintAccessService } from '../../sprints/services/sprint-access.service';
 import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
@@ -34,6 +36,17 @@ type TeamTaskInput = {
     estimatedHours: number | null;
     storyPoints: number | null;
 };
+type TeamHandoverInput = {
+    id: string;
+    taskCode: string | null;
+    taskTitle: string | null;
+    status: string;
+    senderName: string | null;
+    receiverName: string | null;
+    completedWork: string | null;
+    remainingWork: string | null;
+    blockers: string | null;
+};
 export type TeamReportInputData = {
     workspace: {
         id: string;
@@ -65,6 +78,14 @@ export type TeamReportInputData = {
         fullName: string;
         blocker: string;
     }[];
+    handovers: TeamHandoverInput[];
+    handoverStats: {
+        total: number;
+        acknowledged: number;
+        pending: number;
+        changesRequested: number;
+        rejected: number;
+    };
 };
 type BuildTeamInputParams = {
     workspaceId: string;
@@ -79,7 +100,8 @@ export declare class AiTeamReportDataBuilderService {
     private readonly tasksRepository;
     private readonly workspaceAccessService;
     private readonly workspaceMembersRepository;
-    constructor(dailyUpdatesRepository: DailyUpdatesRepository, projectAccessService: ProjectAccessService, sprintAccessService: SprintAccessService, tasksRepository: TasksRepository, workspaceAccessService: WorkspaceAccessService, workspaceMembersRepository: WorkspaceMembersRepository);
+    private readonly shiftHandoversRepository;
+    constructor(dailyUpdatesRepository: DailyUpdatesRepository, projectAccessService: ProjectAccessService, sprintAccessService: SprintAccessService, tasksRepository: TasksRepository, workspaceAccessService: WorkspaceAccessService, workspaceMembersRepository: WorkspaceMembersRepository, shiftHandoversRepository: ShiftHandoversRepository);
     buildTeamReportInput(params: BuildTeamInputParams): Promise<{
         workspace: {
             id: string;
@@ -144,7 +166,37 @@ export declare class AiTeamReportDataBuilderService {
             fullName: string;
             blocker: string;
         }[];
+        handovers: {
+            id: string;
+            taskCode: string | null;
+            taskTitle: string | null;
+            status: HandoverStatus;
+            senderName: string;
+            receiverName: string;
+            completedWork: string | null;
+            remainingWork: string | null;
+            blockers: string | null;
+        }[];
+        handoverStats: {
+            total: number;
+            acknowledged: number;
+            pending: number;
+            changesRequested: number;
+            rejected: number;
+        };
     }>;
+    getTeamHandovers(projectId: string, reportDate: string): Promise<{
+        id: string;
+        taskCode: string | null;
+        taskTitle: string | null;
+        status: HandoverStatus;
+        senderName: string;
+        receiverName: string;
+        completedWork: string | null;
+        remainingWork: string | null;
+        blockers: string | null;
+    }[]>;
+    private getHandoverStats;
     getTeamMembers(workspaceId: string): Promise<{
         userId: string;
         fullName: string;

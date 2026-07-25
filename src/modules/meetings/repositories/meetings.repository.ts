@@ -123,6 +123,46 @@ export class MeetingsRepository {
     return { items, total, page, limit };
   }
 
+  /**
+   * Chuyen cuoc hop sang IN_PROGRESS khi nguoi dau tien vao phong.
+   * Dung UPDATE co dieu kien de hai nguoi vao cung luc khong ghi de nhau:
+   * chi request nao thay doi duoc dong (affected === 1) moi la nguoi dau tien.
+   */
+  async markInProgress(meetingId: string, projectId: string) {
+    const result = await this.repository
+      .createQueryBuilder()
+      .update(Meeting)
+      .set({ status: MeetingStatus.InProgress, actualStartTime: new Date() })
+      .where('id = :meetingId', { meetingId })
+      .andWhere('project_id = :projectId', { projectId })
+      .andWhere('status = :status', { status: MeetingStatus.Scheduled })
+      .andWhere('deleted_at IS NULL')
+      .execute();
+
+    return result.affected === 1;
+  }
+
+  /**
+   * Lay cac cuoc hop da qua gio ket thuc nhung chua duoc chot.
+   * Thoi diem ket thuc uu tien end_time, neu null thi lay het ngay hop,
+   * dung dung logic voi isMeetingJoinable trong gateway.
+   */
+  findDueForAutoComplete(cutoff: Date, limit = 200) {
+    return this.repository
+      .createQueryBuilder('meeting')
+      .where('meeting.status IN (:...statuses)', {
+        statuses: [MeetingStatus.Scheduled, MeetingStatus.InProgress],
+      })
+      .andWhere('meeting.deletedAt IS NULL')
+      .andWhere(
+        `COALESCE(meeting.end_time, TIMESTAMP(meeting.meeting_date, '23:59:59')) <= :cutoff`,
+        { cutoff },
+      )
+      .orderBy('meeting.meetingDate', 'ASC')
+      .take(limit)
+      .getMany();
+  }
+
   async update(meeting: Meeting, data: Partial<Meeting>) {
     Object.assign(meeting, data);
     const savedMeeting = await this.repository.save(meeting);

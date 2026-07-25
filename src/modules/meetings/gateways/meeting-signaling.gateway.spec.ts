@@ -62,6 +62,7 @@ describe('MeetingSignalingGateway', () => {
     assertMeetingInProject: jest.Mock;
     isMeetingManager: jest.Mock;
   };
+  let meetingsService: { markMeetingInProgress: jest.Mock };
   let serverTarget: { emit: jest.Mock };
 
   beforeEach(() => {
@@ -92,6 +93,9 @@ describe('MeetingSignalingGateway', () => {
       }),
       isMeetingManager: jest.fn().mockResolvedValue(true),
     };
+    meetingsService = {
+      markMeetingInProgress: jest.fn().mockResolvedValue(true),
+    };
     serverTarget = {
       emit: jest.fn(),
     };
@@ -99,6 +103,7 @@ describe('MeetingSignalingGateway', () => {
       jwtService as never,
       usersService as never,
       meetingAccessService as never,
+      meetingsService as never,
     );
     (gateway as unknown as { server: { to: jest.Mock } }).server = {
       to: jest.fn(() => serverTarget),

@@ -3,6 +3,7 @@ import { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { UsersService } from '../../users/services/users.service';
 import { MeetingAccessService } from '../services/meeting-access.service';
+import { MeetingsService } from '../services/meetings.service';
 type SignalingUser = {
     id: string;
     email: string;
@@ -41,16 +42,18 @@ export declare class MeetingSignalingGateway implements OnGatewayConnection, OnG
     private readonly jwtService;
     private readonly usersService;
     private readonly meetingAccessService;
+    private readonly meetingsService;
     private readonly server;
     private readonly logger;
     private readonly rooms;
     private readonly waitingRooms;
-    constructor(jwtService: JwtService, usersService: UsersService, meetingAccessService: MeetingAccessService);
+    constructor(jwtService: JwtService, usersService: UsersService, meetingAccessService: MeetingAccessService, meetingsService: MeetingsService);
     handleConnection(client: AuthenticatedSocket): Promise<void>;
     handleDisconnect(client: AuthenticatedSocket): void;
     joinMeeting(client: AuthenticatedSocket, payload: JoinMeetingPayload): Promise<void>;
     admitParticipant(client: AuthenticatedSocket, payload: AdmitParticipantPayload): Promise<void>;
     private addParticipantToRoom;
+    private markMeetingStarted;
     leaveMeeting(client: AuthenticatedSocket): void;
     forwardOffer(client: AuthenticatedSocket, payload: SignalPayload): void;
     forwardAnswer(client: AuthenticatedSocket, payload: SignalPayload): void;

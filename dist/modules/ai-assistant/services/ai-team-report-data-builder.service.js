@@ -11,9 +11,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiTeamReportDataBuilderService = void 0;
 const common_1 = require("@nestjs/common");
+const handover_status_enum_1 = require("../../../common/enums/handover-status.enum");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 const daily_updates_repository_1 = require("../../daily-updates/repositories/daily-updates.repository");
 const project_access_service_1 = require("../../projects/services/project-access.service");
+const shift_handovers_repository_1 = require("../../shift-handovers/repositories/shift-handovers.repository");
 const sprint_access_service_1 = require("../../sprints/services/sprint-access.service");
 const tasks_repository_1 = require("../../tasks/repositories/tasks.repository");
 const workspace_members_repository_1 = require("../../workspaces/repositories/workspace-members.repository");
@@ -25,13 +27,15 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
     tasksRepository;
     workspaceAccessService;
     workspaceMembersRepository;
-    constructor(dailyUpdatesRepository, projectAccessService, sprintAccessService, tasksRepository, workspaceAccessService, workspaceMembersRepository) {
+    shiftHandoversRepository;
+    constructor(dailyUpdatesRepository, projectAccessService, sprintAccessService, tasksRepository, workspaceAccessService, workspaceMembersRepository, shiftHandoversRepository) {
         this.dailyUpdatesRepository = dailyUpdatesRepository;
         this.projectAccessService = projectAccessService;
         this.sprintAccessService = sprintAccessService;
         this.tasksRepository = tasksRepository;
         this.workspaceAccessService = workspaceAccessService;
         this.workspaceMembersRepository = workspaceMembersRepository;
+        this.shiftHandoversRepository = shiftHandoversRepository;
     }
     async buildTeamReportInput(params) {
         const workspace = await this.workspaceAccessService.assertWorkspaceActive(params.workspaceId);
@@ -43,6 +47,7 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
         const members = await this.getTeamMembers(params.workspaceId);
         const dailyUpdates = await this.getTeamDailyUpdates(params.projectId, reportDate, params.sprintId);
         const tasks = await this.getTeamTasks(params.projectId, params.sprintId);
+        const handovers = await this.getTeamHandovers(params.projectId, reportDate);
         return {
             workspace: {
                 id: workspace.id,
@@ -78,6 +83,32 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
                 fullName: dailyUpdate.fullName,
                 blocker: dailyUpdate.blockers?.trim() ?? '',
             })),
+            handovers,
+            handoverStats: this.getHandoverStats(handovers),
+        };
+    }
+    async getTeamHandovers(projectId, reportDate) {
+        const handovers = await this.shiftHandoversRepository.findByProjectAndDate(projectId, reportDate);
+        return handovers.map((handover) => ({
+            id: handover.id,
+            taskCode: handover.task?.taskCode ?? null,
+            taskTitle: handover.task?.title ?? null,
+            status: handover.status,
+            senderName: handover.sender?.fullName ?? null,
+            receiverName: handover.receiver?.fullName ?? null,
+            completedWork: handover.completedWork ?? null,
+            remainingWork: handover.remainingWork ?? null,
+            blockers: handover.blockers ?? null,
+        }));
+    }
+    getHandoverStats(handovers) {
+        const countByStatus = (status) => handovers.filter((handover) => handover.status === status).length;
+        return {
+            total: handovers.length,
+            acknowledged: countByStatus(handover_status_enum_1.HandoverStatus.Acknowledged),
+            pending: countByStatus(handover_status_enum_1.HandoverStatus.Pending),
+            changesRequested: countByStatus(handover_status_enum_1.HandoverStatus.ChangesRequested),
+            rejected: countByStatus(handover_status_enum_1.HandoverStatus.Rejected),
         };
     }
     async getTeamMembers(workspaceId) {
@@ -165,6 +196,7 @@ exports.AiTeamReportDataBuilderService = AiTeamReportDataBuilderService = __deco
         sprint_access_service_1.SprintAccessService,
         tasks_repository_1.TasksRepository,
         workspace_access_service_1.WorkspaceAccessService,
-        workspace_members_repository_1.WorkspaceMembersRepository])
+        workspace_members_repository_1.WorkspaceMembersRepository,
+        shift_handovers_repository_1.ShiftHandoversRepository])
 ], AiTeamReportDataBuilderService);
 //# sourceMappingURL=ai-team-report-data-builder.service.js.map

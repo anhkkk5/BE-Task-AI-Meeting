@@ -16,6 +16,7 @@ const mongodb_config_1 = require("../../config/mongodb.config");
 const daily_updates_module_1 = require("../daily-updates/daily-updates.module");
 const meetings_module_1 = require("../meetings/meetings.module");
 const projects_module_1 = require("../projects/projects.module");
+const shift_handovers_module_1 = require("../shift-handovers/shift-handovers.module");
 const sprints_module_1 = require("../sprints/sprints.module");
 const tasks_module_1 = require("../tasks/tasks.module");
 const users_module_1 = require("../users/users.module");
@@ -72,6 +73,7 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
             daily_updates_module_1.DailyUpdatesModule,
             meetings_module_1.MeetingsModule,
             projects_module_1.ProjectsModule,
+            shift_handovers_module_1.ShiftHandoversModule,
             sprints_module_1.SprintsModule,
             tasks_module_1.TasksModule,
             users_module_1.UsersModule,

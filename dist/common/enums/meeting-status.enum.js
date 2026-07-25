@@ -4,6 +4,7 @@ exports.MeetingStatus = void 0;
 var MeetingStatus;
 (function (MeetingStatus) {
     MeetingStatus["Scheduled"] = "SCHEDULED";
+    MeetingStatus["InProgress"] = "IN_PROGRESS";
     MeetingStatus["Completed"] = "COMPLETED";
     MeetingStatus["Cancelled"] = "CANCELLED";
     MeetingStatus["Archived"] = "ARCHIVED";

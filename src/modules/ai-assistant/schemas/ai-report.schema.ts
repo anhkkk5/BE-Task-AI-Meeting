@@ -14,6 +14,8 @@ export type PersonalDailyReportOutput = {
   inProgressTasks?: string[];
   blockers?: string[];
   risks?: string[];
+  /** Tom tat cong viec da ban giao / nhan ban giao trong ngay. */
+  handoverSummary?: string;
   recommendations?: string[];
   generatedText: string;
 };
@@ -27,6 +29,8 @@ export type TeamDailyReportOutput = {
   blockers?: string[];
   risks?: string[];
   missingDailyUpdates?: string[];
+  /** Tom tat ban giao cong viec cua ca doi trong ngay. */
+  handoverSummary?: string;
   memberSummaries?: {
     userId: string;
     fullName: string;

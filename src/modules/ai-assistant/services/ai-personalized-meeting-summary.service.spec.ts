@@ -290,7 +290,7 @@ describe('AiPersonalizedMeetingSummaryService', () => {
       }),
     } as never;
 
-    personalizedModel.create.mockResolvedValue(personalizedSummary);
+    personalizedModel.create.mockResolvedValue(personalizedSummary as never);
     personalizedModel.find.mockReturnValue(
       queryResult([personalizedSummary]) as never,
     );
@@ -311,7 +311,7 @@ describe('AiPersonalizedMeetingSummaryService', () => {
       },
     ] as never);
     dataBuilderService.buildPersonalizedMeetingSummaryInput.mockResolvedValue(
-      inputData,
+      inputData as never,
     );
     promptBuilderService.buildPersonalizedMeetingSummaryPrompt.mockReturnValue(
       'safe personalized prompt',
@@ -335,7 +335,7 @@ describe('AiPersonalizedMeetingSummaryService', () => {
       meetingAccessService as unknown as MeetingAccessService,
       meetingParticipantsRepository as unknown as MeetingParticipantsRepository,
       projectAccessService as unknown as ProjectAccessService,
-      promptBuilderService,
+      promptBuilderService as unknown as PromptBuilderService,
       workspaceAccessService as unknown as WorkspaceAccessService,
       aiUserPreferencesService as unknown as AiUserPreferencesService,
     );
@@ -459,7 +459,7 @@ describe('AiPersonalizedMeetingSummaryService', () => {
       meetingAccessService as unknown as MeetingAccessService,
       meetingParticipantsRepository as unknown as MeetingParticipantsRepository,
       projectAccessService as unknown as ProjectAccessService,
-      promptBuilderService,
+      promptBuilderService as unknown as PromptBuilderService,
       workspaceAccessService as unknown as WorkspaceAccessService,
       aiUserPreferencesService as unknown as AiUserPreferencesService,
     );

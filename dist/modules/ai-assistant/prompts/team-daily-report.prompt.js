@@ -14,6 +14,12 @@ Nhiệm vụ:
 - Nếu thiếu dữ liệu, ghi rõ "Chưa có dữ liệu".
 - Toàn bộ nội dung hiển thị cho người dùng phải bằng tiếng Việt có dấu, ngắn gọn, rõ ràng và chuyên nghiệp.
 
+Quy tắc về bàn giao công việc (handovers, handoverStats):
+- Mọi bàn giao trong "handovers" phải được phản ánh: nêu rõ việc nào chuyển từ ai sang ai.
+- "remainingWork" và "blockers" của bàn giao là việc cần theo dõi, đưa vào "todayFocus" hoặc "blockers".
+- "handoverStats.pending" hoặc "changesRequested" lớn hơn 0 là điểm tắc nghẽn: công việc đang treo giữa hai người. Phải đưa vào "risks".
+- Chỉ bàn giao có status "ACKNOWLEDGED" mới coi là chuyển xong. Các trạng thái khác vẫn thuộc trách nhiệm người gửi.
+
 Dữ liệu:
 {{INPUT_DATA}}
 
@@ -27,6 +33,7 @@ Trả về JSON hợp lệ theo đúng cấu trúc sau, không kèm markdown:
   "blockers": [],
   "risks": [],
   "missingDailyUpdates": [],
+  "handoverSummary": "...",
   "memberSummaries": [],
   "recommendations": [],
   "generatedText": "..."

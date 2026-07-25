@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
@@ -254,12 +255,14 @@ export class MeetingsService {
       projectId,
       meetingId,
       MeetingStatus.Completed,
+      { actualEndTime: new Date() },
     );
     this.meetingLifecycleService.publishMeetingCompleted({
       currentUserId,
       workspaceId,
       projectId,
       meetingId,
+      reason: 'MANUAL',
     });
 
     return {
@@ -267,6 +270,41 @@ export class MeetingsService {
       message: 'Complete meeting successfully',
       data: null,
     };
+  }
+
+  /**
+   * Chuyen cuoc hop sang IN_PROGRESS khi nguoi dau tien vao phong.
+   * Gateway goi ham nay, nen loi o day khong duoc lam that bai viec vao phong.
+   * Tra ve true neu chinh nguoi nay la nguoi mo dau cuoc hop.
+   */
+  async markMeetingInProgress(projectId: string, meetingId: string) {
+    return this.meetingsRepository.markInProgress(meetingId, projectId);
+  }
+
+  /**
+   * Chot cuoc hop tu dong khi da qua gio ket thuc.
+   * Dung cho scheduler nen bo qua kiem tra quyen: khong co user context.
+   * Su kien phat ra mang currentUserId la nguoi tao cuoc hop de AI co quyen doc du lieu.
+   */
+  async autoCompleteMeeting(meeting: Meeting) {
+    if (meeting.status === MeetingStatus.Completed) {
+      return false;
+    }
+
+    await this.meetingsRepository.update(meeting, {
+      status: MeetingStatus.Completed,
+      actualEndTime: new Date(),
+      autoCompleted: true,
+    });
+    this.meetingLifecycleService.publishMeetingCompleted({
+      currentUserId: meeting.createdBy,
+      workspaceId: meeting.workspaceId,
+      projectId: meeting.projectId,
+      meetingId: meeting.id,
+      reason: 'AUTO',
+    });
+
+    return true;
   }
 
   async deleteMeeting(
@@ -313,6 +351,7 @@ export class MeetingsService {
     projectId: string,
     meetingId: string,
     status: MeetingStatus,
+    extraData: Partial<Meeting> = {},
   ) {
     await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
     await this.meetingAccessService.assertUserCanManageMeeting(
@@ -329,7 +368,15 @@ export class MeetingsService {
     );
     this.meetingAccessService.assertMeetingEditable(meeting);
 
-    await this.meetingsRepository.update(meeting, { status });
+    // Chot hai lan se phat su kien hai lan va AI tao tom tat trung lap.
+    if (
+      status === MeetingStatus.Completed &&
+      meeting.status === MeetingStatus.Completed
+    ) {
+      throw new ConflictException('Cuoc hop nay da duoc ket thuc');
+    }
+
+    await this.meetingsRepository.update(meeting, { status, ...extraData });
   }
 
   private async assertValidMeetingFilters(
@@ -432,6 +479,9 @@ export class MeetingsService {
       meetingDate: meeting.meetingDate,
       startTime: meeting.startTime,
       endTime: meeting.endTime,
+      actualStartTime: meeting.actualStartTime,
+      actualEndTime: meeting.actualEndTime,
+      autoCompleted: meeting.autoCompleted,
       status: meeting.status,
       createdBy: meeting.createdBy,
       creator: meeting.creator

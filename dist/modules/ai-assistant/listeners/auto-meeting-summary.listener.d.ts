@@ -6,8 +6,11 @@ export declare class AutoMeetingSummaryListener implements OnModuleInit, OnModul
     private readonly aiMeetingSummaryService;
     private readonly logger;
     private unsubscribe?;
+    private readonly pendingRetries;
     constructor(meetingLifecycleService: MeetingLifecycleService, aiMeetingSummaryService: AiMeetingSummaryService);
     onModuleInit(): void;
     onModuleDestroy(): void;
     private generateSummary;
+    private scheduleRetry;
+    private isMissingTranscript;
 }

@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 const daily_updates_repository_1 = require("../../daily-updates/repositories/daily-updates.repository");
 const project_access_service_1 = require("../../projects/services/project-access.service");
+const shift_handovers_repository_1 = require("../../shift-handovers/repositories/shift-handovers.repository");
 const sprint_access_service_1 = require("../../sprints/services/sprint-access.service");
 const tasks_repository_1 = require("../../tasks/repositories/tasks.repository");
 const users_service_1 = require("../../users/services/users.service");
@@ -25,13 +26,15 @@ let AiReportDataBuilderService = class AiReportDataBuilderService {
     tasksRepository;
     usersService;
     workspaceAccessService;
-    constructor(dailyUpdatesRepository, projectAccessService, sprintAccessService, tasksRepository, usersService, workspaceAccessService) {
+    shiftHandoversRepository;
+    constructor(dailyUpdatesRepository, projectAccessService, sprintAccessService, tasksRepository, usersService, workspaceAccessService, shiftHandoversRepository) {
         this.dailyUpdatesRepository = dailyUpdatesRepository;
         this.projectAccessService = projectAccessService;
         this.sprintAccessService = sprintAccessService;
         this.tasksRepository = tasksRepository;
         this.usersService = usersService;
         this.workspaceAccessService = workspaceAccessService;
+        this.shiftHandoversRepository = shiftHandoversRepository;
     }
     async buildPersonalDailyReportInput(params) {
         const workspace = await this.workspaceAccessService.assertWorkspaceActive(params.workspaceId);
@@ -57,6 +60,8 @@ let AiReportDataBuilderService = class AiReportDataBuilderService {
             page: 1,
             limit: 100,
         });
+        const dayHandovers = await this.shiftHandoversRepository.findByProjectAndDate(params.projectId, reportDate);
+        const pendingHandovers = await this.shiftHandoversRepository.findPendingByReceiver(params.targetUserId, params.workspaceId);
         const normalizedTasks = tasks.items.map((task) => ({
             id: task.id,
             taskCode: task.taskCode,
@@ -107,6 +112,15 @@ let AiReportDataBuilderService = class AiReportDataBuilderService {
                 }
                 : null,
             tasks: normalizedTasks,
+            handovers: {
+                given: dayHandovers
+                    .filter((handover) => handover.senderId === params.targetUserId)
+                    .map((handover) => this.toHandoverItem(handover, handover.receiver?.fullName ?? null)),
+                received: dayHandovers
+                    .filter((handover) => handover.receiverId === params.targetUserId)
+                    .map((handover) => this.toHandoverItem(handover, handover.sender?.fullName ?? null)),
+                pendingForMe: pendingHandovers.length,
+            },
             taskSummary: {
                 completed: normalizedTasks
                     .filter((task) => task.status === task_status_enum_1.TaskStatus.Done)
@@ -122,6 +136,19 @@ let AiReportDataBuilderService = class AiReportDataBuilderService {
             },
         };
     }
+    toHandoverItem(handover, counterpartName) {
+        return {
+            id: handover.id,
+            taskCode: handover.task?.taskCode ?? null,
+            taskTitle: handover.task?.title ?? null,
+            status: handover.status,
+            counterpartName,
+            completedWork: handover.completedWork ?? null,
+            remainingWork: handover.remainingWork ?? null,
+            blockers: handover.blockers ?? null,
+            notes: handover.notes ?? null,
+        };
+    }
     normalizeDate(value) {
         return value.slice(0, 10);
     }
@@ -134,6 +161,7 @@ exports.AiReportDataBuilderService = AiReportDataBuilderService = __decorate([
         sprint_access_service_1.SprintAccessService,
         tasks_repository_1.TasksRepository,
         users_service_1.UsersService,
-        workspace_access_service_1.WorkspaceAccessService])
+        workspace_access_service_1.WorkspaceAccessService,
+        shift_handovers_repository_1.ShiftHandoversRepository])
 ], AiReportDataBuilderService);
 //# sourceMappingURL=ai-report-data-builder.service.js.map

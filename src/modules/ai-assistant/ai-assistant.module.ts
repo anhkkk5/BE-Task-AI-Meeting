@@ -7,6 +7,7 @@ import { mongodbConfig } from '../../config/mongodb.config';
 import { DailyUpdatesModule } from '../daily-updates/daily-updates.module';
 import { MeetingsModule } from '../meetings/meetings.module';
 import { ProjectsModule } from '../projects/projects.module';
+import { ShiftHandoversModule } from '../shift-handovers/shift-handovers.module';
 import { SprintsModule } from '../sprints/sprints.module';
 import { TasksModule } from '../tasks/tasks.module';
 import { UsersModule } from '../users/users.module';
@@ -73,6 +74,7 @@ const mongoImports = mongodbConfig().enabled
     DailyUpdatesModule,
     MeetingsModule,
     ProjectsModule,
+    ShiftHandoversModule,
     SprintsModule,
     TasksModule,
     UsersModule,

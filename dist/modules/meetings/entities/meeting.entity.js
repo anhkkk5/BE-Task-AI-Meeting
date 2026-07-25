@@ -29,6 +29,9 @@ let Meeting = class Meeting {
     meetingDate;
     startTime;
     endTime;
+    actualStartTime;
+    actualEndTime;
+    autoCompleted;
     status;
     createdBy;
     mongoTranscriptId;
@@ -93,6 +96,18 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'end_time', type: 'datetime', nullable: true }),
     __metadata("design:type", Object)
 ], Meeting.prototype, "endTime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'actual_start_time', type: 'datetime', nullable: true }),
+    __metadata("design:type", Object)
+], Meeting.prototype, "actualStartTime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'actual_end_time', type: 'datetime', nullable: true }),
+    __metadata("design:type", Object)
+], Meeting.prototype, "actualEndTime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'auto_completed', type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], Meeting.prototype, "autoCompleted", void 0);
 __decorate([
     (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({

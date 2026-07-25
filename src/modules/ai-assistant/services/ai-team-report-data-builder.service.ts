@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { HandoverStatus } from '../../../common/enums/handover-status.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { DailyUpdatesRepository } from '../../daily-updates/repositories/daily-updates.repository';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { ShiftHandoversRepository } from '../../shift-handovers/repositories/shift-handovers.repository';
 import { SprintAccessService } from '../../sprints/services/sprint-access.service';
 import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
@@ -39,6 +41,18 @@ type TeamTaskInput = {
   storyPoints: number | null;
 };
 
+type TeamHandoverInput = {
+  id: string;
+  taskCode: string | null;
+  taskTitle: string | null;
+  status: string;
+  senderName: string | null;
+  receiverName: string | null;
+  completedWork: string | null;
+  remainingWork: string | null;
+  blockers: string | null;
+};
+
 export type TeamReportInputData = {
   workspace: {
     id: string;
@@ -70,6 +84,18 @@ export type TeamReportInputData = {
     fullName: string;
     blocker: string;
   }[];
+  /**
+   * Ban giao cong viec trong ngay cua ca doi. Thieu du lieu nay thi bao cao
+   * giao ban se bo qua viec da chuyen tay va khong thay duoc diem tac nghen.
+   */
+  handovers: TeamHandoverInput[];
+  handoverStats: {
+    total: number;
+    acknowledged: number;
+    pending: number;
+    changesRequested: number;
+    rejected: number;
+  };
 };
 
 type BuildTeamInputParams = {
@@ -88,6 +114,7 @@ export class AiTeamReportDataBuilderService {
     private readonly tasksRepository: TasksRepository,
     private readonly workspaceAccessService: WorkspaceAccessService,
     private readonly workspaceMembersRepository: WorkspaceMembersRepository,
+    private readonly shiftHandoversRepository: ShiftHandoversRepository,
   ) {}
 
   async buildTeamReportInput(params: BuildTeamInputParams) {
@@ -112,6 +139,7 @@ export class AiTeamReportDataBuilderService {
       params.sprintId,
     );
     const tasks = await this.getTeamTasks(params.projectId, params.sprintId);
+    const handovers = await this.getTeamHandovers(params.projectId, reportDate);
 
     return {
       workspace: {
@@ -151,7 +179,43 @@ export class AiTeamReportDataBuilderService {
           fullName: dailyUpdate.fullName,
           blocker: dailyUpdate.blockers?.trim() ?? '',
         })),
+      handovers,
+      handoverStats: this.getHandoverStats(handovers),
     } satisfies TeamReportInputData;
+  }
+
+  /** Ban giao trong ngay cua project, rut gon cho prompt AI. */
+  async getTeamHandovers(projectId: string, reportDate: string) {
+    const handovers = await this.shiftHandoversRepository.findByProjectAndDate(
+      projectId,
+      reportDate,
+    );
+
+    return handovers.map((handover) => ({
+      id: handover.id,
+      taskCode: handover.task?.taskCode ?? null,
+      taskTitle: handover.task?.title ?? null,
+      status: handover.status,
+      senderName: handover.sender?.fullName ?? null,
+      receiverName: handover.receiver?.fullName ?? null,
+      completedWork: handover.completedWork ?? null,
+      remainingWork: handover.remainingWork ?? null,
+      blockers: handover.blockers ?? null,
+    }));
+  }
+
+  /** Dem theo trang thai de AI biet co bao nhieu ban giao con treo. */
+  private getHandoverStats(handovers: TeamHandoverInput[]) {
+    const countByStatus = (status: HandoverStatus) =>
+      handovers.filter((handover) => handover.status === status).length;
+
+    return {
+      total: handovers.length,
+      acknowledged: countByStatus(HandoverStatus.Acknowledged),
+      pending: countByStatus(HandoverStatus.Pending),
+      changesRequested: countByStatus(HandoverStatus.ChangesRequested),
+      rejected: countByStatus(HandoverStatus.Rejected),
+    };
   }
 
   async getTeamMembers(workspaceId: string) {

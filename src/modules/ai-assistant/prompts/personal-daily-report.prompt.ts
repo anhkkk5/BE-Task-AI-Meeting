@@ -9,6 +9,12 @@ Nhiệm vụ:
 - Không đề xuất thay đổi cơ sở dữ liệu.
 - Toàn bộ nội dung hiển thị cho người dùng phải bằng tiếng Việt có dấu.
 
+Quy tắc về bàn giao công việc (handovers):
+- "handovers.given" là việc người này đã bàn giao cho người khác. Không được tính phần "remainingWork" của các việc này vào kế hoạch của họ; ghi rõ đã chuyển cho ai.
+- "handovers.received" là việc người này nhận từ người khác. Phải đưa "remainingWork" và "blockers" của các việc này vào phần việc đang làm hoặc rủi ro.
+- "handovers.pendingForMe" lớn hơn 0 nghĩa là còn bàn giao chờ họ xác nhận. Nêu điều này ở phần rủi ro hoặc đề xuất.
+- Bàn giao có status khác "ACKNOWLEDGED" là chưa chốt, việc vẫn thuộc người gửi. Không được coi là đã chuyển xong.
+
 CẤU HÌNH CÁ NHÂN HÓA:
 {{PERSONALIZATION}}
 
@@ -25,6 +31,7 @@ Trả về JSON hợp lệ theo đúng cấu trúc sau, không kèm markdown:
   "inProgressTasks": [],
   "blockers": [],
   "risks": [],
+  "handoverSummary": "...",
   "recommendations": [],
   "generatedText": "..."
 }
