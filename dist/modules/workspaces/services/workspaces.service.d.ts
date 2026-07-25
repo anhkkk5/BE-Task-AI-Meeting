@@ -24,6 +24,7 @@ export declare class WorkspacesService {
                 plan: import("../../../common/enums/workspace-plan.enum").WorkspacePlan;
                 status: import("../../../common/enums/workspace-status.enum").WorkspaceStatus;
                 createdAt: Date;
+                updatedAt: Date;
             };
         };
     }>;
@@ -41,6 +42,7 @@ export declare class WorkspacesService {
                 plan: import("../../../common/enums/workspace-plan.enum").WorkspacePlan;
                 status: import("../../../common/enums/workspace-status.enum").WorkspaceStatus;
                 createdAt: Date;
+                updatedAt: Date;
             }[];
         };
     }>;
@@ -75,6 +77,7 @@ export declare class WorkspacesService {
                 plan: import("../../../common/enums/workspace-plan.enum").WorkspacePlan;
                 status: import("../../../common/enums/workspace-status.enum").WorkspaceStatus;
                 createdAt: Date;
+                updatedAt: Date;
             };
         };
     }>;

@@ -168,6 +168,7 @@ export class WorkspacesService {
       plan: workspace.plan,
       status: workspace.status,
       createdAt: workspace.createdAt,
+      updatedAt: workspace.updatedAt,
     };
   }
 }

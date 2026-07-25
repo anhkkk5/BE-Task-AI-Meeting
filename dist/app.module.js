@@ -30,6 +30,7 @@ const members_module_1 = require("./modules/members/members.module");
 const projects_module_1 = require("./modules/projects/projects.module");
 const sprints_module_1 = require("./modules/sprints/sprints.module");
 const shift_handovers_module_1 = require("./modules/shift-handovers/shift-handovers.module");
+const stats_module_1 = require("./modules/stats/stats.module");
 const tasks_module_1 = require("./modules/tasks/tasks.module");
 const users_module_1 = require("./modules/users/users.module");
 const workspaces_module_1 = require("./modules/workspaces/workspaces.module");
@@ -65,6 +66,7 @@ exports.AppModule = AppModule = __decorate([
             daily_updates_module_1.DailyUpdatesModule,
             meetings_module_1.MeetingsModule,
             shift_handovers_module_1.ShiftHandoversModule,
+            stats_module_1.StatsModule,
             workspaces_module_1.WorkspacesModule,
         ],
         controllers: [app_controller_1.AppController],
