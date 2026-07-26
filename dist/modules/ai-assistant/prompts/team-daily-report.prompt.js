@@ -20,6 +20,21 @@ Quy tắc về bàn giao công việc (handovers, handoverStats):
 - "handoverStats.pending" hoặc "changesRequested" lớn hơn 0 là điểm tắc nghẽn: công việc đang treo giữa hai người. Phải đưa vào "risks".
 - Chỉ bàn giao có status "ACKNOWLEDGED" mới coi là chuyển xong. Các trạng thái khác vẫn thuộc trách nhiệm người gửi.
 
+Quy tắc về biên bản cuộc họp (meetingNotes):
+- "decisions" trong biên bản là quyết định đã chốt, không được diễn giải lại thành đề xuất.
+- "actionItems" trong biên bản là việc cần làm, đưa vào "todayFocus" nếu chưa hoàn thành.
+
+Quy tắc về báo cáo ngày trước (previousReport):
+- Nếu có, so sánh để chỉ ra việc nào vẫn còn tồn từ ngày trước sang hôm nay.
+- Vướng mắc lặp lại qua nhiều ngày phải đưa vào "risks".
+
+Quy tắc về nguồn dữ liệu (dataSources):
+- "dataSources" cho biết người dùng cho phép dùng những nguồn nào. Nguồn nào bị tắt thì dữ liệu tương ứng sẽ trống.
+- Không được suy diễn hay bù đắp cho nguồn đã tắt. Mục liên quan ghi "Chưa có dữ liệu".
+
+Yêu cầu thêm từ người dùng:
+{{EXTRA_INSTRUCTION}}
+
 Dữ liệu:
 {{INPUT_DATA}}
 

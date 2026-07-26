@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiReportSchema = exports.AiReport = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
+const ai_report_review_status_enum_1 = require("../../../common/enums/ai-report-review-status.enum");
 const ai_report_status_enum_1 = require("../../../common/enums/ai-report-status.enum");
 const ai_report_type_enum_1 = require("../../../common/enums/ai-report-type.enum");
 let AiReport = class AiReport {
@@ -24,6 +25,14 @@ let AiReport = class AiReport {
     aiOutput;
     aiModel;
     status;
+    reviewStatus;
+    metrics;
+    dataSources;
+    extraInstruction;
+    editedBy;
+    editedAt;
+    approvedBy;
+    approvedAt;
     createdBy;
 };
 exports.AiReport = AiReport;
@@ -77,6 +86,43 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], AiReport.prototype, "status", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: String,
+        required: true,
+        enum: ai_report_review_status_enum_1.AiReportReviewStatus,
+        default: ai_report_review_status_enum_1.AiReportReviewStatus.Draft,
+    }),
+    __metadata("design:type", String)
+], AiReport.prototype, "reviewStatus", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Object }),
+    __metadata("design:type", Object)
+], AiReport.prototype, "metrics", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Object }),
+    __metadata("design:type", Object)
+], AiReport.prototype, "dataSources", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String }),
+    __metadata("design:type", Object)
+], AiReport.prototype, "extraInstruction", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String }),
+    __metadata("design:type", Object)
+], AiReport.prototype, "editedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Date }),
+    __metadata("design:type", Object)
+], AiReport.prototype, "editedAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String }),
+    __metadata("design:type", Object)
+], AiReport.prototype, "approvedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Date }),
+    __metadata("design:type", Object)
+], AiReport.prototype, "approvedAt", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -9,19 +10,26 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { AiReportReviewStatus } from '../../../common/enums/ai-report-review-status.enum';
 import { AiReportStatus } from '../../../common/enums/ai-report-status.enum';
 import { AiReportType } from '../../../common/enums/ai-report-type.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { SprintAccessService } from '../../sprints/services/sprint-access.service';
 import { GenerateTeamReportDto } from '../dto/generate-team-report.dto';
 import { GetAiTeamReportsQueryDto } from '../dto/get-ai-team-reports-query.dto';
+import { UpdateTeamReportDto } from '../dto/update-team-report.dto';
 import {
   AiPromptLog,
   AiPromptLogDocument,
 } from '../schemas/ai-prompt-log.schema';
-import { AiReport, AiReportDocument } from '../schemas/ai-report.schema';
+import {
+  AiReport,
+  AiReportDocument,
+  TeamDailyReportOutput,
+} from '../schemas/ai-report.schema';
 import { AiProviderService } from './ai-provider.service';
 import { AiReportAccessService } from './ai-report-access.service';
+import { AiReportEventsService } from './ai-report-events.service';
 import { AiTeamReportDataBuilderService } from './ai-team-report-data-builder.service';
 import { PromptBuilderService } from './prompt-builder.service';
 
@@ -60,6 +68,7 @@ export class AiTeamReportService {
     private readonly projectAccessService: ProjectAccessService,
     private readonly promptBuilderService: PromptBuilderService,
     private readonly sprintAccessService: SprintAccessService,
+    private readonly aiReportEventsService: AiReportEventsService,
   ) {}
 
   async generateTeamDailyReport(
@@ -93,9 +102,12 @@ export class AiTeamReportService {
       projectId,
       reportDate: dto.reportDate,
       sprintId: dto.sprintId,
+      dataSources: dto.dataSources,
     });
-    const prompt =
-      this.promptBuilderService.buildTeamDailyReportPrompt(inputData);
+    const prompt = this.promptBuilderService.buildTeamDailyReportPrompt(
+      inputData,
+      dto.extraInstruction,
+    );
     const startedAt = Date.now();
 
     try {
@@ -114,6 +126,11 @@ export class AiTeamReportService {
         aiOutput: aiResult.output,
         aiModel: aiResult.model,
         status: AiReportStatus.Completed,
+        // AI chi sinh ban nhap, phai co nguoi duyet moi thanh bao cao chinh thuc.
+        reviewStatus: AiReportReviewStatus.Draft,
+        metrics: this.dataBuilderService.computeMetrics(inputData),
+        dataSources: inputData.dataSources,
+        extraInstruction: dto.extraInstruction?.trim() || null,
         createdBy: currentUserId,
       });
 
@@ -254,6 +271,135 @@ export class AiTeamReportService {
     projectId: string,
     reportId: string,
   ) {
+    const report = await this.findTeamReportOrFail(
+      currentUserId,
+      workspaceId,
+      projectId,
+      reportId,
+    );
+
+    return {
+      success: true,
+      message: 'Get team daily report detail successfully',
+      data: {
+        report: this.toReportResponse(report, true),
+      },
+    };
+  }
+
+  /**
+   * Sua noi dung bao cao do AI sinh.
+   *
+   * Chi ghi de dung nhung muc nguoi dung gui len, cac muc con lai giu nguyen
+   * ban AI. `inputData` va `metrics` khong bao gio bi sua vi do la du lieu goc.
+   */
+  async updateTeamDailyReport(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    reportId: string,
+    dto: UpdateTeamReportDto,
+  ) {
+    const report = await this.findTeamReportOrFail(
+      currentUserId,
+      workspaceId,
+      projectId,
+      reportId,
+    );
+
+    if (this.resolveReviewStatus(report) === AiReportReviewStatus.Approved) {
+      throw new ConflictException(
+        'Báo cáo đã được duyệt nên không thể chỉnh sửa',
+      );
+    }
+
+    const currentOutput = (report.aiOutput ?? {}) as TeamDailyReportOutput;
+    const patch: Partial<TeamDailyReportOutput> = {};
+
+    if (dto.summary !== undefined) patch.summary = dto.summary;
+    if (dto.teamProgress !== undefined) patch.teamProgress = dto.teamProgress;
+    if (dto.completedWork !== undefined) patch.completedWork = dto.completedWork;
+    if (dto.todayFocus !== undefined) patch.todayFocus = dto.todayFocus;
+    if (dto.blockers !== undefined) patch.blockers = dto.blockers;
+    if (dto.risks !== undefined) patch.risks = dto.risks;
+    if (dto.recommendations !== undefined) {
+      patch.recommendations = dto.recommendations;
+    }
+
+    if (!Object.keys(patch).length) {
+      throw new BadRequestException('Không có nội dung nào được thay đổi');
+    }
+
+    report.aiOutput = { ...currentOutput, ...patch };
+    report.reviewStatus = AiReportReviewStatus.Draft;
+    report.editedBy = currentUserId;
+    report.editedAt = new Date();
+    report.markModified('aiOutput');
+    await report.save();
+
+    return {
+      success: true,
+      message: 'Update team daily report successfully',
+      data: {
+        report: this.toReportResponse(report, true),
+      },
+    };
+  }
+
+  /**
+   * Duyet bao cao: tu ban nhap thanh bao cao giao ban chinh thuc.
+   *
+   * Su kien phat ra o day la moc de gui mail cho ca nhom, nen chi bao cao da
+   * duyet moi tao thong bao.
+   */
+  async approveTeamDailyReport(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    reportId: string,
+  ) {
+    const report = await this.findTeamReportOrFail(
+      currentUserId,
+      workspaceId,
+      projectId,
+      reportId,
+    );
+
+    if (this.resolveReviewStatus(report) === AiReportReviewStatus.Approved) {
+      throw new ConflictException('Báo cáo này đã được duyệt trước đó');
+    }
+
+    report.reviewStatus = AiReportReviewStatus.Approved;
+    report.approvedBy = currentUserId;
+    report.approvedAt = new Date();
+    await report.save();
+
+    this.aiReportEventsService.publish({
+      type: 'team_report_approved',
+      reportId: this.getReportId(report),
+      workspaceId,
+      projectId,
+      reportDate: report.reportDate,
+      approvedBy: currentUserId,
+      title: (report.aiOutput as TeamDailyReportOutput)?.title ?? null,
+      summary: (report.aiOutput as TeamDailyReportOutput)?.summary ?? null,
+    });
+
+    return {
+      success: true,
+      message: 'Approve team daily report successfully',
+      data: {
+        report: this.toReportResponse(report, true),
+      },
+    };
+  }
+
+  private async findTeamReportOrFail(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    reportId: string,
+  ) {
     const reportModel = this.getReportModel();
     await this.aiReportAccessService.assertCanUseTeamReports(
       currentUserId,
@@ -275,13 +421,17 @@ export class AiTeamReportService {
       throw new NotFoundException('Report not found in this project');
     }
 
-    return {
-      success: true,
-      message: 'Get team daily report detail successfully',
-      data: {
-        report: this.toReportResponse(report, true),
-      },
-    };
+    return report;
+  }
+
+  /**
+   * Bao cao tao truoc khi co tinh nang duyet khong co reviewStatus.
+   *
+   * Coi cac ban do la da duyet, neu khong chung se dot ngot hien thanh "ban nhap
+   * cho duyet" du da dung tu lau.
+   */
+  private resolveReviewStatus(report: AiReportDocument) {
+    return report.reviewStatus ?? AiReportReviewStatus.Approved;
   }
 
   private async findReports(
@@ -447,6 +597,16 @@ export class AiTeamReportService {
       summary: report.aiOutput?.summary ?? null,
       model: report.aiModel ?? null,
       status: report.status,
+      // Cac truong duoi day tra ve ca o danh sach vi UI can ve badge trang thai
+      // va the so lieu ngay tren card, khong chi o trang chi tiet.
+      reviewStatus: this.resolveReviewStatus(report),
+      metrics: report.metrics ?? null,
+      dataSources: report.dataSources ?? null,
+      extraInstruction: report.extraInstruction ?? null,
+      editedBy: report.editedBy ?? null,
+      editedAt: report.editedAt ?? null,
+      approvedBy: report.approvedBy ?? null,
+      approvedAt: report.approvedAt ?? null,
       createdBy: report.createdBy,
       ...(includeInputData ? { inputData: report.inputData } : {}),
       createdAt: stampedReport.createdAt,

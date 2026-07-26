@@ -8,10 +8,15 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AiTeamReportDataBuilderService = void 0;
+exports.AiTeamReportDataBuilderService = exports.DEFAULT_TEAM_REPORT_DATA_SOURCES = void 0;
 const common_1 = require("@nestjs/common");
+const mongoose_1 = require("@nestjs/mongoose");
 const handover_status_enum_1 = require("../../../common/enums/handover-status.enum");
+const ai_report_type_enum_1 = require("../../../common/enums/ai-report-type.enum");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 const daily_updates_repository_1 = require("../../daily-updates/repositories/daily-updates.repository");
 const project_access_service_1 = require("../../projects/services/project-access.service");
@@ -20,6 +25,15 @@ const sprint_access_service_1 = require("../../sprints/services/sprint-access.se
 const tasks_repository_1 = require("../../tasks/repositories/tasks.repository");
 const workspace_members_repository_1 = require("../../workspaces/repositories/workspace-members.repository");
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
+const meetings_repository_1 = require("../../meetings/repositories/meetings.repository");
+const ai_report_schema_1 = require("../schemas/ai-report.schema");
+const meeting_summary_schema_1 = require("../schemas/meeting-summary.schema");
+exports.DEFAULT_TEAM_REPORT_DATA_SOURCES = {
+    tasks: true,
+    dailyUpdates: true,
+    meetingTranscripts: true,
+    previousReport: false,
+};
 let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
     dailyUpdatesRepository;
     projectAccessService;
@@ -28,7 +42,10 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
     workspaceAccessService;
     workspaceMembersRepository;
     shiftHandoversRepository;
-    constructor(dailyUpdatesRepository, projectAccessService, sprintAccessService, tasksRepository, workspaceAccessService, workspaceMembersRepository, shiftHandoversRepository) {
+    meetingsRepository;
+    meetingSummaryModel;
+    aiReportModel;
+    constructor(dailyUpdatesRepository, projectAccessService, sprintAccessService, tasksRepository, workspaceAccessService, workspaceMembersRepository, shiftHandoversRepository, meetingsRepository, meetingSummaryModel, aiReportModel) {
         this.dailyUpdatesRepository = dailyUpdatesRepository;
         this.projectAccessService = projectAccessService;
         this.sprintAccessService = sprintAccessService;
@@ -36,8 +53,12 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
         this.workspaceAccessService = workspaceAccessService;
         this.workspaceMembersRepository = workspaceMembersRepository;
         this.shiftHandoversRepository = shiftHandoversRepository;
+        this.meetingsRepository = meetingsRepository;
+        this.meetingSummaryModel = meetingSummaryModel;
+        this.aiReportModel = aiReportModel;
     }
     async buildTeamReportInput(params) {
+        const dataSources = this.resolveDataSources(params.dataSources);
         const workspace = await this.workspaceAccessService.assertWorkspaceActive(params.workspaceId);
         const project = await this.projectAccessService.assertProjectInWorkspace(params.projectId, params.workspaceId);
         const sprint = params.sprintId
@@ -45,9 +66,19 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
             : null;
         const reportDate = this.normalizeDate(params.reportDate);
         const members = await this.getTeamMembers(params.workspaceId);
-        const dailyUpdates = await this.getTeamDailyUpdates(params.projectId, reportDate, params.sprintId);
-        const tasks = await this.getTeamTasks(params.projectId, params.sprintId);
+        const dailyUpdates = dataSources.dailyUpdates
+            ? await this.getTeamDailyUpdates(params.projectId, reportDate, params.sprintId)
+            : [];
+        const tasks = dataSources.tasks
+            ? await this.getTeamTasks(params.projectId, params.sprintId)
+            : [];
         const handovers = await this.getTeamHandovers(params.projectId, reportDate);
+        const meetingNotes = dataSources.meetingTranscripts
+            ? await this.getTeamMeetingNotes(params.projectId, reportDate)
+            : [];
+        const previousReport = dataSources.previousReport
+            ? await this.getPreviousTeamReport(params.workspaceId, params.projectId, reportDate)
+            : null;
         return {
             workspace: {
                 id: workspace.id,
@@ -72,7 +103,9 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
             reportDate,
             members,
             dailyUpdates,
-            missingDailyUpdateMembers: this.getMissingDailyUpdateMembers(members, dailyUpdates),
+            missingDailyUpdateMembers: dataSources.dailyUpdates
+                ? this.getMissingDailyUpdateMembers(members, dailyUpdates)
+                : [],
             taskStats: this.getTaskStats(tasks),
             tasks,
             overdueTasks: this.getOverdueTasks(tasks, reportDate),
@@ -85,6 +118,86 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
             })),
             handovers,
             handoverStats: this.getHandoverStats(handovers),
+            meetingNotes,
+            previousReport,
+            dataSources,
+        };
+    }
+    resolveDataSources(dataSources) {
+        return {
+            ...exports.DEFAULT_TEAM_REPORT_DATA_SOURCES,
+            ...(dataSources ?? {}),
+        };
+    }
+    computeMetrics(inputData) {
+        const activeTasks = inputData.tasks.filter((task) => task.status !== task_status_enum_1.TaskStatus.Cancelled);
+        const doneTasks = activeTasks.filter((task) => task.status === task_status_enum_1.TaskStatus.Done).length;
+        const inProgressTasks = activeTasks.filter((task) => [task_status_enum_1.TaskStatus.InProgress, task_status_enum_1.TaskStatus.Review].includes(task.status)).length;
+        const handoverBlockers = inputData.handovers.filter((handover) => Boolean(handover.blockers?.trim())).length;
+        return {
+            doneTasks,
+            totalTasks: activeTasks.length,
+            inProgressTasks,
+            blockerCount: inputData.blockers.length + handoverBlockers,
+            progressPercent: activeTasks.length
+                ? Math.round((doneTasks / activeTasks.length) * 100)
+                : 0,
+            memberCount: inputData.members.length,
+        };
+    }
+    async getTeamMeetingNotes(projectId, reportDate) {
+        const meetings = await this.meetingsRepository.findByProject(projectId, {
+            fromDate: reportDate,
+            toDate: reportDate,
+            page: 1,
+            limit: 20,
+        });
+        if (!meetings.items.length)
+            return [];
+        const summaries = this.meetingSummaryModel
+            ? await this.meetingSummaryModel
+                .find({
+                projectId,
+                meetingId: { $in: meetings.items.map((meeting) => meeting.id) },
+            })
+                .sort({ createdAt: -1 })
+                .exec()
+            : [];
+        const summaryByMeeting = new Map(summaries.map((summary) => [summary.meetingId, summary]));
+        return meetings.items.map((meeting) => {
+            const summary = summaryByMeeting.get(meeting.id);
+            return {
+                meetingId: meeting.id,
+                title: meeting.title,
+                meetingType: meeting.meetingType,
+                status: meeting.status,
+                summary: summary?.summary ?? null,
+                keyPoints: summary?.keyPoints ?? [],
+                decisions: summary?.decisions ?? [],
+                actionItems: (summary?.actionItems ?? []).map((item) => item.text),
+            };
+        });
+    }
+    async getPreviousTeamReport(workspaceId, projectId, reportDate) {
+        if (!this.aiReportModel)
+            return null;
+        const previousReport = await this.aiReportModel
+            .findOne({
+            workspaceId,
+            projectId,
+            reportType: ai_report_type_enum_1.AiReportType.TeamDailyReport,
+            reportDate: { $lt: reportDate },
+        })
+            .sort({ reportDate: -1, createdAt: -1 })
+            .exec();
+        if (!previousReport)
+            return null;
+        const output = previousReport.aiOutput;
+        return {
+            reportDate: previousReport.reportDate,
+            summary: output?.summary ?? null,
+            todayFocus: output?.todayFocus ?? [],
+            blockers: output?.blockers ?? [],
         };
     }
     async getTeamHandovers(projectId, reportDate) {
@@ -191,12 +304,17 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
 exports.AiTeamReportDataBuilderService = AiTeamReportDataBuilderService;
 exports.AiTeamReportDataBuilderService = AiTeamReportDataBuilderService = __decorate([
     (0, common_1.Injectable)(),
+    __param(8, (0, common_1.Optional)()),
+    __param(8, (0, mongoose_1.InjectModel)(meeting_summary_schema_1.MeetingSummary.name)),
+    __param(9, (0, common_1.Optional)()),
+    __param(9, (0, mongoose_1.InjectModel)(ai_report_schema_1.AiReport.name)),
     __metadata("design:paramtypes", [daily_updates_repository_1.DailyUpdatesRepository,
         project_access_service_1.ProjectAccessService,
         sprint_access_service_1.SprintAccessService,
         tasks_repository_1.TasksRepository,
         workspace_access_service_1.WorkspaceAccessService,
         workspace_members_repository_1.WorkspaceMembersRepository,
-        shift_handovers_repository_1.ShiftHandoversRepository])
+        shift_handovers_repository_1.ShiftHandoversRepository,
+        meetings_repository_1.MeetingsRepository, Object, Object])
 ], AiTeamReportDataBuilderService);
 //# sourceMappingURL=ai-team-report-data-builder.service.js.map

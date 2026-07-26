@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiTeamReportService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
+const ai_report_review_status_enum_1 = require("../../../common/enums/ai-report-review-status.enum");
 const ai_report_status_enum_1 = require("../../../common/enums/ai-report-status.enum");
 const ai_report_type_enum_1 = require("../../../common/enums/ai-report-type.enum");
 const project_access_service_1 = require("../../projects/services/project-access.service");
@@ -23,6 +24,7 @@ const ai_prompt_log_schema_1 = require("../schemas/ai-prompt-log.schema");
 const ai_report_schema_1 = require("../schemas/ai-report.schema");
 const ai_provider_service_1 = require("./ai-provider.service");
 const ai_report_access_service_1 = require("./ai-report-access.service");
+const ai_report_events_service_1 = require("./ai-report-events.service");
 const ai_team_report_data_builder_service_1 = require("./ai-team-report-data-builder.service");
 const prompt_builder_service_1 = require("./prompt-builder.service");
 let AiTeamReportService = class AiTeamReportService {
@@ -34,10 +36,11 @@ let AiTeamReportService = class AiTeamReportService {
     projectAccessService;
     promptBuilderService;
     sprintAccessService;
+    aiReportEventsService;
     rateLimitWindowMs = 10 * 60 * 1000;
     rateLimitMax = 5;
     generateHits = new Map();
-    constructor(aiReportModel, aiPromptLogModel, aiProviderService, aiReportAccessService, dataBuilderService, projectAccessService, promptBuilderService, sprintAccessService) {
+    constructor(aiReportModel, aiPromptLogModel, aiProviderService, aiReportAccessService, dataBuilderService, projectAccessService, promptBuilderService, sprintAccessService, aiReportEventsService) {
         this.aiReportModel = aiReportModel;
         this.aiPromptLogModel = aiPromptLogModel;
         this.aiProviderService = aiProviderService;
@@ -46,6 +49,7 @@ let AiTeamReportService = class AiTeamReportService {
         this.projectAccessService = projectAccessService;
         this.promptBuilderService = promptBuilderService;
         this.sprintAccessService = sprintAccessService;
+        this.aiReportEventsService = aiReportEventsService;
     }
     async generateTeamDailyReport(currentUserId, workspaceId, projectId, dto) {
         const reportModel = this.getReportModel();
@@ -60,8 +64,9 @@ let AiTeamReportService = class AiTeamReportService {
             projectId,
             reportDate: dto.reportDate,
             sprintId: dto.sprintId,
+            dataSources: dto.dataSources,
         });
-        const prompt = this.promptBuilderService.buildTeamDailyReportPrompt(inputData);
+        const prompt = this.promptBuilderService.buildTeamDailyReportPrompt(inputData, dto.extraInstruction);
         const startedAt = Date.now();
         try {
             const aiResult = await this.aiProviderService.generateTeamDailyReport(prompt, inputData);
@@ -76,6 +81,10 @@ let AiTeamReportService = class AiTeamReportService {
                 aiOutput: aiResult.output,
                 aiModel: aiResult.model,
                 status: ai_report_status_enum_1.AiReportStatus.Completed,
+                reviewStatus: ai_report_review_status_enum_1.AiReportReviewStatus.Draft,
+                metrics: this.dataBuilderService.computeMetrics(inputData),
+                dataSources: inputData.dataSources,
+                extraInstruction: dto.extraInstruction?.trim() || null,
                 createdBy: currentUserId,
             });
             await this.writePromptLog({
@@ -166,6 +175,82 @@ let AiTeamReportService = class AiTeamReportService {
         };
     }
     async getTeamDailyReportDetail(currentUserId, workspaceId, projectId, reportId) {
+        const report = await this.findTeamReportOrFail(currentUserId, workspaceId, projectId, reportId);
+        return {
+            success: true,
+            message: 'Get team daily report detail successfully',
+            data: {
+                report: this.toReportResponse(report, true),
+            },
+        };
+    }
+    async updateTeamDailyReport(currentUserId, workspaceId, projectId, reportId, dto) {
+        const report = await this.findTeamReportOrFail(currentUserId, workspaceId, projectId, reportId);
+        if (this.resolveReviewStatus(report) === ai_report_review_status_enum_1.AiReportReviewStatus.Approved) {
+            throw new common_1.ConflictException('Báo cáo đã được duyệt nên không thể chỉnh sửa');
+        }
+        const currentOutput = (report.aiOutput ?? {});
+        const patch = {};
+        if (dto.summary !== undefined)
+            patch.summary = dto.summary;
+        if (dto.teamProgress !== undefined)
+            patch.teamProgress = dto.teamProgress;
+        if (dto.completedWork !== undefined)
+            patch.completedWork = dto.completedWork;
+        if (dto.todayFocus !== undefined)
+            patch.todayFocus = dto.todayFocus;
+        if (dto.blockers !== undefined)
+            patch.blockers = dto.blockers;
+        if (dto.risks !== undefined)
+            patch.risks = dto.risks;
+        if (dto.recommendations !== undefined) {
+            patch.recommendations = dto.recommendations;
+        }
+        if (!Object.keys(patch).length) {
+            throw new common_1.BadRequestException('Không có nội dung nào được thay đổi');
+        }
+        report.aiOutput = { ...currentOutput, ...patch };
+        report.reviewStatus = ai_report_review_status_enum_1.AiReportReviewStatus.Draft;
+        report.editedBy = currentUserId;
+        report.editedAt = new Date();
+        report.markModified('aiOutput');
+        await report.save();
+        return {
+            success: true,
+            message: 'Update team daily report successfully',
+            data: {
+                report: this.toReportResponse(report, true),
+            },
+        };
+    }
+    async approveTeamDailyReport(currentUserId, workspaceId, projectId, reportId) {
+        const report = await this.findTeamReportOrFail(currentUserId, workspaceId, projectId, reportId);
+        if (this.resolveReviewStatus(report) === ai_report_review_status_enum_1.AiReportReviewStatus.Approved) {
+            throw new common_1.ConflictException('Báo cáo này đã được duyệt trước đó');
+        }
+        report.reviewStatus = ai_report_review_status_enum_1.AiReportReviewStatus.Approved;
+        report.approvedBy = currentUserId;
+        report.approvedAt = new Date();
+        await report.save();
+        this.aiReportEventsService.publish({
+            type: 'team_report_approved',
+            reportId: this.getReportId(report),
+            workspaceId,
+            projectId,
+            reportDate: report.reportDate,
+            approvedBy: currentUserId,
+            title: report.aiOutput?.title ?? null,
+            summary: report.aiOutput?.summary ?? null,
+        });
+        return {
+            success: true,
+            message: 'Approve team daily report successfully',
+            data: {
+                report: this.toReportResponse(report, true),
+            },
+        };
+    }
+    async findTeamReportOrFail(currentUserId, workspaceId, projectId, reportId) {
         const reportModel = this.getReportModel();
         await this.aiReportAccessService.assertCanUseTeamReports(currentUserId, workspaceId);
         await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
@@ -176,13 +261,10 @@ let AiTeamReportService = class AiTeamReportService {
             report.reportType !== ai_report_type_enum_1.AiReportType.TeamDailyReport) {
             throw new common_1.NotFoundException('Report not found in this project');
         }
-        return {
-            success: true,
-            message: 'Get team daily report detail successfully',
-            data: {
-                report: this.toReportResponse(report, true),
-            },
-        };
+        return report;
+    }
+    resolveReviewStatus(report) {
+        return report.reviewStatus ?? ai_report_review_status_enum_1.AiReportReviewStatus.Approved;
     }
     async findReports(workspaceId, projectId, query) {
         const reportModel = this.getReportModel();
@@ -292,6 +374,14 @@ let AiTeamReportService = class AiTeamReportService {
             summary: report.aiOutput?.summary ?? null,
             model: report.aiModel ?? null,
             status: report.status,
+            reviewStatus: this.resolveReviewStatus(report),
+            metrics: report.metrics ?? null,
+            dataSources: report.dataSources ?? null,
+            extraInstruction: report.extraInstruction ?? null,
+            editedBy: report.editedBy ?? null,
+            editedAt: report.editedAt ?? null,
+            approvedBy: report.approvedBy ?? null,
+            approvedAt: report.approvedAt ?? null,
             createdBy: report.createdBy,
             ...(includeInputData ? { inputData: report.inputData } : {}),
             createdAt: stampedReport.createdAt,
@@ -311,6 +401,7 @@ exports.AiTeamReportService = AiTeamReportService = __decorate([
         ai_team_report_data_builder_service_1.AiTeamReportDataBuilderService,
         project_access_service_1.ProjectAccessService,
         prompt_builder_service_1.PromptBuilderService,
-        sprint_access_service_1.SprintAccessService])
+        sprint_access_service_1.SprintAccessService,
+        ai_report_events_service_1.AiReportEventsService])
 ], AiTeamReportService);
 //# sourceMappingURL=ai-team-report.service.js.map

@@ -190,6 +190,9 @@ describe('Ban giao cong viec trong du lieu bao cao AI', () => {
       const workspaceMembersRepository = {
         findActiveByWorkspace: jest.fn().mockResolvedValue([]),
       };
+      const meetingsRepository = {
+        findByProject: jest.fn().mockResolvedValue(emptyPage),
+      };
 
       return new AiTeamReportDataBuilderService(
         dailyUpdatesRepository as never,
@@ -199,6 +202,10 @@ describe('Ban giao cong viec trong du lieu bao cao AI', () => {
         workspaceAccessService as never,
         workspaceMembersRepository as never,
         shiftHandoversRepository as never,
+        meetingsRepository as never,
+        // Mongo tat trong test nay: cac nhanh dung Mongo deu co duong thoat null.
+        null,
+        null,
       );
     };
 

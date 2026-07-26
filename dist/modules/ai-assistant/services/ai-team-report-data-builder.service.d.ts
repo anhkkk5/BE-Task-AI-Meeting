@@ -1,3 +1,4 @@
+import { Model } from 'mongoose';
 import { HandoverStatus } from '../../../common/enums/handover-status.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { DailyUpdatesRepository } from '../../daily-updates/repositories/daily-updates.repository';
@@ -7,6 +8,10 @@ import { SprintAccessService } from '../../sprints/services/sprint-access.servic
 import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
+import { MeetingsRepository } from '../../meetings/repositories/meetings.repository';
+import { AiReportDocument, TeamReportDataSources, TeamReportMetrics } from '../schemas/ai-report.schema';
+import { MeetingSummaryDocument } from '../schemas/meeting-summary.schema';
+export declare const DEFAULT_TEAM_REPORT_DATA_SOURCES: TeamReportDataSources;
 type TeamMemberInput = {
     userId: string;
     fullName: string;
@@ -47,6 +52,22 @@ type TeamHandoverInput = {
     remainingWork: string | null;
     blockers: string | null;
 };
+type TeamMeetingNoteInput = {
+    meetingId: string;
+    title: string;
+    meetingType: string;
+    status: string;
+    summary: string | null;
+    keyPoints: string[];
+    decisions: string[];
+    actionItems: string[];
+};
+type PreviousReportInput = {
+    reportDate: string;
+    summary: string | null;
+    todayFocus: string[];
+    blockers: string[];
+};
 export type TeamReportInputData = {
     workspace: {
         id: string;
@@ -86,12 +107,16 @@ export type TeamReportInputData = {
         changesRequested: number;
         rejected: number;
     };
+    meetingNotes: TeamMeetingNoteInput[];
+    previousReport: PreviousReportInput | null;
+    dataSources: TeamReportDataSources;
 };
 type BuildTeamInputParams = {
     workspaceId: string;
     projectId: string;
     reportDate: string;
     sprintId?: string;
+    dataSources?: Partial<TeamReportDataSources>;
 };
 export declare class AiTeamReportDataBuilderService {
     private readonly dailyUpdatesRepository;
@@ -101,7 +126,10 @@ export declare class AiTeamReportDataBuilderService {
     private readonly workspaceAccessService;
     private readonly workspaceMembersRepository;
     private readonly shiftHandoversRepository;
-    constructor(dailyUpdatesRepository: DailyUpdatesRepository, projectAccessService: ProjectAccessService, sprintAccessService: SprintAccessService, tasksRepository: TasksRepository, workspaceAccessService: WorkspaceAccessService, workspaceMembersRepository: WorkspaceMembersRepository, shiftHandoversRepository: ShiftHandoversRepository);
+    private readonly meetingsRepository;
+    private readonly meetingSummaryModel;
+    private readonly aiReportModel;
+    constructor(dailyUpdatesRepository: DailyUpdatesRepository, projectAccessService: ProjectAccessService, sprintAccessService: SprintAccessService, tasksRepository: TasksRepository, workspaceAccessService: WorkspaceAccessService, workspaceMembersRepository: WorkspaceMembersRepository, shiftHandoversRepository: ShiftHandoversRepository, meetingsRepository: MeetingsRepository, meetingSummaryModel: Model<MeetingSummaryDocument> | null, aiReportModel: Model<AiReportDocument> | null);
     buildTeamReportInput(params: BuildTeamInputParams): Promise<{
         workspace: {
             id: string;
@@ -184,7 +212,32 @@ export declare class AiTeamReportDataBuilderService {
             changesRequested: number;
             rejected: number;
         };
+        meetingNotes: {
+            meetingId: string;
+            title: string;
+            meetingType: import("../../../common/enums/meeting-type.enum").MeetingType;
+            status: import("../../../common/enums/meeting-status.enum").MeetingStatus;
+            summary: string | null;
+            keyPoints: string[];
+            decisions: string[];
+            actionItems: string[];
+        }[];
+        previousReport: PreviousReportInput | null;
+        dataSources: TeamReportDataSources;
     }>;
+    resolveDataSources(dataSources?: Partial<TeamReportDataSources>): TeamReportDataSources;
+    computeMetrics(inputData: TeamReportInputData): TeamReportMetrics;
+    getTeamMeetingNotes(projectId: string, reportDate: string): Promise<{
+        meetingId: string;
+        title: string;
+        meetingType: import("../../../common/enums/meeting-type.enum").MeetingType;
+        status: import("../../../common/enums/meeting-status.enum").MeetingStatus;
+        summary: string | null;
+        keyPoints: string[];
+        decisions: string[];
+        actionItems: string[];
+    }[]>;
+    getPreviousTeamReport(workspaceId: string, projectId: string, reportDate: string): Promise<PreviousReportInput | null>;
     getTeamHandovers(projectId: string, reportDate: string): Promise<{
         id: string;
         taskCode: string | null;

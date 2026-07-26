@@ -1,5 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { HandoverStatus } from '../../../common/enums/handover-status.enum';
+import { AiReportType } from '../../../common/enums/ai-report-type.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { DailyUpdatesRepository } from '../../daily-updates/repositories/daily-updates.repository';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
@@ -8,6 +11,30 @@ import { SprintAccessService } from '../../sprints/services/sprint-access.servic
 import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
+import { MeetingsRepository } from '../../meetings/repositories/meetings.repository';
+import {
+  AiReport,
+  AiReportDocument,
+  TeamReportDataSources,
+  TeamReportMetrics,
+} from '../schemas/ai-report.schema';
+import {
+  MeetingSummary,
+  MeetingSummaryDocument,
+} from '../schemas/meeting-summary.schema';
+
+/**
+ * Mac dinh bat 3 nguon chinh, tat so sanh voi bao cao ngay truoc.
+ *
+ * Bao cao ngay truoc mac dinh tat vi no lam prompt dai them dang ke nhung chi
+ * huu ich khi nguoi dung thuc su muon doi chieu tien do.
+ */
+export const DEFAULT_TEAM_REPORT_DATA_SOURCES: TeamReportDataSources = {
+  tasks: true,
+  dailyUpdates: true,
+  meetingTranscripts: true,
+  previousReport: false,
+};
 
 type TeamMemberInput = {
   userId: string;
@@ -53,6 +80,30 @@ type TeamHandoverInput = {
   blockers: string | null;
 };
 
+/**
+ * Bien ban hop cua ngay bao cao, da rut gon.
+ *
+ * Chi lay keyPoints/decisions/actionItems thay vi ca transcript, vi transcript
+ * day du se chiem gan het cua so context va phan lon la loi thoai vun.
+ */
+type TeamMeetingNoteInput = {
+  meetingId: string;
+  title: string;
+  meetingType: string;
+  status: string;
+  summary: string | null;
+  keyPoints: string[];
+  decisions: string[];
+  actionItems: string[];
+};
+
+type PreviousReportInput = {
+  reportDate: string;
+  summary: string | null;
+  todayFocus: string[];
+  blockers: string[];
+};
+
 export type TeamReportInputData = {
   workspace: {
     id: string;
@@ -96,6 +147,9 @@ export type TeamReportInputData = {
     changesRequested: number;
     rejected: number;
   };
+  meetingNotes: TeamMeetingNoteInput[];
+  previousReport: PreviousReportInput | null;
+  dataSources: TeamReportDataSources;
 };
 
 type BuildTeamInputParams = {
@@ -103,6 +157,7 @@ type BuildTeamInputParams = {
   projectId: string;
   reportDate: string;
   sprintId?: string;
+  dataSources?: Partial<TeamReportDataSources>;
 };
 
 @Injectable()
@@ -115,9 +170,17 @@ export class AiTeamReportDataBuilderService {
     private readonly workspaceAccessService: WorkspaceAccessService,
     private readonly workspaceMembersRepository: WorkspaceMembersRepository,
     private readonly shiftHandoversRepository: ShiftHandoversRepository,
+    private readonly meetingsRepository: MeetingsRepository,
+    @Optional()
+    @InjectModel(MeetingSummary.name)
+    private readonly meetingSummaryModel: Model<MeetingSummaryDocument> | null,
+    @Optional()
+    @InjectModel(AiReport.name)
+    private readonly aiReportModel: Model<AiReportDocument> | null,
   ) {}
 
   async buildTeamReportInput(params: BuildTeamInputParams) {
+    const dataSources = this.resolveDataSources(params.dataSources);
     const workspace = await this.workspaceAccessService.assertWorkspaceActive(
       params.workspaceId,
     );
@@ -133,13 +196,29 @@ export class AiTeamReportDataBuilderService {
       : null;
     const reportDate = this.normalizeDate(params.reportDate);
     const members = await this.getTeamMembers(params.workspaceId);
-    const dailyUpdates = await this.getTeamDailyUpdates(
-      params.projectId,
-      reportDate,
-      params.sprintId,
-    );
-    const tasks = await this.getTeamTasks(params.projectId, params.sprintId);
+
+    // Nguon bi tat thi khong truy van, de prompt that su khong co du lieu do.
+    const dailyUpdates = dataSources.dailyUpdates
+      ? await this.getTeamDailyUpdates(
+          params.projectId,
+          reportDate,
+          params.sprintId,
+        )
+      : [];
+    const tasks = dataSources.tasks
+      ? await this.getTeamTasks(params.projectId, params.sprintId)
+      : [];
     const handovers = await this.getTeamHandovers(params.projectId, reportDate);
+    const meetingNotes = dataSources.meetingTranscripts
+      ? await this.getTeamMeetingNotes(params.projectId, reportDate)
+      : [];
+    const previousReport = dataSources.previousReport
+      ? await this.getPreviousTeamReport(
+          params.workspaceId,
+          params.projectId,
+          reportDate,
+        )
+      : null;
 
     return {
       workspace: {
@@ -165,10 +244,9 @@ export class AiTeamReportDataBuilderService {
       reportDate,
       members,
       dailyUpdates,
-      missingDailyUpdateMembers: this.getMissingDailyUpdateMembers(
-        members,
-        dailyUpdates,
-      ),
+      missingDailyUpdateMembers: dataSources.dailyUpdates
+        ? this.getMissingDailyUpdateMembers(members, dailyUpdates)
+        : [],
       taskStats: this.getTaskStats(tasks),
       tasks,
       overdueTasks: this.getOverdueTasks(tasks, reportDate),
@@ -181,7 +259,133 @@ export class AiTeamReportDataBuilderService {
         })),
       handovers,
       handoverStats: this.getHandoverStats(handovers),
+      meetingNotes,
+      previousReport,
+      dataSources,
     } satisfies TeamReportInputData;
+  }
+
+  /** Gop lua chon cua nguoi dung voi mac dinh, thieu truong nao thi lay mac dinh. */
+  resolveDataSources(
+    dataSources?: Partial<TeamReportDataSources>,
+  ): TeamReportDataSources {
+    return {
+      ...DEFAULT_TEAM_REPORT_DATA_SOURCES,
+      ...(dataSources ?? {}),
+    };
+  }
+
+  /**
+   * So lieu dinh luong cho the thong ke dau bao cao.
+   *
+   * Tinh o backend va luu vao document vi API danh sach khong tra ve inputData,
+   * frontend se khong the tu tinh lai khi ve danh sach bao cao.
+   */
+  computeMetrics(inputData: TeamReportInputData): TeamReportMetrics {
+    const activeTasks = inputData.tasks.filter(
+      (task) => task.status !== TaskStatus.Cancelled,
+    );
+    const doneTasks = activeTasks.filter(
+      (task) => task.status === TaskStatus.Done,
+    ).length;
+    const inProgressTasks = activeTasks.filter((task) =>
+      [TaskStatus.InProgress, TaskStatus.Review].includes(
+        task.status as TaskStatus,
+      ),
+    ).length;
+    const handoverBlockers = inputData.handovers.filter((handover) =>
+      Boolean(handover.blockers?.trim()),
+    ).length;
+
+    return {
+      doneTasks,
+      totalTasks: activeTasks.length,
+      inProgressTasks,
+      blockerCount: inputData.blockers.length + handoverBlockers,
+      progressPercent: activeTasks.length
+        ? Math.round((doneTasks / activeTasks.length) * 100)
+        : 0,
+      memberCount: inputData.members.length,
+    };
+  }
+
+  /**
+   * Bien ban cac cuoc hop trong ngay, uu tien ban tom tat AI da sinh.
+   *
+   * Neu cuoc hop chua co tom tat thi van liet ke ten hop de bao cao khong bo
+   * sot su kien, nhung khong bom transcript tho vao prompt.
+   */
+  async getTeamMeetingNotes(projectId: string, reportDate: string) {
+    const meetings = await this.meetingsRepository.findByProject(projectId, {
+      fromDate: reportDate,
+      toDate: reportDate,
+      page: 1,
+      limit: 20,
+    });
+
+    if (!meetings.items.length) return [];
+
+    const summaries = this.meetingSummaryModel
+      ? await this.meetingSummaryModel
+          .find({
+            projectId,
+            meetingId: { $in: meetings.items.map((meeting) => meeting.id) },
+          })
+          .sort({ createdAt: -1 })
+          .exec()
+      : [];
+    const summaryByMeeting = new Map(
+      summaries.map((summary) => [summary.meetingId, summary]),
+    );
+
+    return meetings.items.map((meeting) => {
+      const summary = summaryByMeeting.get(meeting.id);
+
+      return {
+        meetingId: meeting.id,
+        title: meeting.title,
+        meetingType: meeting.meetingType,
+        status: meeting.status,
+        summary: summary?.summary ?? null,
+        keyPoints: summary?.keyPoints ?? [],
+        decisions: summary?.decisions ?? [],
+        actionItems: (summary?.actionItems ?? []).map((item) => item.text),
+      } satisfies TeamMeetingNoteInput;
+    });
+  }
+
+  /** Bao cao giao ban gan nhat truoc ngay dang tao, de AI doi chieu tien do. */
+  async getPreviousTeamReport(
+    workspaceId: string,
+    projectId: string,
+    reportDate: string,
+  ): Promise<PreviousReportInput | null> {
+    if (!this.aiReportModel) return null;
+
+    const previousReport = await this.aiReportModel
+      .findOne({
+        workspaceId,
+        projectId,
+        reportType: AiReportType.TeamDailyReport,
+        reportDate: { $lt: reportDate },
+      })
+      .sort({ reportDate: -1, createdAt: -1 })
+      .exec();
+
+    if (!previousReport) return null;
+
+    const output = previousReport.aiOutput as {
+      summary?: string;
+      todayFocus?: string[];
+      blockers?: string[];
+    };
+
+    return {
+      reportDate: previousReport.reportDate,
+      summary: output?.summary ?? null,
+      todayFocus: output?.todayFocus ?? [],
+      blockers: output?.blockers ?? [],
+    };
   }
 
   /** Ban giao trong ngay cua project, rut gon cho prompt AI. */

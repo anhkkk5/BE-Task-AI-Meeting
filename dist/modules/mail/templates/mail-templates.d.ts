@@ -27,4 +27,16 @@ export declare const buildHandoverRejectedMail: (params: HandoverMailParams & {
 export declare const buildHandoverChangesRequestedMail: (params: HandoverMailParams & {
     reason: string;
 }) => MailContent;
+export declare const buildTeamReportApprovedMail: (params: {
+    recipientName: string;
+    approverName: string;
+    projectName: string;
+    reportDate: string;
+    reportTitle: string;
+    summary: string;
+    progressLabel: string | null;
+    todayFocus: string[];
+    blockers: string[];
+    reportUrl: string;
+}) => MailContent;
 export {};

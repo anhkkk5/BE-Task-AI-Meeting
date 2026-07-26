@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -22,6 +23,7 @@ import { AccessTokenGuard } from '../../auth/guards/access-token.guard';
 import type { AuthUser } from '../../auth/types/auth-user.type';
 import { GenerateTeamReportDto } from '../dto/generate-team-report.dto';
 import { GetAiTeamReportsQueryDto } from '../dto/get-ai-team-reports-query.dto';
+import { UpdateTeamReportDto } from '../dto/update-team-report.dto';
 import { AiTeamReportService } from '../services/ai-team-report.service';
 
 const managerRoles = [
@@ -119,6 +121,60 @@ export class AiTeamReportController {
     @Param('reportId') reportId: string,
   ) {
     return this.aiTeamReportService.getTeamDailyReportDetail(
+      user.id,
+      workspaceId,
+      projectId,
+      reportId,
+    );
+  }
+
+  @Patch('team-daily-reports/:reportId')
+  @WorkspaceRoles(...managerRoles)
+  @UseGuards(WorkspaceRolesGuard)
+  @ApiOperation({
+    summary: 'Update AI team daily report',
+    description:
+      'Sua noi dung ban nhap do AI sinh. Bao cao da duyet thi khong sua duoc.',
+  })
+  @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
+  @ApiParam({ name: 'projectId', example: 'project-uuid' })
+  @ApiParam({ name: 'reportId', example: 'mongo-report-id' })
+  @ApiResponse({ status: 409, description: 'Bao cao da duoc duyet.' })
+  updateTeamDailyReport(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('reportId') reportId: string,
+    @Body() dto: UpdateTeamReportDto,
+  ) {
+    return this.aiTeamReportService.updateTeamDailyReport(
+      user.id,
+      workspaceId,
+      projectId,
+      reportId,
+      dto,
+    );
+  }
+
+  @Post('team-daily-reports/:reportId/approve')
+  @WorkspaceRoles(...managerRoles)
+  @UseGuards(WorkspaceRolesGuard)
+  @ApiOperation({
+    summary: 'Approve AI team daily report',
+    description:
+      'Duyet ban nhap thanh bao cao giao ban chinh thuc va gui mail cho ca nhom.',
+  })
+  @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
+  @ApiParam({ name: 'projectId', example: 'project-uuid' })
+  @ApiParam({ name: 'reportId', example: 'mongo-report-id' })
+  @ApiResponse({ status: 409, description: 'Bao cao da duoc duyet truoc do.' })
+  approveTeamDailyReport(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('reportId') reportId: string,
+  ) {
+    return this.aiTeamReportService.approveTeamDailyReport(
       user.id,
       workspaceId,
       projectId,

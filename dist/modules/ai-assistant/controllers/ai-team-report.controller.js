@@ -22,6 +22,7 @@ const workspace_roles_guard_1 = require("../../../common/guards/workspace-roles.
 const access_token_guard_1 = require("../../auth/guards/access-token.guard");
 const generate_team_report_dto_1 = require("../dto/generate-team-report.dto");
 const get_ai_team_reports_query_dto_1 = require("../dto/get-ai-team-reports-query.dto");
+const update_team_report_dto_1 = require("../dto/update-team-report.dto");
 const ai_team_report_service_1 = require("../services/ai-team-report.service");
 const managerRoles = [
     workspace_role_enum_1.WorkspaceRole.Owner,
@@ -44,6 +45,12 @@ let AiTeamReportController = class AiTeamReportController {
     }
     getTeamDailyReportDetail(user, workspaceId, projectId, reportId) {
         return this.aiTeamReportService.getTeamDailyReportDetail(user.id, workspaceId, projectId, reportId);
+    }
+    updateTeamDailyReport(user, workspaceId, projectId, reportId, dto) {
+        return this.aiTeamReportService.updateTeamDailyReport(user.id, workspaceId, projectId, reportId, dto);
+    }
+    approveTeamDailyReport(user, workspaceId, projectId, reportId) {
+        return this.aiTeamReportService.approveTeamDailyReport(user.id, workspaceId, projectId, reportId);
     }
 };
 exports.AiTeamReportController = AiTeamReportController;
@@ -115,6 +122,47 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", void 0)
 ], AiTeamReportController.prototype, "getTeamDailyReportDetail", null);
+__decorate([
+    (0, common_1.Patch)('team-daily-reports/:reportId'),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...managerRoles),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Update AI team daily report',
+        description: 'Sua noi dung ban nhap do AI sinh. Bao cao da duyet thi khong sua duoc.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'reportId', example: 'mongo-report-id' }),
+    (0, swagger_1.ApiResponse)({ status: 409, description: 'Bao cao da duoc duyet.' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('reportId')),
+    __param(4, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String, update_team_report_dto_1.UpdateTeamReportDto]),
+    __metadata("design:returntype", void 0)
+], AiTeamReportController.prototype, "updateTeamDailyReport", null);
+__decorate([
+    (0, common_1.Post)('team-daily-reports/:reportId/approve'),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...managerRoles),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Approve AI team daily report',
+        description: 'Duyet ban nhap thanh bao cao giao ban chinh thuc va gui mail cho ca nhom.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'reportId', example: 'mongo-report-id' }),
+    (0, swagger_1.ApiResponse)({ status: 409, description: 'Bao cao da duoc duyet truoc do.' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('reportId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String]),
+    __metadata("design:returntype", void 0)
+], AiTeamReportController.prototype, "approveTeamDailyReport", null);
 exports.AiTeamReportController = AiTeamReportController = __decorate([
     (0, common_1.Controller)('workspaces/:workspaceId/projects/:projectId/ai'),
     (0, swagger_1.ApiTags)('AI Team Reports'),

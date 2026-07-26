@@ -44,10 +44,12 @@ import { AiProjectAssistantService } from './services/ai-project-assistant.servi
 import { AiProviderService } from './services/ai-provider.service';
 import { AiReportAccessService } from './services/ai-report-access.service';
 import { AiReportDataBuilderService } from './services/ai-report-data-builder.service';
+import { AiReportEventsService } from './services/ai-report-events.service';
 import { AiTeamReportDataBuilderService } from './services/ai-team-report-data-builder.service';
 import { AiTeamReportService } from './services/ai-team-report.service';
 import { PromptBuilderService } from './services/prompt-builder.service';
 import { AutoMeetingSummaryListener } from './listeners/auto-meeting-summary.listener';
+import { TeamReportNotificationListener } from './listeners/team-report-notification.listener';
 import { AiDailyReportSchedulerService } from './schedulers/ai-daily-report-scheduler.service';
 import { MeetingActionItemReview } from './entities/meeting-action-item-review.entity';
 import { MeetingActionItemReviewsRepository } from './repositories/meeting-action-item-reviews.repository';
@@ -102,9 +104,11 @@ const mongoImports = mongodbConfig().enabled
     AiPersonalizedMeetingSummaryDataBuilderService,
     AiReportAccessService,
     AiReportDataBuilderService,
+    AiReportEventsService,
     AiTeamReportDataBuilderService,
     PromptBuilderService,
     AutoMeetingSummaryListener,
+    TeamReportNotificationListener,
     AiDailyReportSchedulerService,
     AiMeetingActionItemReviewService,
     MeetingActionItemReviewsRepository,

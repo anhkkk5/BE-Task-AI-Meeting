@@ -11,6 +11,7 @@ import {
 } from '../schemas/ai-report.schema';
 import { AiProviderService } from './ai-provider.service';
 import { AiReportAccessService } from './ai-report-access.service';
+import { AiReportEventsService } from './ai-report-events.service';
 import {
   AiTeamReportDataBuilderService,
   TeamReportInputData,
@@ -33,8 +34,12 @@ describe('AiTeamReportService', () => {
     Pick<AiReportAccessService, 'assertCanUseTeamReports'>
   >;
   let dataBuilderService: jest.Mocked<
-    Pick<AiTeamReportDataBuilderService, 'buildTeamReportInput'>
+    Pick<
+      AiTeamReportDataBuilderService,
+      'buildTeamReportInput' | 'computeMetrics'
+    >
   >;
+  let aiReportEventsService: jest.Mocked<Pick<AiReportEventsService, 'publish'>>;
   let projectAccessService: jest.Mocked<
     Pick<ProjectAccessService, 'assertProjectInWorkspace'>
   >;
@@ -110,6 +115,22 @@ describe('AiTeamReportService', () => {
       changesRequested: 0,
       rejected: 0,
     },
+    meetingNotes: [],
+    previousReport: null,
+    dataSources: {
+      tasks: true,
+      dailyUpdates: true,
+      meetingTranscripts: true,
+      previousReport: false,
+    },
+  };
+  const metrics = {
+    doneTasks: 1,
+    totalTasks: 2,
+    inProgressTasks: 1,
+    blockerCount: 0,
+    progressPercent: 50,
+    memberCount: 1,
   };
   const report = {
     _id: reportId,
@@ -147,6 +168,10 @@ describe('AiTeamReportService', () => {
     };
     dataBuilderService = {
       buildTeamReportInput: jest.fn(),
+      computeMetrics: jest.fn().mockReturnValue(metrics),
+    };
+    aiReportEventsService = {
+      publish: jest.fn(),
     };
     projectAccessService = {
       assertProjectInWorkspace: jest.fn(),
@@ -196,6 +221,7 @@ describe('AiTeamReportService', () => {
       projectAccessService as unknown as ProjectAccessService,
       promptBuilderService as unknown as PromptBuilderService,
       sprintAccessService as unknown as SprintAccessService,
+      aiReportEventsService as unknown as AiReportEventsService,
     );
   });
 
@@ -218,6 +244,7 @@ describe('AiTeamReportService', () => {
       projectId: 'project-id',
       reportDate: '2026-06-22',
       sprintId: undefined,
+      dataSources: undefined,
     });
     expect(reportModel.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -340,6 +367,7 @@ describe('AiTeamReportService', () => {
       projectAccessService as unknown as ProjectAccessService,
       promptBuilderService as unknown as PromptBuilderService,
       sprintAccessService as unknown as SprintAccessService,
+      aiReportEventsService as unknown as AiReportEventsService,
     );
 
     await expect(

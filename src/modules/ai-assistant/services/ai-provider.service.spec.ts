@@ -225,6 +225,14 @@ describe('AiProviderService', () => {
       changesRequested: 0,
       rejected: 0,
     },
+    meetingNotes: [],
+    previousReport: null,
+    dataSources: {
+      tasks: true,
+      dailyUpdates: true,
+      meetingTranscripts: true,
+      previousReport: false,
+    },
   };
   const personalizedMeetingInputData: PersonalizedMeetingSummaryInputData = {
     workspace: {

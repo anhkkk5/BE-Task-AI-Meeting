@@ -190,3 +190,55 @@ export const buildHandoverChangesRequestedMail = (
     text: `${params.counterpartName} can ban bo sung thong tin cho ban giao ${params.taskLabel}. Noi dung: ${params.reason}. Xem tai: ${params.handoverUrl}`,
   };
 };
+
+/** Danh sach gach dau dong, tra ve rong neu khong co muc nao. */
+const bulletList = (label: string, items: string[]) => {
+  if (!items.length) return '';
+
+  const listItems = items
+    .map(
+      (item) =>
+        `<li style="margin:0 0 6px;font-size:14px;line-height:21px;color:#172b4d;">${toHtmlParagraph(item)}</li>`,
+    )
+    .join('');
+
+  return `
+  <div style="margin-top:16px;">
+    <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b778c;">${escapeHtml(label)}</p>
+    <ul style="margin:0;padding-left:20px;">${listItems}</ul>
+  </div>`;
+};
+
+export const buildTeamReportApprovedMail = (params: {
+  recipientName: string;
+  approverName: string;
+  projectName: string;
+  reportDate: string;
+  reportTitle: string;
+  summary: string;
+  progressLabel: string | null;
+  todayFocus: string[];
+  blockers: string[];
+  reportUrl: string;
+}): MailContent => {
+  const body = `
+    <p style="margin:0;font-size:15px;line-height:23px;color:#172b4d;">
+      Xin chao <strong>${escapeHtml(params.recipientName)}</strong>,
+    </p>
+    <p style="margin:12px 0 0;font-size:15px;line-height:23px;color:#172b4d;">
+      <strong>${escapeHtml(params.approverName)}</strong> da duyet bao cao giao ban ngay
+      <strong>${escapeHtml(params.reportDate)}</strong> cua du an
+      <strong>${escapeHtml(params.projectName)}</strong>.
+    </p>
+    ${params.progressLabel ? infoBlock('Tien do', params.progressLabel) : ''}
+    ${infoBlock('Tom tat', params.summary)}
+    ${bulletList('Trong tam hom nay', params.todayFocus)}
+    ${bulletList('Vuong mac can xu ly', params.blockers)}
+    ${button('Xem bao cao day du', params.reportUrl)}`;
+
+  return {
+    subject: `[Giao ban] ${params.projectName} - ${params.reportDate}`,
+    html: layout(params.reportTitle, body),
+    text: `${params.approverName} da duyet bao cao giao ban ngay ${params.reportDate} cua du an ${params.projectName}. Tom tat: ${params.summary}. Xem tai: ${params.reportUrl}`,
+  };
+};

@@ -41,10 +41,12 @@ const ai_project_assistant_service_1 = require("./services/ai-project-assistant.
 const ai_provider_service_1 = require("./services/ai-provider.service");
 const ai_report_access_service_1 = require("./services/ai-report-access.service");
 const ai_report_data_builder_service_1 = require("./services/ai-report-data-builder.service");
+const ai_report_events_service_1 = require("./services/ai-report-events.service");
 const ai_team_report_data_builder_service_1 = require("./services/ai-team-report-data-builder.service");
 const ai_team_report_service_1 = require("./services/ai-team-report.service");
 const prompt_builder_service_1 = require("./services/prompt-builder.service");
 const auto_meeting_summary_listener_1 = require("./listeners/auto-meeting-summary.listener");
+const team_report_notification_listener_1 = require("./listeners/team-report-notification.listener");
 const ai_daily_report_scheduler_service_1 = require("./schedulers/ai-daily-report-scheduler.service");
 const meeting_action_item_review_entity_1 = require("./entities/meeting-action-item-review.entity");
 const meeting_action_item_reviews_repository_1 = require("./repositories/meeting-action-item-reviews.repository");
@@ -101,9 +103,11 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
             ai_personalized_meeting_summary_data_builder_service_1.AiPersonalizedMeetingSummaryDataBuilderService,
             ai_report_access_service_1.AiReportAccessService,
             ai_report_data_builder_service_1.AiReportDataBuilderService,
+            ai_report_events_service_1.AiReportEventsService,
             ai_team_report_data_builder_service_1.AiTeamReportDataBuilderService,
             prompt_builder_service_1.PromptBuilderService,
             auto_meeting_summary_listener_1.AutoMeetingSummaryListener,
+            team_report_notification_listener_1.TeamReportNotificationListener,
             ai_daily_report_scheduler_service_1.AiDailyReportSchedulerService,
             ai_meeting_action_item_review_service_1.AiMeetingActionItemReviewService,
             meeting_action_item_reviews_repository_1.MeetingActionItemReviewsRepository,
