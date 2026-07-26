@@ -24,7 +24,7 @@ describe('MeetingTranscriptsService', () => {
     Pick<MeetingsRepository, 'updateTranscriptId'>
   >;
   let meetingParticipantsRepository: jest.Mocked<
-    Pick<MeetingParticipantsRepository, 'findByMeetingAndUser'>
+    Pick<MeetingParticipantsRepository, 'findByMeetingAndUser' | 'findByMeeting'>
   >;
   let meetingAccessService: jest.Mocked<
     Pick<
@@ -96,6 +96,7 @@ describe('MeetingTranscriptsService', () => {
     };
     meetingParticipantsRepository = {
       findByMeetingAndUser: jest.fn(),
+      findByMeeting: jest.fn(),
     };
     meetingAccessService = {
       assertMeetingEditable: jest.fn(),
@@ -131,6 +132,15 @@ describe('MeetingTranscriptsService', () => {
         email: 'owner@example.com',
       },
     } as never);
+    meetingParticipantsRepository.findByMeeting.mockResolvedValue([
+      {
+        userId: 'owner-id',
+        user: {
+          fullName: 'Nguyen Van A',
+          email: 'owner@example.com',
+        },
+      },
+    ] as never);
 
     service = new MeetingTranscriptsService(
       transcriptModel as unknown as Model<MeetingTranscriptDocument>,
@@ -284,7 +294,7 @@ describe('MeetingTranscriptsService', () => {
         text: 'Noi dung tu Groq',
       }),
     );
-    expect(response.data.transcript.rawTranscript).toContain(
+    expect(response.data.transcript?.rawTranscript).toContain(
       'Nguyen Van A: Noi dung tu Groq',
     );
   });
@@ -317,6 +327,6 @@ describe('MeetingTranscriptsService', () => {
     );
 
     expect(groqTranscriptionService.transcribe).not.toHaveBeenCalled();
-    expect(response.data.segment.text).toBe('Da xu ly');
+    expect(response.data.segment?.text).toBe('Da xu ly');
   });
 });

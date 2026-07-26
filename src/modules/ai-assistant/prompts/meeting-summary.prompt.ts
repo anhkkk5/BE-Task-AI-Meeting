@@ -10,6 +10,12 @@ biên bản hiện có. Tuân thủ các quy tắc sau:
   rủi ro, câu hỏi mở và bước tiếp theo.
 - Nếu một mục không có dữ liệu chứng minh, trả về mảng rỗng cho mục đó.
 - Toàn bộ nội dung hiển thị cho người dùng phải bằng tiếng Việt có dấu.
+- Khi nhắc đến người, luôn dùng đúng họ tên (fullName) trong danh sách
+  participants. Tuyệt đối không hiển thị userId, UUID hoặc email trong phần
+  văn bản. userId chỉ được đặt vào trường assigneeUserId.
+- Bỏ qua các câu không thuộc nội dung cuộc họp do công cụ nhận diện giọng nói
+  tự sinh ra, ví dụ lời mời đăng ký kênh, subscribe, quảng cáo hoặc tên kênh
+  YouTube. Không đưa các câu này vào bất kỳ mục nào.
 
 Dữ liệu đầu vào:
 {{INPUT_DATA}}

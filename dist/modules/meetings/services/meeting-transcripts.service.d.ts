@@ -17,6 +17,7 @@ export declare class MeetingTranscriptsService {
     private readonly workspaceAccessService;
     private readonly projectAccessService;
     private readonly groqTranscriptionService;
+    private readonly logger;
     constructor(transcriptModel: Model<MeetingTranscriptDocument> | null, meetingsRepository: MeetingsRepository, meetingParticipantsRepository: MeetingParticipantsRepository, meetingAccessService: MeetingAccessService, workspaceAccessService: WorkspaceAccessService, projectAccessService: ProjectAccessService, groqTranscriptionService: GroqTranscriptionService);
     saveTranscript(currentUserId: string, workspaceId: string, projectId: string, meetingId: string, dto: SaveMeetingTranscriptDto): Promise<{
         success: boolean;
@@ -95,6 +96,25 @@ export declare class MeetingTranscriptsService {
                 updatedAt: Date | undefined;
             };
         };
+    } | {
+        success: boolean;
+        message: string;
+        data: {
+            segment: null;
+            transcript: {
+                id: string;
+                meetingId: string;
+                workspaceId: string;
+                projectId: string;
+                sprintId: string | null;
+                rawTranscript: string;
+                speakers: import("../schemas/meeting-transcript.schema").MeetingTranscriptSpeaker[];
+                liveSegments: MeetingTranscriptSegment[];
+                createdBy: string;
+                createdAt: Date | undefined;
+                updatedAt: Date | undefined;
+            } | null;
+        };
     }>;
     findTranscriptForMeeting(meeting: {
         mongoTranscriptId: string | null;
@@ -115,9 +135,11 @@ export declare class MeetingTranscriptsService {
     }>>;
     private getTranscriptModel;
     private getAppendContext;
+    private resolveSpeakerName;
     private persistSegment;
     private getTranscriptId;
     private toTranscriptResponse;
+    private buildSpeakerTurns;
     private buildSpeakersFromSegments;
     private buildRawTranscript;
 }

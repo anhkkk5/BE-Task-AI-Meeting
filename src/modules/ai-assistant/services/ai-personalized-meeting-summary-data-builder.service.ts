@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { isNoiseTranscript } from '../../../common/utils/transcript-noise.util';
 import { Meeting } from '../../meetings/entities/meeting.entity';
 import { MeetingParticipantsRepository } from '../../meetings/repositories/meeting-participants.repository';
 import { MeetingTranscriptsService } from '../../meetings/services/meeting-transcripts.service';
@@ -211,20 +212,27 @@ export class AiPersonalizedMeetingSummaryDataBuilderService {
       const speakerName = speaker.speakerName?.toLowerCase() ?? '';
       const text = speaker.text.trim();
 
+      // Bo cac cau do cong cu nhan dien giong noi tu sinh ra.
+      if (isNoiseTranscript(text)) continue;
+
       if (
         speaker.userId === targetUser.userId ||
         speakerName.includes(targetName) ||
         text.toLowerCase().includes(targetName)
       ) {
-        snippets.add(
-          [speaker.speakerName, speaker.text].filter(Boolean).join(': '),
-        );
+        const displayName = this.isUuidLike(speaker.speakerName ?? '')
+          ? null
+          : speaker.speakerName;
+
+        snippets.add([displayName, text].filter(Boolean).join(': '));
       }
     }
 
     for (const line of transcript.rawTranscript.split(/\r?\n/)) {
       const trimmedLine = line.trim();
       const normalizedLine = trimmedLine.toLowerCase();
+
+      if (isNoiseTranscript(trimmedLine)) continue;
 
       if (
         trimmedLine &&
@@ -236,5 +244,11 @@ export class AiPersonalizedMeetingSummaryDataBuilderService {
     }
 
     return [...snippets].slice(0, 20);
+  }
+
+  private isUuidLike(value: string) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      value,
+    );
   }
 }

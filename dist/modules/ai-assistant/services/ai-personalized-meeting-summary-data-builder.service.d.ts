@@ -73,4 +73,5 @@ export declare class AiPersonalizedMeetingSummaryDataBuilderService {
     private findTranscriptIfAvailable;
     private findTargetActionItems;
     private findRelatedTranscriptSnippets;
+    private isUuidLike;
 }

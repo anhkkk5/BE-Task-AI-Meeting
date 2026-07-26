@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   Optional,
   ServiceUnavailableException,
@@ -8,6 +9,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
+import {
+  cleanTranscriptLines,
+  isNoiseTranscript,
+  normalizeTranscriptText,
+} from '../../../common/utils/transcript-noise.util';
 import { SaveMeetingTranscriptDto } from '../dto/save-meeting-transcript.dto';
 import { AppendLiveTranscriptSegmentDto } from '../dto/append-live-transcript-segment.dto';
 import { TranscribeAudioChunkDto } from '../dto/transcribe-audio-chunk.dto';
@@ -31,6 +37,8 @@ type MeetingTranscriptWithTimestamps = MeetingTranscriptDocument & {
 
 @Injectable()
 export class MeetingTranscriptsService {
+  private readonly logger = new Logger(MeetingTranscriptsService.name);
+
   constructor(
     @Optional()
     @InjectModel(MeetingTranscript.name)
@@ -200,12 +208,13 @@ export class MeetingTranscriptsService {
     audio: MeetingAudioFile,
     dto: TranscribeAudioChunkDto,
   ) {
-    const { meeting, speakerName } = await this.getAppendContext(
-      currentUserId,
-      workspaceId,
-      projectId,
-      meetingId,
-    );
+    const { meeting, speakerName, participantNames } =
+      await this.getAppendContext(
+        currentUserId,
+        workspaceId,
+        projectId,
+        meetingId,
+      );
     const transcriptModel = this.getTranscriptModel();
     let existingTranscript: MeetingTranscriptDocument | null = null;
 
@@ -230,8 +239,42 @@ export class MeetingTranscriptsService {
       }
     }
 
-    const transcription =
-      await this.groqTranscriptionService.transcribe(audio);
+    // Khong truyen van ban truoc do vao prompt: xem buildPrompt() de biet vi sao
+    // viec do tao vong lap khien mot cau bia lap lai lien tuc.
+    const transcription = await this.groqTranscriptionService.transcribe(
+      audio,
+      { vocabularyHints: participantNames },
+    );
+
+    // Doan chi co tieng on hoac cau quang cao do Whisper tu sinh -> khong luu.
+    if (!transcription.text || isNoiseTranscript(transcription.text)) {
+      // Phan biet ro hai nguyen nhan: Whisper khong nghe ra chu nao, hoac co
+      // chu nhung bi bo loc nhieu chan lai. Thieu log nay thi khi noi dung
+      // khong duoc luu se khong biet dieu tra tu dau.
+      this.logger.warn(
+        transcription.text
+          ? `Bo doan ${dto.chunkId} vi bi coi la nhieu: "${transcription.text}"`
+          : `Bo doan ${dto.chunkId} vi Whisper khong nhan ra loi noi nao`,
+      );
+
+      const currentTranscript =
+        existingTranscript ??
+        (meeting.mongoTranscriptId
+          ? await transcriptModel.findById(meeting.mongoTranscriptId).exec()
+          : null);
+
+      return {
+        success: true,
+        message: 'Doan am thanh khong co loi noi nen duoc bo qua',
+        data: {
+          segment: null,
+          transcript: currentTranscript
+            ? this.toTranscriptResponse(currentTranscript)
+            : null,
+        },
+      };
+    }
+
     const segment: MeetingTranscriptSegment = {
       chunkId: dto.chunkId,
       userId: currentUserId,
@@ -313,19 +356,34 @@ export class MeetingTranscriptsService {
       throw new NotFoundException('Meeting transcript not found');
     }
 
-    const participant =
-      await this.meetingParticipantsRepository.findByMeetingAndUser(
-        meetingId,
-        currentUserId,
-      );
+    const participants =
+      await this.meetingParticipantsRepository.findByMeeting(meetingId);
+    const participant = participants.find(
+      (item) => item.userId === currentUserId,
+    );
 
     return {
       meeting,
-      speakerName:
-        participant?.user?.fullName ||
-        participant?.user?.email ||
-        currentUserId,
+      // Khong dung userId lam ten nguoi noi: transcript se hien UUID.
+      speakerName: this.resolveSpeakerName(participant),
+      participantNames: participants
+        .map((item) => item.user?.fullName?.trim())
+        .filter((name): name is string => Boolean(name)),
     };
+  }
+
+  private resolveSpeakerName(participant?: {
+    user?: { fullName?: string | null; email?: string | null } | null;
+  }) {
+    const fullName = participant?.user?.fullName?.trim();
+
+    if (fullName) return fullName;
+
+    const email = participant?.user?.email?.trim();
+
+    if (email) return email.split('@')[0];
+
+    return 'Thành viên';
   }
 
   private async persistSegment(
@@ -363,8 +421,11 @@ export class MeetingTranscriptsService {
         this.getTranscriptId(transcript),
       );
     } else {
+      // Loc luon cac doan nhieu da luu tu truoc de du lieu ton dong duoc don.
       transcript.liveSegments = [
-        ...(transcript.liveSegments ?? []),
+        ...(transcript.liveSegments ?? []).filter(
+          (item) => !isNoiseTranscript(item.text),
+        ),
         segment,
       ].slice(-1000);
       transcript.speakers = this.buildSpeakersFromSegments(
@@ -385,6 +446,11 @@ export class MeetingTranscriptsService {
 
   private toTranscriptResponse(transcript: MeetingTranscriptDocument) {
     const stampedTranscript = transcript as MeetingTranscriptWithTimestamps;
+    // liveSegments la mang UI doc truc tiep. Cac ban ghi cu duoc luu truoc khi
+    // co bo loc van con trong DB nen phai loc lai o dau ra.
+    const cleanSegments = (transcript.liveSegments ?? []).filter(
+      (segment) => !isNoiseTranscript(segment.text),
+    );
 
     return {
       id: this.getTranscriptId(transcript),
@@ -392,36 +458,78 @@ export class MeetingTranscriptsService {
       workspaceId: transcript.workspaceId,
       projectId: transcript.projectId,
       sprintId: transcript.sprintId ?? null,
-      rawTranscript: transcript.rawTranscript,
-      speakers: transcript.speakers ?? [],
-      liveSegments: transcript.liveSegments ?? [],
+      rawTranscript: cleanTranscriptLines(
+        (transcript.rawTranscript ?? '').split(/\r?\n/),
+      ).join('\n'),
+      speakers: (transcript.speakers ?? []).filter(
+        (speaker) => !isNoiseTranscript(speaker.text),
+      ),
+      liveSegments: cleanSegments,
       createdBy: transcript.createdBy,
       createdAt: stampedTranscript.createdAt,
       updatedAt: stampedTranscript.updatedAt,
     };
   }
 
-  private buildSpeakersFromSegments(segments: MeetingTranscriptSegment[]) {
-    return segments.map((segment) => ({
-      userId: segment.userId,
-      speakerName: segment.speakerName,
-      text: segment.text,
-    }));
-  }
-
-  private buildRawTranscript(segments: MeetingTranscriptSegment[]) {
-    return segments
+  /**
+   * Gop cac doan lien tiep cua cung mot nguoi noi thanh mot luot noi, dong thoi
+   * bo cac doan nhieu va doan trung lap do Whisper sinh ra.
+   */
+  private buildSpeakerTurns(segments: MeetingTranscriptSegment[]) {
+    const sortedSegments = segments
       .slice()
       .sort(
         (left, right) =>
           new Date(left.startedAt).getTime() -
           new Date(right.startedAt).getTime(),
       )
-      .map((segment) =>
-        [segment.speakerName || 'Unknown', segment.text]
-          .filter(Boolean)
-          .join(': '),
-      )
-      .join('\n');
+      .filter((segment) => !isNoiseTranscript(segment.text));
+    const turns: {
+      userId?: string;
+      speakerName?: string;
+      text: string;
+    }[] = [];
+
+    for (const segment of sortedSegments) {
+      const spokenText = segment.text.trim();
+      const lastTurn = turns[turns.length - 1];
+
+      if (lastTurn && lastTurn.userId === segment.userId) {
+        const normalizedNew = normalizeTranscriptText(spokenText);
+        const normalizedLast = normalizeTranscriptText(lastTurn.text);
+
+        // Bo doan lap y nguyen hoac da nam trong luot noi truoc.
+        if (
+          normalizedNew &&
+          (normalizedLast === normalizedNew ||
+            normalizedLast.endsWith(normalizedNew))
+        ) {
+          continue;
+        }
+
+        lastTurn.text = `${lastTurn.text} ${spokenText}`.trim();
+        continue;
+      }
+
+      turns.push({
+        userId: segment.userId,
+        speakerName: segment.speakerName,
+        text: spokenText,
+      });
+    }
+
+    return turns;
+  }
+
+  private buildSpeakersFromSegments(segments: MeetingTranscriptSegment[]) {
+    return this.buildSpeakerTurns(segments);
+  }
+
+  private buildRawTranscript(segments: MeetingTranscriptSegment[]) {
+    const lines = this.buildSpeakerTurns(segments).map((turn) =>
+      [turn.speakerName || 'Thành viên', turn.text].filter(Boolean).join(': '),
+    );
+
+    return cleanTranscriptLines(lines).join('\n');
   }
 }

@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiProviderService = void 0;
 const common_1 = require("@nestjs/common");
+const transcript_noise_util_1 = require("../../../common/utils/transcript-noise.util");
 let AiProviderService = class AiProviderService {
     async generateProjectAssistantAnswer(prompt, fallback) {
         const provider = process.env.AI_PROVIDER ?? 'mock';
@@ -444,14 +445,17 @@ let AiProviderService = class AiProviderService {
             ? output.summary.trim()
             : 'Chua co du lieu du de tong hop.';
         const actionItems = Array.isArray(output.actionItems)
-            ? output.actionItems.map((item) => ({
-                text: item.text,
-                assigneeName: item.assigneeName ?? null,
-                assigneeUserId: item.assigneeUserId ?? null,
-                dueDate: item.dueDate ?? null,
-                status: item.status ?? 'OPEN',
-                source: item.source ?? item.text,
-            }))
+            ? output.actionItems.map((item) => {
+                const assignee = this.resolveMeetingAssignee(item, inputData);
+                return {
+                    text: item.text,
+                    assigneeName: assignee.assigneeName,
+                    assigneeUserId: assignee.assigneeUserId,
+                    dueDate: item.dueDate ?? null,
+                    status: item.status ?? 'OPEN',
+                    source: item.source ?? item.text,
+                };
+            })
             : [];
         return {
             title,
@@ -477,6 +481,41 @@ let AiProviderService = class AiProviderService {
                         : 'Viec can lam: Chua co du lieu.',
                 ].join('\n'),
         };
+    }
+    resolveMeetingAssignee(item, inputData) {
+        const participants = inputData.participants ?? [];
+        const rawName = item.assigneeName?.trim() || '';
+        const rawUserId = item.assigneeUserId?.trim() || '';
+        const byId = participants.find((participant) => participant.userId === rawUserId ||
+            (rawName && participant.userId === rawName));
+        if (byId) {
+            return {
+                assigneeName: byId.fullName || byId.email || null,
+                assigneeUserId: byId.userId,
+            };
+        }
+        const normalizedName = this.normalizeNameKey(rawName);
+        const byName = normalizedName
+            ? participants.find((participant) => this.normalizeNameKey(participant.fullName ?? '') ===
+                normalizedName ||
+                this.normalizeNameKey(participant.email ?? '') === normalizedName)
+            : undefined;
+        if (byName) {
+            return {
+                assigneeName: byName.fullName || byName.email || null,
+                assigneeUserId: byName.userId,
+            };
+        }
+        return {
+            assigneeName: this.isUuidLike(rawName) ? null : rawName || null,
+            assigneeUserId: this.isUuidLike(rawUserId) ? rawUserId : null,
+        };
+    }
+    normalizeNameKey(value) {
+        return (0, transcript_noise_util_1.stripDiacritics)(value).toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+    isUuidLike(value) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
     }
     generateMeetingSummaryMockResponse(prompt, inputData, provider) {
         const model = process.env.AI_MODEL || `${provider}-meeting-summary`;
@@ -550,13 +589,18 @@ let AiProviderService = class AiProviderService {
     getTranscriptLines(inputData) {
         if (inputData.transcript.speakers.length) {
             return inputData.transcript.speakers
+                .filter((speaker) => !(0, transcript_noise_util_1.isNoiseTranscript)(speaker.text))
                 .map((speaker) => [speaker.speakerName, speaker.text].filter(Boolean).join(': ').trim())
                 .filter(Boolean);
         }
         return inputData.transcript.normalizedTranscript
             .split(/\r?\n/)
             .map((line) => line.trim())
-            .filter(Boolean);
+            .filter(Boolean)
+            .filter((line) => {
+            const [, ...rest] = line.split(':');
+            return !(0, transcript_noise_util_1.isNoiseTranscript)(rest.length ? rest.join(':') : line);
+        });
     }
     hasDecisionSignal(line) {
         return /quyet dinh|thong nhat|chot|dong y|approved|decided/i.test(line);

@@ -38,6 +38,9 @@ export declare class AiProviderService {
     private normalizeText;
     private normalizeTextArray;
     private normalizeMeetingSummaryOutput;
+    private resolveMeetingAssignee;
+    private normalizeNameKey;
+    private isUuidLike;
     private generateMeetingSummaryMockResponse;
     private getTranscriptLines;
     private hasDecisionSignal;

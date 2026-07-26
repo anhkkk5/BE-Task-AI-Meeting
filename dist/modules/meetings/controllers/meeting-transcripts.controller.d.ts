@@ -65,6 +65,25 @@ export declare class MeetingTranscriptsController {
                 updatedAt: Date | undefined;
             };
         };
+    } | {
+        success: boolean;
+        message: string;
+        data: {
+            segment: null;
+            transcript: {
+                id: string;
+                meetingId: string;
+                workspaceId: string;
+                projectId: string;
+                sprintId: string | null;
+                rawTranscript: string;
+                speakers: import("../schemas/meeting-transcript.schema").MeetingTranscriptSpeaker[];
+                liveSegments: import("../schemas/meeting-transcript.schema").MeetingTranscriptSegment[];
+                createdBy: string;
+                createdAt: Date | undefined;
+                updatedAt: Date | undefined;
+            } | null;
+        };
     }>;
     getTranscript(user: AuthUser, workspaceId: string, projectId: string, meetingId: string): Promise<{
         success: boolean;

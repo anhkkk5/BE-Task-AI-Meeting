@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiPersonalizedMeetingSummaryDataBuilderService = void 0;
 const common_1 = require("@nestjs/common");
+const transcript_noise_util_1 = require("../../../common/utils/transcript-noise.util");
 const meeting_participants_repository_1 = require("../../meetings/repositories/meeting-participants.repository");
 const meeting_transcripts_service_1 = require("../../meetings/services/meeting-transcripts.service");
 const project_access_service_1 = require("../../projects/services/project-access.service");
@@ -130,15 +131,22 @@ let AiPersonalizedMeetingSummaryDataBuilderService = class AiPersonalizedMeeting
         for (const speaker of transcript.speakers ?? []) {
             const speakerName = speaker.speakerName?.toLowerCase() ?? '';
             const text = speaker.text.trim();
+            if ((0, transcript_noise_util_1.isNoiseTranscript)(text))
+                continue;
             if (speaker.userId === targetUser.userId ||
                 speakerName.includes(targetName) ||
                 text.toLowerCase().includes(targetName)) {
-                snippets.add([speaker.speakerName, speaker.text].filter(Boolean).join(': '));
+                const displayName = this.isUuidLike(speaker.speakerName ?? '')
+                    ? null
+                    : speaker.speakerName;
+                snippets.add([displayName, text].filter(Boolean).join(': '));
             }
         }
         for (const line of transcript.rawTranscript.split(/\r?\n/)) {
             const trimmedLine = line.trim();
             const normalizedLine = trimmedLine.toLowerCase();
+            if ((0, transcript_noise_util_1.isNoiseTranscript)(trimmedLine))
+                continue;
             if (trimmedLine &&
                 (normalizedLine.includes(targetName) ||
                     normalizedLine.includes(targetUser.email.toLowerCase()))) {
@@ -146,6 +154,9 @@ let AiPersonalizedMeetingSummaryDataBuilderService = class AiPersonalizedMeeting
             }
         }
         return [...snippets].slice(0, 20);
+    }
+    isUuidLike(value) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
     }
 };
 exports.AiPersonalizedMeetingSummaryDataBuilderService = AiPersonalizedMeetingSummaryDataBuilderService;

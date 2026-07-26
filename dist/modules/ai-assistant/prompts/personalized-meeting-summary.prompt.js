@@ -15,6 +15,12 @@ Quy tắc:
 - Không đưa bí mật, mật khẩu, token, cookie, API key hoặc biến môi trường vào kết quả.
 - Không tạo hoặc cập nhật task. Kết quả này chỉ là báo cáo.
 - Toàn bộ nội dung hiển thị cho người dùng phải bằng tiếng Việt có dấu.
+- Khi nhắc đến người, luôn dùng đúng họ tên (fullName) trong dữ liệu đầu vào.
+  Tuyệt đối không hiển thị userId, UUID hoặc email trong phần văn bản; userId
+  chỉ được đặt vào trường assigneeId.
+- Bỏ qua các câu không thuộc nội dung cuộc họp do công cụ nhận diện giọng nói
+  tự sinh ra, ví dụ lời mời đăng ký kênh, subscribe, quảng cáo hoặc tên kênh
+  YouTube.
 
 Cấu hình cá nhân hóa:
 {{PERSONALIZATION}}

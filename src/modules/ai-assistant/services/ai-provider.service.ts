@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import {
+  isNoiseTranscript,
+  stripDiacritics,
+} from '../../../common/utils/transcript-noise.util';
+import {
   MeetingSummaryActionItem,
   MeetingSummaryOutput,
 } from '../schemas/meeting-summary.schema';
@@ -694,14 +698,18 @@ export class AiProviderService {
         ? output.summary.trim()
         : 'Chua co du lieu du de tong hop.';
     const actionItems = Array.isArray(output.actionItems)
-      ? output.actionItems.map((item) => ({
-          text: item.text,
-          assigneeName: item.assigneeName ?? null,
-          assigneeUserId: item.assigneeUserId ?? null,
-          dueDate: item.dueDate ?? null,
-          status: item.status ?? 'OPEN',
-          source: item.source ?? item.text,
-        }))
+      ? output.actionItems.map((item) => {
+          const assignee = this.resolveMeetingAssignee(item, inputData);
+
+          return {
+            text: item.text,
+            assigneeName: assignee.assigneeName,
+            assigneeUserId: assignee.assigneeUserId,
+            dueDate: item.dueDate ?? null,
+            status: item.status ?? 'OPEN',
+            source: item.source ?? item.text,
+          };
+        })
       : [];
 
     return {
@@ -729,6 +737,64 @@ export class AiProviderService {
                 : 'Viec can lam: Chua co du lieu.',
             ].join('\n'),
     };
+  }
+
+  /**
+   * AI co the tra ve userId (UUID) o truong assigneeName. Doi chieu voi danh
+   * sach participant de luon hien thi ten thanh vien tren UI.
+   */
+  private resolveMeetingAssignee(
+    item: MeetingSummaryActionItem,
+    inputData: MeetingSummaryInputData,
+  ) {
+    const participants = inputData.participants ?? [];
+    const rawName = item.assigneeName?.trim() || '';
+    const rawUserId = item.assigneeUserId?.trim() || '';
+    const byId = participants.find(
+      (participant) =>
+        participant.userId === rawUserId ||
+        (rawName && participant.userId === rawName),
+    );
+
+    if (byId) {
+      return {
+        assigneeName: byId.fullName || byId.email || null,
+        assigneeUserId: byId.userId,
+      };
+    }
+
+    const normalizedName = this.normalizeNameKey(rawName);
+    const byName = normalizedName
+      ? participants.find(
+          (participant) =>
+            this.normalizeNameKey(participant.fullName ?? '') ===
+              normalizedName ||
+            this.normalizeNameKey(participant.email ?? '') === normalizedName,
+        )
+      : undefined;
+
+    if (byName) {
+      return {
+        assigneeName: byName.fullName || byName.email || null,
+        assigneeUserId: byName.userId,
+      };
+    }
+
+    // Khong khop ai: khong tra UUID ra UI.
+    return {
+      assigneeName: this.isUuidLike(rawName) ? null : rawName || null,
+      assigneeUserId: this.isUuidLike(rawUserId) ? rawUserId : null,
+    };
+  }
+
+  private normalizeNameKey(value: string) {
+    return stripDiacritics(value).toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
+  private isUuidLike(value: string) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      value,
+    );
   }
 
   private generateMeetingSummaryMockResponse(
@@ -809,6 +875,7 @@ export class AiProviderService {
   private getTranscriptLines(inputData: MeetingSummaryInputData) {
     if (inputData.transcript.speakers.length) {
       return inputData.transcript.speakers
+        .filter((speaker) => !isNoiseTranscript(speaker.text))
         .map((speaker) =>
           [speaker.speakerName, speaker.text].filter(Boolean).join(': ').trim(),
         )
@@ -818,7 +885,11 @@ export class AiProviderService {
     return inputData.transcript.normalizedTranscript
       .split(/\r?\n/)
       .map((line) => line.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((line) => {
+        const [, ...rest] = line.split(':');
+        return !isNoiseTranscript(rest.length ? rest.join(':') : line);
+      });
   }
 
   private hasDecisionSignal(line: string) {

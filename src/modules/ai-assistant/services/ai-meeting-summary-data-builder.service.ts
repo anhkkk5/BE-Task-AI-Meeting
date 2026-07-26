@@ -1,4 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import {
+  cleanTranscriptLines,
+  isNoiseTranscript,
+} from '../../../common/utils/transcript-noise.util';
 import { Meeting } from '../../meetings/entities/meeting.entity';
 import { MeetingParticipantsRepository } from '../../meetings/repositories/meeting-participants.repository';
 import { MeetingTranscriptsService } from '../../meetings/services/meeting-transcripts.service';
@@ -111,26 +115,68 @@ export class AiMeetingSummaryDataBuilderService {
       })),
       transcript: {
         id: transcript._id.toString(),
-        rawTranscript: transcript.rawTranscript,
+        rawTranscript: this.cleanRawTranscript(transcript.rawTranscript),
         normalizedTranscript: this.normalizeTranscript(
           transcript.rawTranscript,
         ),
-        speakers: (transcript.speakers ?? []).map((speaker) => ({
-          userId: speaker.userId,
-          speakerName: speaker.speakerName,
-          text: speaker.text,
-        })),
+        speakers: (transcript.speakers ?? [])
+          .filter((speaker) => !isNoiseTranscript(speaker.text))
+          .map((speaker) => ({
+            userId: speaker.userId,
+            speakerName: this.resolveSpeakerName(speaker, participants),
+            text: speaker.text,
+          })),
       },
       generatedAt: new Date().toISOString(),
     };
   }
 
+  /**
+   * Transcript cu co the luu userId o speakerName. Doi chieu voi participants
+   * de prompt va UI luon nhan duoc ho ten thay vi UUID.
+   */
+  private resolveSpeakerName(
+    speaker: { userId?: string; speakerName?: string },
+    participants: {
+      userId: string;
+      user?: { fullName?: string | null; email?: string | null } | null;
+    }[],
+  ) {
+    const participant = participants.find(
+      (item) =>
+        item.userId === speaker.userId || item.userId === speaker.speakerName,
+    );
+    const fullName = participant?.user?.fullName?.trim();
+
+    if (fullName) return fullName;
+
+    const email = participant?.user?.email?.trim();
+
+    if (email) return email.split('@')[0];
+
+    const speakerName = speaker.speakerName?.trim();
+
+    if (speakerName && !this.isUuidLike(speakerName)) return speakerName;
+
+    return 'Thành viên';
+  }
+
+  private isUuidLike(value: string) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      value,
+    );
+  }
+
+  private cleanRawTranscript(rawTranscript: string) {
+    return cleanTranscriptLines(rawTranscript.split(/\r?\n/)).join('\n');
+  }
+
   private normalizeTranscript(rawTranscript: string) {
-    return rawTranscript
+    const lines = rawTranscript
       .split(/\r?\n/)
       .map((line) => line.trim().replace(/\s+/g, ' '))
-      .filter(Boolean)
-      .join('\n')
-      .slice(0, 20000);
+      .filter(Boolean);
+
+    return cleanTranscriptLines(lines).join('\n').slice(0, 20000);
   }
 }

@@ -1,1 +1,1 @@
-{"version":3,"file":"personalized-meeting-summary.prompt.js","sourceRoot":"","sources":["../../../../src/modules/ai-assistant/prompts/personalized-meeting-summary.prompt.ts"],"names":[],"mappings":";;;AAAa,QAAA,4CAA4C,GAAG;;;;;;;;;;;;;;;;;;;;;;CAsB3D,CAAC"}
+{"version":3,"file":"personalized-meeting-summary.prompt.js","sourceRoot":"","sources":["../../../../src/modules/ai-assistant/prompts/personalized-meeting-summary.prompt.ts"],"names":[],"mappings":";;;AAAa,QAAA,4CAA4C,GAAG;;;;;;;;;;;;;;;;;;;;;;;;;;;;CA4B3D,CAAC"}

@@ -11,18 +11,20 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var MeetingTranscriptsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MeetingTranscriptsService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const project_access_service_1 = require("../../projects/services/project-access.service");
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
+const transcript_noise_util_1 = require("../../../common/utils/transcript-noise.util");
 const meeting_transcript_schema_1 = require("../schemas/meeting-transcript.schema");
 const meetings_repository_1 = require("../repositories/meetings.repository");
 const meeting_participants_repository_1 = require("../repositories/meeting-participants.repository");
 const meeting_access_service_1 = require("./meeting-access.service");
 const groq_transcription_service_1 = require("./groq-transcription.service");
-let MeetingTranscriptsService = class MeetingTranscriptsService {
+let MeetingTranscriptsService = MeetingTranscriptsService_1 = class MeetingTranscriptsService {
     transcriptModel;
     meetingsRepository;
     meetingParticipantsRepository;
@@ -30,6 +32,7 @@ let MeetingTranscriptsService = class MeetingTranscriptsService {
     workspaceAccessService;
     projectAccessService;
     groqTranscriptionService;
+    logger = new common_1.Logger(MeetingTranscriptsService_1.name);
     constructor(transcriptModel, meetingsRepository, meetingParticipantsRepository, meetingAccessService, workspaceAccessService, projectAccessService, groqTranscriptionService) {
         this.transcriptModel = transcriptModel;
         this.meetingsRepository = meetingsRepository;
@@ -127,7 +130,7 @@ let MeetingTranscriptsService = class MeetingTranscriptsService {
         };
     }
     async appendAudioChunk(currentUserId, workspaceId, projectId, meetingId, audio, dto) {
-        const { meeting, speakerName } = await this.getAppendContext(currentUserId, workspaceId, projectId, meetingId);
+        const { meeting, speakerName, participantNames } = await this.getAppendContext(currentUserId, workspaceId, projectId, meetingId);
         const transcriptModel = this.getTranscriptModel();
         let existingTranscript = null;
         if (meeting.mongoTranscriptId) {
@@ -146,7 +149,26 @@ let MeetingTranscriptsService = class MeetingTranscriptsService {
                 };
             }
         }
-        const transcription = await this.groqTranscriptionService.transcribe(audio);
+        const transcription = await this.groqTranscriptionService.transcribe(audio, { vocabularyHints: participantNames });
+        if (!transcription.text || (0, transcript_noise_util_1.isNoiseTranscript)(transcription.text)) {
+            this.logger.warn(transcription.text
+                ? `Bo doan ${dto.chunkId} vi bi coi la nhieu: "${transcription.text}"`
+                : `Bo doan ${dto.chunkId} vi Whisper khong nhan ra loi noi nao`);
+            const currentTranscript = existingTranscript ??
+                (meeting.mongoTranscriptId
+                    ? await transcriptModel.findById(meeting.mongoTranscriptId).exec()
+                    : null);
+            return {
+                success: true,
+                message: 'Doan am thanh khong co loi noi nen duoc bo qua',
+                data: {
+                    segment: null,
+                    transcript: currentTranscript
+                        ? this.toTranscriptResponse(currentTranscript)
+                        : null,
+                },
+            };
+        }
         const segment = {
             chunkId: dto.chunkId,
             userId: currentUserId,
@@ -194,13 +216,24 @@ let MeetingTranscriptsService = class MeetingTranscriptsService {
         if (meeting.workspaceId !== workspaceId) {
             throw new common_1.NotFoundException('Meeting transcript not found');
         }
-        const participant = await this.meetingParticipantsRepository.findByMeetingAndUser(meetingId, currentUserId);
+        const participants = await this.meetingParticipantsRepository.findByMeeting(meetingId);
+        const participant = participants.find((item) => item.userId === currentUserId);
         return {
             meeting,
-            speakerName: participant?.user?.fullName ||
-                participant?.user?.email ||
-                currentUserId,
+            speakerName: this.resolveSpeakerName(participant),
+            participantNames: participants
+                .map((item) => item.user?.fullName?.trim())
+                .filter((name) => Boolean(name)),
         };
+    }
+    resolveSpeakerName(participant) {
+        const fullName = participant?.user?.fullName?.trim();
+        if (fullName)
+            return fullName;
+        const email = participant?.user?.email?.trim();
+        if (email)
+            return email.split('@')[0];
+        return 'Thành viên';
     }
     async persistSegment(meeting, currentUserId, workspaceId, projectId, segment, loadedTranscript = null) {
         const transcriptModel = this.getTranscriptModel();
@@ -225,7 +258,7 @@ let MeetingTranscriptsService = class MeetingTranscriptsService {
         }
         else {
             transcript.liveSegments = [
-                ...(transcript.liveSegments ?? []),
+                ...(transcript.liveSegments ?? []).filter((item) => !(0, transcript_noise_util_1.isNoiseTranscript)(item.text)),
                 segment,
             ].slice(-1000);
             transcript.speakers = this.buildSpeakersFromSegments(transcript.liveSegments);
@@ -239,40 +272,60 @@ let MeetingTranscriptsService = class MeetingTranscriptsService {
     }
     toTranscriptResponse(transcript) {
         const stampedTranscript = transcript;
+        const cleanSegments = (transcript.liveSegments ?? []).filter((segment) => !(0, transcript_noise_util_1.isNoiseTranscript)(segment.text));
         return {
             id: this.getTranscriptId(transcript),
             meetingId: transcript.meetingId,
             workspaceId: transcript.workspaceId,
             projectId: transcript.projectId,
             sprintId: transcript.sprintId ?? null,
-            rawTranscript: transcript.rawTranscript,
-            speakers: transcript.speakers ?? [],
-            liveSegments: transcript.liveSegments ?? [],
+            rawTranscript: (0, transcript_noise_util_1.cleanTranscriptLines)((transcript.rawTranscript ?? '').split(/\r?\n/)).join('\n'),
+            speakers: (transcript.speakers ?? []).filter((speaker) => !(0, transcript_noise_util_1.isNoiseTranscript)(speaker.text)),
+            liveSegments: cleanSegments,
             createdBy: transcript.createdBy,
             createdAt: stampedTranscript.createdAt,
             updatedAt: stampedTranscript.updatedAt,
         };
     }
-    buildSpeakersFromSegments(segments) {
-        return segments.map((segment) => ({
-            userId: segment.userId,
-            speakerName: segment.speakerName,
-            text: segment.text,
-        }));
-    }
-    buildRawTranscript(segments) {
-        return segments
+    buildSpeakerTurns(segments) {
+        const sortedSegments = segments
             .slice()
             .sort((left, right) => new Date(left.startedAt).getTime() -
             new Date(right.startedAt).getTime())
-            .map((segment) => [segment.speakerName || 'Unknown', segment.text]
-            .filter(Boolean)
-            .join(': '))
-            .join('\n');
+            .filter((segment) => !(0, transcript_noise_util_1.isNoiseTranscript)(segment.text));
+        const turns = [];
+        for (const segment of sortedSegments) {
+            const spokenText = segment.text.trim();
+            const lastTurn = turns[turns.length - 1];
+            if (lastTurn && lastTurn.userId === segment.userId) {
+                const normalizedNew = (0, transcript_noise_util_1.normalizeTranscriptText)(spokenText);
+                const normalizedLast = (0, transcript_noise_util_1.normalizeTranscriptText)(lastTurn.text);
+                if (normalizedNew &&
+                    (normalizedLast === normalizedNew ||
+                        normalizedLast.endsWith(normalizedNew))) {
+                    continue;
+                }
+                lastTurn.text = `${lastTurn.text} ${spokenText}`.trim();
+                continue;
+            }
+            turns.push({
+                userId: segment.userId,
+                speakerName: segment.speakerName,
+                text: spokenText,
+            });
+        }
+        return turns;
+    }
+    buildSpeakersFromSegments(segments) {
+        return this.buildSpeakerTurns(segments);
+    }
+    buildRawTranscript(segments) {
+        const lines = this.buildSpeakerTurns(segments).map((turn) => [turn.speakerName || 'Thành viên', turn.text].filter(Boolean).join(': '));
+        return (0, transcript_noise_util_1.cleanTranscriptLines)(lines).join('\n');
     }
 };
 exports.MeetingTranscriptsService = MeetingTranscriptsService;
-exports.MeetingTranscriptsService = MeetingTranscriptsService = __decorate([
+exports.MeetingTranscriptsService = MeetingTranscriptsService = MeetingTranscriptsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Optional)()),
     __param(0, (0, mongoose_1.InjectModel)(meeting_transcript_schema_1.MeetingTranscript.name)),

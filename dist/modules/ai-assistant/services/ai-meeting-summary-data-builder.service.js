@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiMeetingSummaryDataBuilderService = void 0;
 const common_1 = require("@nestjs/common");
+const transcript_noise_util_1 = require("../../../common/utils/transcript-noise.util");
 const meeting_participants_repository_1 = require("../../meetings/repositories/meeting-participants.repository");
 const meeting_transcripts_service_1 = require("../../meetings/services/meeting-transcripts.service");
 const project_access_service_1 = require("../../projects/services/project-access.service");
@@ -67,24 +68,44 @@ let AiMeetingSummaryDataBuilderService = class AiMeetingSummaryDataBuilderServic
             })),
             transcript: {
                 id: transcript._id.toString(),
-                rawTranscript: transcript.rawTranscript,
+                rawTranscript: this.cleanRawTranscript(transcript.rawTranscript),
                 normalizedTranscript: this.normalizeTranscript(transcript.rawTranscript),
-                speakers: (transcript.speakers ?? []).map((speaker) => ({
+                speakers: (transcript.speakers ?? [])
+                    .filter((speaker) => !(0, transcript_noise_util_1.isNoiseTranscript)(speaker.text))
+                    .map((speaker) => ({
                     userId: speaker.userId,
-                    speakerName: speaker.speakerName,
+                    speakerName: this.resolveSpeakerName(speaker, participants),
                     text: speaker.text,
                 })),
             },
             generatedAt: new Date().toISOString(),
         };
     }
+    resolveSpeakerName(speaker, participants) {
+        const participant = participants.find((item) => item.userId === speaker.userId || item.userId === speaker.speakerName);
+        const fullName = participant?.user?.fullName?.trim();
+        if (fullName)
+            return fullName;
+        const email = participant?.user?.email?.trim();
+        if (email)
+            return email.split('@')[0];
+        const speakerName = speaker.speakerName?.trim();
+        if (speakerName && !this.isUuidLike(speakerName))
+            return speakerName;
+        return 'Thành viên';
+    }
+    isUuidLike(value) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+    }
+    cleanRawTranscript(rawTranscript) {
+        return (0, transcript_noise_util_1.cleanTranscriptLines)(rawTranscript.split(/\r?\n/)).join('\n');
+    }
     normalizeTranscript(rawTranscript) {
-        return rawTranscript
+        const lines = rawTranscript
             .split(/\r?\n/)
             .map((line) => line.trim().replace(/\s+/g, ' '))
-            .filter(Boolean)
-            .join('\n')
-            .slice(0, 20000);
+            .filter(Boolean);
+        return (0, transcript_noise_util_1.cleanTranscriptLines)(lines).join('\n').slice(0, 20000);
     }
 };
 exports.AiMeetingSummaryDataBuilderService = AiMeetingSummaryDataBuilderService;

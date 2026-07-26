@@ -58,5 +58,8 @@ export declare class AiMeetingSummaryDataBuilderService {
         projectId: string;
         meeting: Meeting;
     }): Promise<MeetingSummaryInputData>;
+    private resolveSpeakerName;
+    private isUuidLike;
+    private cleanRawTranscript;
     private normalizeTranscript;
 }
