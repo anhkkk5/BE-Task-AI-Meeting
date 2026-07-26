@@ -13,6 +13,7 @@ import { RedisModule } from './database/redis/redis.module';
 import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DailyUpdatesModule } from './modules/daily-updates/daily-updates.module';
+import { MailModule } from './modules/mail/mail.module';
 import { MeetingsModule } from './modules/meetings/meetings.module';
 import { MembersModule } from './modules/members/members.module';
 import { ProjectsModule } from './modules/projects/projects.module';
@@ -40,6 +41,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
         ]
       : []),
     RedisModule,
+    MailModule,
     ScheduleModule.forRoot(),
     AiAssistantModule,
     AuthModule,

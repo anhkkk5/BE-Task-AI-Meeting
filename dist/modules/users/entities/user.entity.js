@@ -21,6 +21,7 @@ let User = class User {
     jobTitle;
     passwordHash;
     status;
+    emailVerifiedAt;
     refreshTokenHash;
     createdAt;
     updatedAt;
@@ -63,6 +64,15 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], User.prototype, "status", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        name: 'email_verified_at',
+        type: 'datetime',
+        precision: 6,
+        nullable: true,
+    }),
+    __metadata("design:type", Object)
+], User.prototype, "emailVerifiedAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         name: 'refresh_token_hash',

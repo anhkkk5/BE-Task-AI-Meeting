@@ -8,13 +8,15 @@ import { CreateHandoverDto } from '../dto/create-handover.dto';
 import { GetHandoversQueryDto } from '../dto/get-handovers-query.dto';
 import { UpdateHandoverDto } from '../dto/update-handover.dto';
 import { ShiftHandoversRepository } from '../repositories/shift-handovers.repository';
+import { HandoverEventsService } from './handover-events.service';
 export declare class ShiftHandoversService {
     private readonly repository;
     private readonly workspaceAccess;
     private readonly projectAccess;
     private readonly workspaceMembers;
     private readonly tasksRepository;
-    constructor(repository: ShiftHandoversRepository, workspaceAccess: WorkspaceAccessService, projectAccess: ProjectAccessService, workspaceMembers: WorkspaceMembersRepository, tasksRepository: TasksRepository);
+    private readonly handoverEvents;
+    constructor(repository: ShiftHandoversRepository, workspaceAccess: WorkspaceAccessService, projectAccess: ProjectAccessService, workspaceMembers: WorkspaceMembersRepository, tasksRepository: TasksRepository, handoverEvents: HandoverEventsService);
     createHandover(userId: string, workspaceId: string, projectId: string, dto: CreateHandoverDto): Promise<{
         success: boolean;
         message: string;

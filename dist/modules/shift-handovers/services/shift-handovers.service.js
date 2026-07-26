@@ -19,6 +19,7 @@ const tasks_repository_1 = require("../../tasks/repositories/tasks.repository");
 const workspace_members_repository_1 = require("../../workspaces/repositories/workspace-members.repository");
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
 const shift_handovers_repository_1 = require("../repositories/shift-handovers.repository");
+const handover_events_service_1 = require("./handover-events.service");
 const managerRoles = [
     workspace_role_enum_1.WorkspaceRole.Owner,
     workspace_role_enum_1.WorkspaceRole.ScrumMaster,
@@ -31,12 +32,14 @@ let ShiftHandoversService = class ShiftHandoversService {
     projectAccess;
     workspaceMembers;
     tasksRepository;
-    constructor(repository, workspaceAccess, projectAccess, workspaceMembers, tasksRepository) {
+    handoverEvents;
+    constructor(repository, workspaceAccess, projectAccess, workspaceMembers, tasksRepository, handoverEvents) {
         this.repository = repository;
         this.workspaceAccess = workspaceAccess;
         this.projectAccess = projectAccess;
         this.workspaceMembers = workspaceMembers;
         this.tasksRepository = tasksRepository;
+        this.handoverEvents = handoverEvents;
     }
     async createHandover(userId, workspaceId, projectId, dto) {
         await this.assertContext(userId, workspaceId, projectId);
@@ -133,8 +136,10 @@ let ShiftHandoversService = class ShiftHandoversService {
             changeRequest: null,
             rejectionReason: null,
         });
+        const submitted = await this.getHandoverEntity(handover.id, projectId);
+        this.handoverEvents.publish({ type: 'submitted', handover: submitted });
         return this.response('Đã gửi yêu cầu bàn giao cho người nhận', {
-            handover: this.mapHandover(await this.getHandoverEntity(handover.id, projectId)),
+            handover: this.mapHandover(submitted),
         });
     }
     async requestChanges(userId, workspaceId, projectId, handoverId, reason) {
@@ -145,8 +150,14 @@ let ShiftHandoversService = class ShiftHandoversService {
             status: handover_status_enum_1.HandoverStatus.ChangesRequested,
             changeRequest: reason.trim(),
         });
+        const updated = await this.getHandoverEntity(handover.id, projectId);
+        this.handoverEvents.publish({
+            type: 'changes_requested',
+            handover: updated,
+            reason,
+        });
         return this.response('Đã yêu cầu người giao bổ sung thông tin', {
-            handover: this.mapHandover(await this.getHandoverEntity(handover.id, projectId)),
+            handover: this.mapHandover(updated),
         });
     }
     async reject(userId, workspaceId, projectId, handoverId, reason) {
@@ -158,8 +169,14 @@ let ShiftHandoversService = class ShiftHandoversService {
             rejectionReason: reason.trim(),
             rejectedAt: new Date(),
         });
+        const rejected = await this.getHandoverEntity(handover.id, projectId);
+        this.handoverEvents.publish({
+            type: 'rejected',
+            handover: rejected,
+            reason,
+        });
         return this.response('Đã từ chối nhận bàn giao', {
-            handover: this.mapHandover(await this.getHandoverEntity(handover.id, projectId)),
+            handover: this.mapHandover(rejected),
         });
     }
     async accept(userId, workspaceId, projectId, handoverId) {
@@ -171,8 +188,10 @@ let ShiftHandoversService = class ShiftHandoversService {
         if (!(await this.repository.acceptAndTransferTask(handover))) {
             throw new common_1.ConflictException('Người phụ trách task đã thay đổi. Hãy tải lại trước khi chấp nhận bàn giao');
         }
+        const accepted = await this.getHandoverEntity(handover.id, projectId);
+        this.handoverEvents.publish({ type: 'accepted', handover: accepted });
         return this.response('Đã nhận bàn giao và chuyển người phụ trách task', {
-            handover: this.mapHandover(await this.getHandoverEntity(handover.id, projectId)),
+            handover: this.mapHandover(accepted),
         });
     }
     async deleteHandover(userId, workspaceId, projectId, handoverId) {
@@ -294,6 +313,7 @@ exports.ShiftHandoversService = ShiftHandoversService = __decorate([
         workspace_access_service_1.WorkspaceAccessService,
         project_access_service_1.ProjectAccessService,
         workspace_members_repository_1.WorkspaceMembersRepository,
-        tasks_repository_1.TasksRepository])
+        tasks_repository_1.TasksRepository,
+        handover_events_service_1.HandoverEventsService])
 ], ShiftHandoversService);
 //# sourceMappingURL=shift-handovers.service.js.map

@@ -39,6 +39,20 @@ export class User {
   })
   status: UserStatus;
 
+  /**
+   * Thoi diem email duoc xac thuc bang OTP.
+   *
+   * null nghia la chua xac thuc. Tai khoan tao truoc khi co tinh nang OTP da
+   * duoc migration danh dau la da xac thuc.
+   */
+  @Column({
+    name: 'email_verified_at',
+    type: 'datetime',
+    precision: 6,
+    nullable: true,
+  })
+  emailVerifiedAt: Date | null;
+
   @Column({
     name: 'refresh_token_hash',
     type: 'varchar',

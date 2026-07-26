@@ -47,15 +47,22 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = __importStar(require("bcrypt"));
 const jwt_config_1 = require("../../../config/jwt.config");
+const mail_service_1 = require("../../mail/services/mail.service");
+const mail_templates_1 = require("../../mail/templates/mail-templates");
 const user_status_enum_1 = require("../../users/enums/user-status.enum");
 const users_service_1 = require("../../users/services/users.service");
+const otp_service_1 = require("./otp.service");
 let AuthService = class AuthService {
     usersService;
     jwtService;
+    otpService;
+    mailService;
     saltRounds = 12;
-    constructor(usersService, jwtService) {
+    constructor(usersService, jwtService, otpService, mailService) {
         this.usersService = usersService;
         this.jwtService = jwtService;
+        this.otpService = otpService;
+        this.mailService = mailService;
     }
     async register(dto) {
         const email = dto.email.trim().toLowerCase();
@@ -63,16 +70,95 @@ let AuthService = class AuthService {
         if (existingUser) {
             throw new common_1.ConflictException('Email already exists');
         }
+        const cooldown = await this.otpService.getResendCooldownSeconds(email);
+        if (cooldown > 0) {
+            throw new common_1.BadRequestException(`Ma xac thuc vua duoc gui. Vui long cho ${cooldown} giay truoc khi yeu cau lai.`);
+        }
+        const fullName = dto.fullName.trim();
         const passwordHash = await bcrypt.hash(dto.password, this.saltRounds);
+        const otp = this.otpService.generateOtp();
+        await this.otpService.savePendingRegistration({ email, fullName, passwordHash }, otp);
+        await this.sendOtpMail(email, fullName, otp);
+        return {
+            success: true,
+            message: 'Ma xac thuc da duoc gui den email cua ban.',
+            data: {
+                email,
+                otpExpiresInSeconds: otp_service_1.OTP_TTL_SECONDS,
+                resendAfterSeconds: otp_service_1.OTP_RESEND_COOLDOWN_SECONDS,
+            },
+        };
+    }
+    async verifyRegistrationOtp(dto) {
+        const email = dto.email.trim().toLowerCase();
+        const result = await this.otpService.verifyOtp(email, dto.otp);
+        if (result.status === 'NOT_FOUND') {
+            throw new common_1.BadRequestException('Ma xac thuc khong ton tai hoac da het han. Vui long dang ky lai.');
+        }
+        if (result.status === 'TOO_MANY_ATTEMPTS') {
+            throw new common_1.BadRequestException(`Ban da nhap sai qua ${otp_service_1.OTP_MAX_ATTEMPTS} lan. Vui long dang ky lai de nhan ma moi.`);
+        }
+        if (result.status === 'INVALID') {
+            throw new common_1.BadRequestException(`Ma xac thuc khong dung. Ban con ${result.remainingAttempts} lan thu.`);
+        }
+        const existingUser = await this.usersService.findByEmail(email);
+        if (existingUser) {
+            await this.otpService.clearPendingRegistration(email);
+            throw new common_1.ConflictException('Email already exists');
+        }
         const user = await this.usersService.create({
-            email,
-            fullName: dto.fullName.trim(),
-            passwordHash,
+            email: result.registration.email,
+            fullName: result.registration.fullName,
+            passwordHash: result.registration.passwordHash,
             status: user_status_enum_1.UserStatus.Active,
+            emailVerifiedAt: new Date(),
         });
+        await this.otpService.clearPendingRegistration(email);
         const tokens = await this.issueTokens(user);
         await this.storeRefreshTokenHash(user.id, tokens.refreshToken);
         return this.authResponse('Register successfully', user, tokens);
+    }
+    async resendRegistrationOtp(dto) {
+        const email = dto.email.trim().toLowerCase();
+        const cooldown = await this.otpService.getResendCooldownSeconds(email);
+        if (cooldown > 0) {
+            throw new common_1.BadRequestException(`Vui long cho ${cooldown} giay truoc khi yeu cau ma moi.`);
+        }
+        const pending = await this.otpService.getPendingRegistration(email);
+        if (!pending) {
+            throw new common_1.BadRequestException('Khong tim thay yeu cau dang ky nao dang cho. Vui long dang ky lai.');
+        }
+        const otp = this.otpService.generateOtp();
+        await this.otpService.refreshOtp(email, otp);
+        await this.sendOtpMail(email, pending.fullName, otp);
+        return {
+            success: true,
+            message: 'Ma xac thuc moi da duoc gui.',
+            data: {
+                email,
+                otpExpiresInSeconds: otp_service_1.OTP_TTL_SECONDS,
+                resendAfterSeconds: otp_service_1.OTP_RESEND_COOLDOWN_SECONDS,
+            },
+        };
+    }
+    async sendOtpMail(email, fullName, otp) {
+        const mail = (0, mail_templates_1.buildOtpMail)({
+            fullName,
+            otp,
+            expiresInMinutes: Math.round(otp_service_1.OTP_TTL_SECONDS / 60),
+        });
+        try {
+            await this.mailService.sendMail({
+                to: email,
+                subject: mail.subject,
+                html: mail.html,
+                text: mail.text,
+            });
+        }
+        catch {
+            await this.otpService.clearPendingRegistration(email);
+            throw new common_1.BadRequestException('Khong gui duoc email xac thuc. Vui long kiem tra lai dia chi email hoac thu lai sau.');
+        }
     }
     async login(dto) {
         const user = await this.usersService.findByEmail(dto.email.trim().toLowerCase());
@@ -167,6 +253,8 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [users_service_1.UsersService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        otp_service_1.OtpService,
+        mail_service_1.MailService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

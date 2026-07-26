@@ -25,6 +25,7 @@ const redis_module_1 = require("./database/redis/redis.module");
 const ai_assistant_module_1 = require("./modules/ai-assistant/ai-assistant.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const daily_updates_module_1 = require("./modules/daily-updates/daily-updates.module");
+const mail_module_1 = require("./modules/mail/mail.module");
 const meetings_module_1 = require("./modules/meetings/meetings.module");
 const members_module_1 = require("./modules/members/members.module");
 const projects_module_1 = require("./modules/projects/projects.module");
@@ -55,6 +56,7 @@ exports.AppModule = AppModule = __decorate([
                 ]
                 : []),
             redis_module_1.RedisModule,
+            mail_module_1.MailModule,
             schedule_1.ScheduleModule.forRoot(),
             ai_assistant_module_1.AiAssistantModule,
             auth_module_1.AuthModule,

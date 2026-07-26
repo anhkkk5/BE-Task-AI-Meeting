@@ -8,6 +8,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -18,6 +19,8 @@ import type { CookieOptions, Request, Response } from 'express';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
+import { ResendOtpDto } from '../dto/resend-otp.dto';
+import { VerifyOtpDto } from '../dto/verify-otp.dto';
 import { AccessTokenGuard } from '../guards/access-token.guard';
 import { RefreshTokenGuard } from '../guards/refresh-token.guard';
 import { AuthService } from '../services/auth.service';
@@ -31,21 +34,63 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({
-    summary: 'Dang ky tai khoan',
-    description: 'Tao user moi, hash password va tra accessToken/refreshToken.',
+    summary: 'Buoc 1: yeu cau ma xac thuc dang ky',
+    description:
+      'Kiem tra email chua ton tai roi gui OTP 6 so den email. Chua tao tai khoan va chua tra token o buoc nay.',
   })
-  @ApiResponse({ status: 201, description: 'Dang ky thanh cong.' })
-  @ApiResponse({ status: 400, description: 'Request body khong hop le.' })
+  @ApiResponse({ status: 201, description: 'Da gui ma xac thuc.' })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Request body khong hop le hoac chua het thoi gian cho gui lai.',
+  })
   @ApiResponse({ status: 409, description: 'Email da ton tai.' })
-  async register(
-    @Body() dto: RegisterDto,
+  register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
+
+  @Post('verify-otp')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({
+    summary: 'Buoc 2: xac thuc OTP va tao tai khoan',
+    description:
+      'OTP dung thi tao tai khoan, danh dau email da xac thuc va tra accessToken/refreshToken.',
+  })
+  @ApiResponse({ status: 201, description: 'Xac thuc thanh cong.' })
+  @ApiResponse({
+    status: 400,
+    description: 'OTP sai, het han hoac vuot so lan thu cho phep.',
+  })
+  @ApiResponse({ status: 409, description: 'Email da ton tai.' })
+  async verifyOtp(
+    @Body() dto: VerifyOtpDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const result = await this.authService.register(dto);
+    const result = await this.authService.verifyRegistrationOtp(dto);
     this.setRefreshTokenCookie(response, result.refreshToken);
 
     return result.body;
+  }
+
+  @Post('resend-otp')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @ApiOperation({
+    summary: 'Gui lai ma xac thuc',
+    description:
+      'Cap OTP moi cho yeu cau dang ky dang cho. Moi lan gui cach nhau it nhat 60 giay.',
+  })
+  @ApiResponse({ status: 201, description: 'Da gui lai ma xac thuc.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Chua het thoi gian cho hoac khong co yeu cau dang ky nao.',
+  })
+  resendOtp(@Body() dto: ResendOtpDto) {
+    return this.authService.resendRegistrationOtp(dto);
   }
 
   @Post('login')
@@ -168,8 +213,8 @@ export class AuthController {
   private getRefreshTokenCookieBaseOptions(): CookieOptions {
     const isProduction =
       process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
-    const configuredSameSite = process.env.REFRESH_COOKIE_SAME_SITE?.trim()
-      .toLowerCase();
+    const configuredSameSite =
+      process.env.REFRESH_COOKIE_SAME_SITE?.trim().toLowerCase();
     const sameSite: 'lax' | 'strict' | 'none' =
       configuredSameSite === 'lax' ||
       configuredSameSite === 'strict' ||
@@ -178,8 +223,8 @@ export class AuthController {
         : isProduction
           ? 'none'
           : 'lax';
-    const configuredSecure = process.env.REFRESH_COOKIE_SECURE?.trim()
-      .toLowerCase();
+    const configuredSecure =
+      process.env.REFRESH_COOKIE_SECURE?.trim().toLowerCase();
     const secure =
       configuredSecure === 'true'
         ? true

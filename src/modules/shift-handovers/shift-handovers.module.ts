@@ -7,7 +7,9 @@ import { TasksModule } from '../tasks/tasks.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { ShiftHandoversController } from './controllers/shift-handovers.controller';
 import { ShiftHandover } from './entities/shift-handover.entity';
+import { HandoverNotificationListener } from './listeners/handover-notification.listener';
 import { ShiftHandoversRepository } from './repositories/shift-handovers.repository';
+import { HandoverEventsService } from './services/handover-events.service';
 import { ShiftHandoversService } from './services/shift-handovers.service';
 
 @Module({
@@ -21,6 +23,8 @@ import { ShiftHandoversService } from './services/shift-handovers.service';
   providers: [
     ShiftHandoversRepository,
     ShiftHandoversService,
+    HandoverEventsService,
+    HandoverNotificationListener,
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,
   ],

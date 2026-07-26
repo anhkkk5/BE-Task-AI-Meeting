@@ -16,7 +16,9 @@ const tasks_module_1 = require("../tasks/tasks.module");
 const workspaces_module_1 = require("../workspaces/workspaces.module");
 const shift_handovers_controller_1 = require("./controllers/shift-handovers.controller");
 const shift_handover_entity_1 = require("./entities/shift-handover.entity");
+const handover_notification_listener_1 = require("./listeners/handover-notification.listener");
 const shift_handovers_repository_1 = require("./repositories/shift-handovers.repository");
+const handover_events_service_1 = require("./services/handover-events.service");
 const shift_handovers_service_1 = require("./services/shift-handovers.service");
 let ShiftHandoversModule = class ShiftHandoversModule {
 };
@@ -33,6 +35,8 @@ exports.ShiftHandoversModule = ShiftHandoversModule = __decorate([
         providers: [
             shift_handovers_repository_1.ShiftHandoversRepository,
             shift_handovers_service_1.ShiftHandoversService,
+            handover_events_service_1.HandoverEventsService,
+            handover_notification_listener_1.HandoverNotificationListener,
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,
         ],

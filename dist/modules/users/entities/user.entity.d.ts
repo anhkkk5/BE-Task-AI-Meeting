@@ -8,6 +8,7 @@ export declare class User {
     jobTitle: string | null;
     passwordHash: string;
     status: UserStatus;
+    emailVerifiedAt: Date | null;
     refreshTokenHash: string | null;
     createdAt: Date;
     updatedAt: Date;

@@ -1,12 +1,23 @@
 import type { Request, Response } from 'express';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
+import { ResendOtpDto } from '../dto/resend-otp.dto';
+import { VerifyOtpDto } from '../dto/verify-otp.dto';
 import { AuthService } from '../services/auth.service';
 import type { AuthUser } from '../types/auth-user.type';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
-    register(dto: RegisterDto, response: Response): Promise<{
+    register(dto: RegisterDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            email: string;
+            otpExpiresInSeconds: number;
+            resendAfterSeconds: number;
+        };
+    }>;
+    verifyOtp(dto: VerifyOtpDto, response: Response): Promise<{
         success: boolean;
         message: string;
         data: {
@@ -24,6 +35,15 @@ export declare class AuthController {
             tokens: {
                 accessToken: string;
             };
+        };
+    }>;
+    resendOtp(dto: ResendOtpDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            email: string;
+            otpExpiresInSeconds: number;
+            resendAfterSeconds: number;
         };
     }>;
     login(dto: LoginDto, response: Response): Promise<{

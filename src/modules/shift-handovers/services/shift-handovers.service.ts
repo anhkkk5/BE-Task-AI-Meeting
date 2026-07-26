@@ -18,6 +18,7 @@ import { GetHandoversQueryDto } from '../dto/get-handovers-query.dto';
 import { UpdateHandoverDto } from '../dto/update-handover.dto';
 import { ShiftHandover } from '../entities/shift-handover.entity';
 import { ShiftHandoversRepository } from '../repositories/shift-handovers.repository';
+import { HandoverEventsService } from './handover-events.service';
 
 const managerRoles = [
   WorkspaceRole.Owner,
@@ -35,6 +36,7 @@ export class ShiftHandoversService {
     private readonly projectAccess: ProjectAccessService,
     private readonly workspaceMembers: WorkspaceMembersRepository,
     private readonly tasksRepository: TasksRepository,
+    private readonly handoverEvents: HandoverEventsService,
   ) {}
 
   async createHandover(
@@ -175,8 +177,12 @@ export class ShiftHandoversService {
       rejectionReason: null,
     });
 
+    // Nạp lại để có sender/receiver/task cho email, rồi mới phát sự kiện.
+    const submitted = await this.getHandoverEntity(handover.id, projectId);
+    this.handoverEvents.publish({ type: 'submitted', handover: submitted });
+
     return this.response('Đã gửi yêu cầu bàn giao cho người nhận', {
-      handover: this.mapHandover(await this.getHandoverEntity(handover.id, projectId)),
+      handover: this.mapHandover(submitted),
     });
   }
 
@@ -194,8 +200,15 @@ export class ShiftHandoversService {
       status: HandoverStatus.ChangesRequested,
       changeRequest: reason.trim(),
     });
+    const updated = await this.getHandoverEntity(handover.id, projectId);
+    this.handoverEvents.publish({
+      type: 'changes_requested',
+      handover: updated,
+      reason,
+    });
+
     return this.response('Đã yêu cầu người giao bổ sung thông tin', {
-      handover: this.mapHandover(await this.getHandoverEntity(handover.id, projectId)),
+      handover: this.mapHandover(updated),
     });
   }
 
@@ -214,8 +227,15 @@ export class ShiftHandoversService {
       rejectionReason: reason.trim(),
       rejectedAt: new Date(),
     });
+    const rejected = await this.getHandoverEntity(handover.id, projectId);
+    this.handoverEvents.publish({
+      type: 'rejected',
+      handover: rejected,
+      reason,
+    });
+
     return this.response('Đã từ chối nhận bàn giao', {
-      handover: this.mapHandover(await this.getHandoverEntity(handover.id, projectId)),
+      handover: this.mapHandover(rejected),
     });
   }
 
@@ -237,8 +257,11 @@ export class ShiftHandoversService {
       );
     }
 
+    const accepted = await this.getHandoverEntity(handover.id, projectId);
+    this.handoverEvents.publish({ type: 'accepted', handover: accepted });
+
     return this.response('Đã nhận bàn giao và chuyển người phụ trách task', {
-      handover: this.mapHandover(await this.getHandoverEntity(handover.id, projectId)),
+      handover: this.mapHandover(accepted),
     });
   }
 
