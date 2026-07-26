@@ -178,7 +178,8 @@ export class HandoverNotificationListener implements OnModuleInit {
   private handoverUrl(handover: ShiftHandover) {
     const { appUrl } = mailConfig();
 
-    return `${appUrl}/workspaces/${handover.workspaceId}/projects/${handover.projectId}/handovers`;
+    // Duong dan phai khop route frontend: .../projects/:projectId/shift-handovers
+    return `${appUrl}/workspaces/${handover.workspaceId}/projects/${handover.projectId}/shift-handovers`;
   }
 
   private formatDate(value: Date | null) {

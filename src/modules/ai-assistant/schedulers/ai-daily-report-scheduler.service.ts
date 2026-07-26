@@ -27,10 +27,25 @@ export type AutomaticReportRunResult = {
   lockAcquired: boolean;
 };
 
+/** Ket qua lan chay gan nhat, duoc giu lai de UI biet may da tu dong chay. */
+export type LastAutomaticRun = AutomaticReportRunResult & {
+  finishedAt: string;
+};
+
+export type ReportAutomationStatus = {
+  enabled: boolean;
+  cron: string;
+  timeZone: string;
+  includeTeam: boolean;
+  nextRunAt: string | null;
+  lastRun: LastAutomaticRun | null;
+};
+
 @Injectable()
 export class AiDailyReportSchedulerService implements OnApplicationBootstrap {
   private readonly logger = new Logger(AiDailyReportSchedulerService.name);
   private readonly jobName = 'automatic-ai-daily-reports';
+  private readonly lastRunKey = 'ai-daily-reports:last-run';
 
   constructor(
     private readonly configService: ConfigService,
@@ -194,8 +209,81 @@ export class AiDailyReportSchedulerService implements OnApplicationBootstrap {
       return result;
     } finally {
       if (result.lockAcquired) {
+        // Chi ghi lai khi that su la lan chay cua may nay, tranh ghi de
+        // ket qua cua instance khac dang giu khoa.
+        await this.saveLastRun(result);
         await this.releaseLock(lockKey, lockToken);
       }
+    }
+  }
+
+  /**
+   * Tra ve trang thai lich tu dong cho frontend.
+   *
+   * Muc dich: nguoi dung phai thay duoc bao cao la do may tu tao theo lich,
+   * neu khong ho se tuong tinh nang chua chay va di bam tao thu cong.
+   */
+  async getAutomationStatus(): Promise<ReportAutomationStatus> {
+    return {
+      enabled: this.getBoolean('AI_DAILY_REPORT_SCHEDULER_ENABLED', false),
+      cron: this.configService.get<string>(
+        'AI_DAILY_REPORT_CRON',
+        '0 0 17 * * 1-5',
+      ),
+      timeZone: this.getTimeZone(),
+      includeTeam: this.getBoolean('AI_DAILY_REPORT_INCLUDE_TEAM', true),
+      nextRunAt: this.resolveNextRunAt(),
+      lastRun: await this.getLastRun(),
+    };
+  }
+
+  private resolveNextRunAt() {
+    try {
+      const job = this.schedulerRegistry.getCronJob(this.jobName);
+      // Tuy phien ban cron, nextDate() tra ve luxon DateTime hoac Date.
+      const next = job.nextDate() as unknown as {
+        toJSDate?: () => Date;
+        toMillis?: () => number;
+      };
+
+      if (typeof next?.toJSDate === 'function') {
+        return next.toJSDate().toISOString();
+      }
+
+      if (typeof next?.toMillis === 'function') {
+        return new Date(next.toMillis()).toISOString();
+      }
+
+      return null;
+    } catch {
+      // Job chua duoc dang ky, vi du khi lich dang tat.
+      return null;
+    }
+  }
+
+  private async saveLastRun(result: AutomaticReportRunResult) {
+    const payload: LastAutomaticRun = {
+      ...result,
+      finishedAt: new Date().toISOString(),
+    };
+
+    try {
+      await this.redis.set(this.lastRunKey, JSON.stringify(payload));
+    } catch (error) {
+      // Khong lam that bai ca lan chay chi vi khong ghi duoc trang thai.
+      this.logger.warn(
+        `Khong the luu trang thai lan chay gan nhat: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async getLastRun(): Promise<LastAutomaticRun | null> {
+    try {
+      const raw = await this.redis.get(this.lastRunKey);
+
+      return raw ? (JSON.parse(raw) as LastAutomaticRun) : null;
+    } catch {
+      return null;
     }
   }
 

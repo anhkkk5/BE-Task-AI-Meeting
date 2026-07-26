@@ -133,7 +133,7 @@ let HandoverNotificationListener = HandoverNotificationListener_1 = class Handov
     }
     handoverUrl(handover) {
         const { appUrl } = (0, mail_config_1.mailConfig)();
-        return `${appUrl}/workspaces/${handover.workspaceId}/projects/${handover.projectId}/handovers`;
+        return `${appUrl}/workspaces/${handover.workspaceId}/projects/${handover.projectId}/shift-handovers`;
     }
     formatDate(value) {
         if (!value) {

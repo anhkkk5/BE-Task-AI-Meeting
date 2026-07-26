@@ -1,10 +1,17 @@
 import type { AuthUser } from '../../auth/types/auth-user.type';
 import { GeneratePersonalReportDto } from '../dto/generate-personal-report.dto';
 import { GetAiReportsQueryDto } from '../dto/get-ai-reports-query.dto';
+import { AiDailyReportSchedulerService } from '../schedulers/ai-daily-report-scheduler.service';
 import { AiPersonalReportService } from '../services/ai-personal-report.service';
 export declare class AiPersonalReportController {
     private readonly aiPersonalReportService;
-    constructor(aiPersonalReportService: AiPersonalReportService);
+    private readonly schedulerService;
+    constructor(aiPersonalReportService: AiPersonalReportService, schedulerService: AiDailyReportSchedulerService);
+    getDailyReportAutomation(): Promise<{
+        success: boolean;
+        message: string;
+        data: import("../schedulers/ai-daily-report-scheduler.service").ReportAutomationStatus;
+    }>;
     generateMyPersonalDailyReport(user: AuthUser, workspaceId: string, projectId: string, dto: GeneratePersonalReportDto): Promise<{
         success: boolean;
         message: string;

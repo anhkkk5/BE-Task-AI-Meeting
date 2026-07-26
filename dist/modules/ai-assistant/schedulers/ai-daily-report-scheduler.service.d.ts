@@ -14,6 +14,17 @@ export type AutomaticReportRunResult = {
     failed: number;
     lockAcquired: boolean;
 };
+export type LastAutomaticRun = AutomaticReportRunResult & {
+    finishedAt: string;
+};
+export type ReportAutomationStatus = {
+    enabled: boolean;
+    cron: string;
+    timeZone: string;
+    includeTeam: boolean;
+    nextRunAt: string | null;
+    lastRun: LastAutomaticRun | null;
+};
 export declare class AiDailyReportSchedulerService implements OnApplicationBootstrap {
     private readonly configService;
     private readonly schedulerRegistry;
@@ -24,9 +35,14 @@ export declare class AiDailyReportSchedulerService implements OnApplicationBoots
     private readonly teamReportService;
     private readonly logger;
     private readonly jobName;
+    private readonly lastRunKey;
     constructor(configService: ConfigService, schedulerRegistry: SchedulerRegistry, redis: Redis, projectsRepository: ProjectsRepository, workspaceMembersRepository: WorkspaceMembersRepository, personalReportService: AiPersonalReportService, teamReportService: AiTeamReportService);
     onApplicationBootstrap(): void;
     runScheduledReports(now?: Date): Promise<AutomaticReportRunResult>;
+    getAutomationStatus(): Promise<ReportAutomationStatus>;
+    private resolveNextRunAt;
+    private saveLastRun;
+    private getLastRun;
     private findReportManager;
     private releaseLock;
     private formatDateInTimeZone;

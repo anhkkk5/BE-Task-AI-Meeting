@@ -13,7 +13,9 @@ import { User } from '../../users/entities/user.entity';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { ShiftHandover } from '../entities/shift-handover.entity';
+import { HandoverEvent } from '../events/handover.event';
 import { ShiftHandoversRepository } from '../repositories/shift-handovers.repository';
+import { HandoverEventsService } from './handover-events.service';
 import { ShiftHandoversService } from './shift-handovers.service';
 
 describe('ShiftHandoversService - bàn giao công việc', () => {
@@ -22,6 +24,8 @@ describe('ShiftHandoversService - bàn giao công việc', () => {
   let workspaceAccess: jest.Mocked<WorkspaceAccessService>;
   let workspaceMembers: jest.Mocked<WorkspaceMembersRepository>;
   let tasksRepository: jest.Mocked<TasksRepository>;
+  /** Ghi lai su kien phat ra de kiem chung thong bao email duoc kich hoat. */
+  let publishedEvents: HandoverEvent[];
 
   const user = (id: string, fullName: string) =>
     ({
@@ -108,12 +112,21 @@ describe('ShiftHandoversService - bàn giao công việc', () => {
       assertProjectInWorkspace: jest.fn().mockResolvedValue(undefined),
     } as unknown as ProjectAccessService;
 
+    // Dung service that thay vi mock: no chi la observer trong bo nho, va nho
+    // vay test bat duoc ca truong hop quen phat su kien.
+    publishedEvents = [];
+    const handoverEvents = new HandoverEventsService();
+    handoverEvents.onHandoverEvent((event) => {
+      publishedEvents.push(event);
+    });
+
     service = new ShiftHandoversService(
       repository,
       workspaceAccess,
       projectAccess,
       workspaceMembers,
       tasksRepository,
+      handoverEvents,
     );
   });
 
@@ -205,6 +218,12 @@ describe('ShiftHandoversService - bàn giao công việc', () => {
       expect.objectContaining({ status: HandoverStatus.Pending }),
     );
     expect(result.data.handover.status).toBe(HandoverStatus.Pending);
+    // Phai phat su kien de nguoi nhan duoc gui mail thong bao.
+    expect(publishedEvents).toHaveLength(1);
+    expect(publishedEvents[0].type).toBe('submitted');
+    expect(publishedEvents[0].handover.receiver.email).toBe(
+      'receiver-id@example.com',
+    );
   });
 
   it('người nhận có thể yêu cầu bổ sung thông tin', async () => {
@@ -227,6 +246,9 @@ describe('ShiftHandoversService - bàn giao công việc', () => {
     );
 
     expect(result.data.handover.status).toBe(HandoverStatus.ChangesRequested);
+    expect(publishedEvents).toHaveLength(1);
+    expect(publishedEvents[0].type).toBe('changes_requested');
+    expect(publishedEvents[0].reason).toBe('Bổ sung đường dẫn tài liệu.');
   });
 
   it('người nhận có thể từ chối kèm lý do', async () => {
@@ -249,6 +271,9 @@ describe('ShiftHandoversService - bàn giao công việc', () => {
     );
 
     expect(result.data.handover.status).toBe(HandoverStatus.Rejected);
+    expect(publishedEvents).toHaveLength(1);
+    expect(publishedEvents[0].type).toBe('rejected');
+    expect(publishedEvents[0].reason).toBe('Thông tin chưa đủ để tiếp nhận.');
   });
 
   it('chỉ đổi người phụ trách task khi người nhận chấp nhận', async () => {
@@ -273,6 +298,12 @@ describe('ShiftHandoversService - bàn giao công việc', () => {
     expect(repository.acceptAndTransferTask).toHaveBeenCalledWith(pending);
     expect(result.data.handover.status).toBe(HandoverStatus.Acknowledged);
     expect(result.data.handover.task?.assigneeId).toBe('receiver-id');
+    // Nguoi giao phai duoc thong bao la ban giao da duoc tiep nhan.
+    expect(publishedEvents).toHaveLength(1);
+    expect(publishedEvents[0].type).toBe('accepted');
+    expect(publishedEvents[0].handover.sender.email).toBe(
+      'sender-id@example.com',
+    );
   });
 
   it('không chấp nhận nếu người phụ trách task đã thay đổi', async () => {

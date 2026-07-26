@@ -40,6 +40,7 @@ let AiDailyReportSchedulerService = AiDailyReportSchedulerService_1 = class AiDa
     teamReportService;
     logger = new common_1.Logger(AiDailyReportSchedulerService_1.name);
     jobName = 'automatic-ai-daily-reports';
+    lastRunKey = 'ai-daily-reports:last-run';
     constructor(configService, schedulerRegistry, redis, projectsRepository, workspaceMembersRepository, personalReportService, teamReportService) {
         this.configService = configService;
         this.schedulerRegistry = schedulerRegistry;
@@ -141,8 +142,56 @@ let AiDailyReportSchedulerService = AiDailyReportSchedulerService_1 = class AiDa
         }
         finally {
             if (result.lockAcquired) {
+                await this.saveLastRun(result);
                 await this.releaseLock(lockKey, lockToken);
             }
+        }
+    }
+    async getAutomationStatus() {
+        return {
+            enabled: this.getBoolean('AI_DAILY_REPORT_SCHEDULER_ENABLED', false),
+            cron: this.configService.get('AI_DAILY_REPORT_CRON', '0 0 17 * * 1-5'),
+            timeZone: this.getTimeZone(),
+            includeTeam: this.getBoolean('AI_DAILY_REPORT_INCLUDE_TEAM', true),
+            nextRunAt: this.resolveNextRunAt(),
+            lastRun: await this.getLastRun(),
+        };
+    }
+    resolveNextRunAt() {
+        try {
+            const job = this.schedulerRegistry.getCronJob(this.jobName);
+            const next = job.nextDate();
+            if (typeof next?.toJSDate === 'function') {
+                return next.toJSDate().toISOString();
+            }
+            if (typeof next?.toMillis === 'function') {
+                return new Date(next.toMillis()).toISOString();
+            }
+            return null;
+        }
+        catch {
+            return null;
+        }
+    }
+    async saveLastRun(result) {
+        const payload = {
+            ...result,
+            finishedAt: new Date().toISOString(),
+        };
+        try {
+            await this.redis.set(this.lastRunKey, JSON.stringify(payload));
+        }
+        catch (error) {
+            this.logger.warn(`Khong the luu trang thai lan chay gan nhat: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+    async getLastRun() {
+        try {
+            const raw = await this.redis.get(this.lastRunKey);
+            return raw ? JSON.parse(raw) : null;
+        }
+        catch {
+            return null;
         }
     }
     findReportManager(members) {

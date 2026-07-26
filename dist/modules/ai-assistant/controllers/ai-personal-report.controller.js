@@ -23,6 +23,7 @@ const workspace_roles_guard_1 = require("../../../common/guards/workspace-roles.
 const access_token_guard_1 = require("../../auth/guards/access-token.guard");
 const generate_personal_report_dto_1 = require("../dto/generate-personal-report.dto");
 const get_ai_reports_query_dto_1 = require("../dto/get-ai-reports-query.dto");
+const ai_daily_report_scheduler_service_1 = require("../schedulers/ai-daily-report-scheduler.service");
 const ai_personal_report_service_1 = require("../services/ai-personal-report.service");
 const managerRoles = [
     workspace_role_enum_1.WorkspaceRole.Owner,
@@ -31,8 +32,17 @@ const managerRoles = [
 ];
 let AiPersonalReportController = class AiPersonalReportController {
     aiPersonalReportService;
-    constructor(aiPersonalReportService) {
+    schedulerService;
+    constructor(aiPersonalReportService, schedulerService) {
         this.aiPersonalReportService = aiPersonalReportService;
+        this.schedulerService = schedulerService;
+    }
+    async getDailyReportAutomation() {
+        return {
+            success: true,
+            message: 'Success',
+            data: await this.schedulerService.getAutomationStatus(),
+        };
     }
     generateMyPersonalDailyReport(user, workspaceId, projectId, dto) {
         return this.aiPersonalReportService.generateMyPersonalDailyReport(user.id, workspaceId, projectId, dto);
@@ -51,6 +61,19 @@ let AiPersonalReportController = class AiPersonalReportController {
     }
 };
 exports.AiPersonalReportController = AiPersonalReportController;
+__decorate([
+    (0, common_1.Get)('daily-report-automation'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get AI daily report automation status',
+        description: 'Cho biet lich tu dong tao bao cao giao ban co dang bat, chay vao luc nao va ket qua lan chay gan nhat.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AiPersonalReportController.prototype, "getDailyReportAutomation", null);
 __decorate([
     (0, common_1.Post)('personal-daily-report'),
     (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
@@ -143,6 +166,7 @@ exports.AiPersonalReportController = AiPersonalReportController = __decorate([
     (0, swagger_1.ApiTags)('AI Personal Reports'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard),
-    __metadata("design:paramtypes", [ai_personal_report_service_1.AiPersonalReportService])
+    __metadata("design:paramtypes", [ai_personal_report_service_1.AiPersonalReportService,
+        ai_daily_report_scheduler_service_1.AiDailyReportSchedulerService])
 ], AiPersonalReportController);
 //# sourceMappingURL=ai-personal-report.controller.js.map

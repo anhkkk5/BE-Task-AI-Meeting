@@ -23,6 +23,7 @@ import { AccessTokenGuard } from '../../auth/guards/access-token.guard';
 import type { AuthUser } from '../../auth/types/auth-user.type';
 import { GeneratePersonalReportDto } from '../dto/generate-personal-report.dto';
 import { GetAiReportsQueryDto } from '../dto/get-ai-reports-query.dto';
+import { AiDailyReportSchedulerService } from '../schedulers/ai-daily-report-scheduler.service';
 import { AiPersonalReportService } from '../services/ai-personal-report.service';
 
 const managerRoles = [
@@ -38,7 +39,25 @@ const managerRoles = [
 export class AiPersonalReportController {
   constructor(
     private readonly aiPersonalReportService: AiPersonalReportService,
+    private readonly schedulerService: AiDailyReportSchedulerService,
   ) {}
+
+  @Get('daily-report-automation')
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({
+    summary: 'Get AI daily report automation status',
+    description:
+      'Cho biet lich tu dong tao bao cao giao ban co dang bat, chay vao luc nao va ket qua lan chay gan nhat.',
+  })
+  @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
+  @ApiParam({ name: 'projectId', example: 'project-uuid' })
+  async getDailyReportAutomation() {
+    return {
+      success: true,
+      message: 'Success',
+      data: await this.schedulerService.getAutomationStatus(),
+    };
+  }
 
   @Post('personal-daily-report')
   @UseGuards(WorkspaceMemberGuard)
