@@ -60,6 +60,7 @@ let MembersService = class MembersService {
                 role: dto.role,
             });
         member.user = user;
+        await this.workspaceAccessService.invalidateMembership(user.id, workspaceId);
         return {
             success: true,
             message: 'Add member successfully',
@@ -98,6 +99,7 @@ let MembersService = class MembersService {
         const updatedMember = await this.workspaceMembersRepository.updateMember(member, {
             role: dto.role,
         });
+        await this.workspaceAccessService.invalidateMembership(member.userId, workspaceId);
         return {
             success: true,
             message: 'Change member role successfully',
@@ -114,6 +116,7 @@ let MembersService = class MembersService {
         await this.workspaceMembersRepository.updateMember(member, {
             status: workspace_member_status_enum_1.WorkspaceMemberStatus.Removed,
         });
+        await this.workspaceAccessService.invalidateMembership(member.userId, workspaceId);
         return {
             success: true,
             message: 'Remove member successfully',

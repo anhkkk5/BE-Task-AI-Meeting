@@ -15,7 +15,10 @@ describe('MembersService', () => {
   let workspaceAccessService: jest.Mocked<
     Pick<
       WorkspaceAccessService,
-      'assertWorkspaceActive' | 'assertWorkspaceMember' | 'assertWorkspaceOwner'
+      | 'assertWorkspaceActive'
+      | 'assertWorkspaceMember'
+      | 'assertWorkspaceOwner'
+      | 'invalidateMembership'
     >
   >;
   let workspaceMembersRepository: jest.Mocked<
@@ -57,6 +60,7 @@ describe('MembersService', () => {
       assertWorkspaceActive: jest.fn(),
       assertWorkspaceMember: jest.fn(),
       assertWorkspaceOwner: jest.fn(),
+      invalidateMembership: jest.fn(),
     };
     workspaceMembersRepository = {
       countActiveOwners: jest.fn(),

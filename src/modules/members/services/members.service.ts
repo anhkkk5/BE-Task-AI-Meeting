@@ -83,6 +83,13 @@ export class MembersService {
 
     member.user = user;
 
+    // Cache co the dang giu ket qua "khong phai thanh vien" cua nguoi nay,
+    // phai xoa ngay de ho vao duoc workspace ma khong phai cho het TTL.
+    await this.workspaceAccessService.invalidateMembership(
+      user.id,
+      workspaceId,
+    );
+
     return {
       success: true,
       message: 'Add member successfully',
@@ -173,6 +180,13 @@ export class MembersService {
       },
     );
 
+    // Khong xoa cache thi nguoi bi ha quyen van hanh dong duoc nhu owner cho den
+    // khi cache het han.
+    await this.workspaceAccessService.invalidateMembership(
+      member.userId,
+      workspaceId,
+    );
+
     return {
       success: true,
       message: 'Change member role successfully',
@@ -201,6 +215,12 @@ export class MembersService {
     await this.workspaceMembersRepository.updateMember(member, {
       status: WorkspaceMemberStatus.Removed,
     });
+
+    // Nguoi vua bi xoa phai mat quyen truy cap ngay lap tuc.
+    await this.workspaceAccessService.invalidateMembership(
+      member.userId,
+      workspaceId,
+    );
 
     return {
       success: true,

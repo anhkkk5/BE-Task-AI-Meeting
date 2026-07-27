@@ -24,7 +24,7 @@ let WorkspaceMemberGuard = class WorkspaceMemberGuard {
         if (!userId || !workspaceId) {
             throw new common_1.UnauthorizedException('Unauthorized');
         }
-        await this.workspaceAccessService.assertWorkspaceMember(userId, workspaceId);
+        await this.workspaceAccessService.assertWorkspaceMembership(userId, workspaceId);
         return true;
     }
 };

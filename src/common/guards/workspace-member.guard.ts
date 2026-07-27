@@ -26,7 +26,13 @@ export class WorkspaceMemberGuard implements CanActivate {
       throw new UnauthorizedException('Unauthorized');
     }
 
-    await this.workspaceAccessService.assertWorkspaceMember(
+    /*
+     * Dung ban rut gon co cache thay vi lay ca entity.
+     * Guard nay chay tren gan nhu moi request, va mot lan mo trang cua frontend
+     * ban nhieu request song song cho cung mot workspace, nen truoc day phat
+     * sinh nhieu query giong nhau. Guard chi can biet co quyen hay khong.
+     */
+    await this.workspaceAccessService.assertWorkspaceMembership(
       userId,
       workspaceId,
     );

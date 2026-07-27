@@ -2,11 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mysqlConfig = void 0;
 const isMysqlSslEnabled = () => process.env.MYSQL_SSL === 'true';
+const DEFAULT_MYSQL_CONNECTION_LIMIT = 2;
 const getMysqlConnectionLimit = () => {
-    const configuredLimit = Number(process.env.MYSQL_CONNECTION_LIMIT ?? 2);
+    const configuredLimit = Number(process.env.MYSQL_CONNECTION_LIMIT ?? DEFAULT_MYSQL_CONNECTION_LIMIT);
     return Number.isInteger(configuredLimit) && configuredLimit > 0
         ? configuredLimit
-        : 2;
+        : DEFAULT_MYSQL_CONNECTION_LIMIT;
 };
 const mysqlConfig = () => {
     const connectionLimit = getMysqlConnectionLimit();

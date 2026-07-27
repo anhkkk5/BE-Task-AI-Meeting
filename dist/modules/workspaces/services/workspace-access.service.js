@@ -15,20 +15,43 @@ const workspace_role_enum_1 = require("../../../common/enums/workspace-role.enum
 const workspace_status_enum_1 = require("../../../common/enums/workspace-status.enum");
 const workspace_members_repository_1 = require("../repositories/workspace-members.repository");
 const workspaces_repository_1 = require("../repositories/workspaces.repository");
+const MEMBERSHIP_CACHE_TTL_MS = 15_000;
+const MEMBERSHIP_CACHE_MAX_ENTRIES = 5_000;
 let WorkspaceAccessService = class WorkspaceAccessService {
     workspacesRepository;
     workspaceMembersRepository;
+    membershipCache = new Map();
     constructor(workspacesRepository, workspaceMembersRepository) {
         this.workspacesRepository = workspacesRepository;
         this.workspaceMembersRepository = workspaceMembersRepository;
     }
-    async getUserWorkspaceRole(userId, workspaceId) {
+    async getMembershipSnapshot(userId, workspaceId) {
+        const cacheKey = this.buildMembershipCacheKey(userId, workspaceId);
+        const cached = this.membershipCache.get(cacheKey);
+        if (cached && cached.expiresAt > Date.now()) {
+            return cached.snapshot;
+        }
         const member = await this.workspaceMembersRepository.findActiveByWorkspaceAndUser(workspaceId, userId);
-        return member?.role ?? null;
+        const snapshot = member
+            ? { role: member.role, status: member.status }
+            : null;
+        this.writeCache(cacheKey, snapshot);
+        return snapshot;
+    }
+    async getUserWorkspaceRole(userId, workspaceId) {
+        const snapshot = await this.getMembershipSnapshot(userId, workspaceId);
+        return snapshot?.role ?? null;
     }
     async isWorkspaceMember(userId, workspaceId) {
         const role = await this.getUserWorkspaceRole(userId, workspaceId);
         return Boolean(role);
+    }
+    async assertWorkspaceMembership(userId, workspaceId) {
+        const snapshot = await this.getMembershipSnapshot(userId, workspaceId);
+        if (!snapshot) {
+            throw new common_1.ForbiddenException('You do not have access to this workspace');
+        }
+        return snapshot;
     }
     async assertWorkspaceMember(userId, workspaceId) {
         const member = await this.workspaceMembersRepository.findActiveByWorkspaceAndUser(workspaceId, userId);
@@ -53,6 +76,32 @@ let WorkspaceAccessService = class WorkspaceAccessService {
             throw new common_1.ForbiddenException('Workspace is archived');
         }
         return workspace;
+    }
+    invalidateMembership(userId, workspaceId) {
+        this.membershipCache.delete(this.buildMembershipCacheKey(userId, workspaceId));
+    }
+    buildMembershipCacheKey(userId, workspaceId) {
+        return `${workspaceId}:${userId}`;
+    }
+    writeCache(cacheKey, snapshot) {
+        if (this.membershipCache.size >= MEMBERSHIP_CACHE_MAX_ENTRIES) {
+            this.evictExpiredEntries();
+        }
+        this.membershipCache.set(cacheKey, {
+            snapshot,
+            expiresAt: Date.now() + MEMBERSHIP_CACHE_TTL_MS,
+        });
+    }
+    evictExpiredEntries() {
+        const now = Date.now();
+        for (const [key, entry] of this.membershipCache) {
+            if (entry.expiresAt <= now) {
+                this.membershipCache.delete(key);
+            }
+        }
+        if (this.membershipCache.size >= MEMBERSHIP_CACHE_MAX_ENTRIES) {
+            this.membershipCache.clear();
+        }
     }
 };
 exports.WorkspaceAccessService = WorkspaceAccessService;
