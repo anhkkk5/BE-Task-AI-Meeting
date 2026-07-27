@@ -35,6 +35,7 @@ export declare class AiTeamReportActionItemService {
                 note: string | null;
                 handledAt: Date | null;
             }[];
+            canHandle: boolean;
         };
     }>;
     createTaskFromActionItem(currentUserId: string, workspaceId: string, projectId: string, reportId: string, dto: CreateTeamReportTaskDto): Promise<{
@@ -126,6 +127,8 @@ export declare class AiTeamReportActionItemService {
     private findPendingItem;
     private buildConflictMessage;
     private findReportOrFail;
+    private findReportForRead;
+    private loadReport;
     private getItemText;
     private assertActiveMember;
     private collectItems;

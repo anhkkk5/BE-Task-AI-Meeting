@@ -28,6 +28,13 @@ let ProjectAccessService = class ProjectAccessService {
         }
         return project;
     }
+    async assertProjectDetailInWorkspace(projectId, workspaceId) {
+        const project = await this.projectsRepository.findDetailByIdAndWorkspace(projectId, workspaceId);
+        if (!project) {
+            throw new common_1.NotFoundException('Project not found in this workspace');
+        }
+        return project;
+    }
     async assertProjectActive(projectId, workspaceId) {
         const project = await this.assertProjectInWorkspace(projectId, workspaceId);
         if (project.status !== project_status_enum_1.ProjectStatus.Active) {

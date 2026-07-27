@@ -5,11 +5,13 @@ import { GetProjectsQueryDto } from '../dto/get-projects-query.dto';
 import { UpdateProjectDto } from '../dto/update-project.dto';
 import { ProjectsRepository } from '../repositories/projects.repository';
 import { ProjectAccessService } from './project-access.service';
+import { ProjectKeyCodeService } from './project-key-code.service';
 export declare class ProjectsService {
     private readonly projectsRepository;
     private readonly projectAccessService;
+    private readonly projectKeyCodeService;
     private readonly workspaceAccessService;
-    constructor(projectsRepository: ProjectsRepository, projectAccessService: ProjectAccessService, workspaceAccessService: WorkspaceAccessService);
+    constructor(projectsRepository: ProjectsRepository, projectAccessService: ProjectAccessService, projectKeyCodeService: ProjectKeyCodeService, workspaceAccessService: WorkspaceAccessService);
     createProject(currentUserId: string, workspaceId: string, dto: CreateProjectDto): Promise<{
         success: boolean;
         message: string;
@@ -58,6 +60,12 @@ export declare class ProjectsService {
         message: string;
         data: {
             project: {
+                createdByUser: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 id: string;
                 workspaceId: string;
                 name: string;

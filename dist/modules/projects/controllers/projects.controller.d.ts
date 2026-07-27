@@ -54,6 +54,12 @@ export declare class ProjectsController {
         message: string;
         data: {
             project: {
+                createdByUser: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 id: string;
                 workspaceId: string;
                 name: string;

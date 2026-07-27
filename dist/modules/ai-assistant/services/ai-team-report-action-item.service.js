@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiTeamReportActionItemService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
+const ai_report_review_status_enum_1 = require("../../../common/enums/ai-report-review-status.enum");
 const ai_report_type_enum_1 = require("../../../common/enums/ai-report-type.enum");
 const team_report_action_item_status_enum_1 = require("../../../common/enums/team-report-action-item-status.enum");
 const project_access_service_1 = require("../../projects/services/project-access.service");
@@ -42,7 +43,7 @@ let AiTeamReportActionItemService = class AiTeamReportActionItemService {
         this.workspaceMembers = workspaceMembers;
     }
     async getActionItems(currentUserId, workspaceId, projectId, reportId) {
-        const report = await this.findReportOrFail(currentUserId, workspaceId, projectId, reportId);
+        const { report, canManage } = await this.findReportForRead(currentUserId, workspaceId, projectId, reportId);
         const records = await this.actionItemsRepository.findByReport(reportId);
         const recordsByKey = new Map(records.map((record) => [
             this.buildKey(record.source, record.itemIndex),
@@ -57,6 +58,7 @@ let AiTeamReportActionItemService = class AiTeamReportActionItemService {
                     ...this.collectItems(output.blockers ?? [], team_report_action_item_status_enum_1.TeamReportActionItemSource.Blocker, recordsByKey),
                     ...this.collectItems(output.recommendations ?? [], team_report_action_item_status_enum_1.TeamReportActionItemSource.Recommendation, recordsByKey),
                 ],
+                canHandle: canManage,
             },
         };
     }
@@ -177,8 +179,22 @@ let AiTeamReportActionItemService = class AiTeamReportActionItemService {
         return 'De xuat nay da bi bo qua';
     }
     async findReportOrFail(currentUserId, workspaceId, projectId, reportId) {
-        const reportModel = this.getReportModel();
         await this.aiReportAccessService.assertCanUseTeamReports(currentUserId, workspaceId);
+        return this.loadReport(workspaceId, projectId, reportId);
+    }
+    async findReportForRead(currentUserId, workspaceId, projectId, reportId) {
+        const role = await this.aiReportAccessService.assertCanViewTeamReport(currentUserId, workspaceId);
+        const canManage = this.aiReportAccessService.isManagerRole(role);
+        const report = await this.loadReport(workspaceId, projectId, reportId);
+        if (!canManage &&
+            (0, ai_report_review_status_enum_1.normalizeReviewStatus)(report.reviewStatus) !==
+                ai_report_review_status_enum_1.AiReportReviewStatus.Published) {
+            throw new common_1.ForbiddenException('Báo cáo giao ban này chưa được phát hành cho cả nhóm');
+        }
+        return { report, canManage };
+    }
+    async loadReport(workspaceId, projectId, reportId) {
+        const reportModel = this.getReportModel();
         await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
         const report = await reportModel.findById(reportId).exec();
         if (!report ||

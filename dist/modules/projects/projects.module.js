@@ -16,6 +16,7 @@ const projects_controller_1 = require("./controllers/projects.controller");
 const project_entity_1 = require("./entities/project.entity");
 const projects_repository_1 = require("./repositories/projects.repository");
 const project_access_service_1 = require("./services/project-access.service");
+const project_key_code_service_1 = require("./services/project-key-code.service");
 const projects_service_1 = require("./services/projects.service");
 let ProjectsModule = class ProjectsModule {
 };
@@ -26,6 +27,7 @@ exports.ProjectsModule = ProjectsModule = __decorate([
         controllers: [projects_controller_1.ProjectsController],
         providers: [
             project_access_service_1.ProjectAccessService,
+            project_key_code_service_1.ProjectKeyCodeService,
             projects_repository_1.ProjectsRepository,
             projects_service_1.ProjectsService,
             workspace_member_guard_1.WorkspaceMemberGuard,

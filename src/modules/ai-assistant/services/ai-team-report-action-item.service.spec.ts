@@ -1,6 +1,12 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Model } from 'mongoose';
+import { AiReportReviewStatus } from '../../../common/enums/ai-report-review-status.enum';
 import { AiReportType } from '../../../common/enums/ai-report-type.enum';
+import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import {
   TeamReportActionItemSource,
   TeamReportActionItemStatus,
@@ -23,7 +29,10 @@ describe('AiTeamReportActionItemService', () => {
     Pick<TeamReportActionItemsRepository, 'findByReport' | 'findOne' | 'save'>
   >;
   let aiReportAccessService: jest.Mocked<
-    Pick<AiReportAccessService, 'assertCanUseTeamReports'>
+    Pick<
+      AiReportAccessService,
+      'assertCanUseTeamReports' | 'assertCanViewTeamReport' | 'isManagerRole'
+    >
   >;
   let projectAccessService: jest.Mocked<
     Pick<ProjectAccessService, 'assertProjectInWorkspace'>
@@ -40,6 +49,7 @@ describe('AiTeamReportActionItemService', () => {
     projectId: 'project-id',
     reportType: AiReportType.TeamDailyReport,
     reportDate: '2026-07-26',
+    reviewStatus: AiReportReviewStatus.Published,
     aiOutput: {
       blockers: ['Chua co moi truong staging de kiem thu'],
       recommendations: ['Chot nguoi phu trach kiem thu truoc thu Sau'],
@@ -59,6 +69,10 @@ describe('AiTeamReportActionItemService', () => {
     };
     aiReportAccessService = {
       assertCanUseTeamReports: jest.fn().mockResolvedValue({} as never),
+      assertCanViewTeamReport: jest
+        .fn()
+        .mockResolvedValue(WorkspaceRole.Owner),
+      isManagerRole: jest.fn().mockReturnValue(true),
     };
     projectAccessService = {
       assertProjectInWorkspace: jest.fn().mockResolvedValue({} as never),
@@ -118,6 +132,67 @@ describe('AiTeamReportActionItemService', () => {
       source: TeamReportActionItemSource.Recommendation,
       status: TeamReportActionItemStatus.Pending,
     });
+    expect(result.data.canHandle).toBe(true);
+  });
+
+  it('cho thanh vien thuong doc danh sach cua ban da phat hanh nhung khong chot duoc', async () => {
+    aiReportAccessService.assertCanViewTeamReport.mockResolvedValue(
+      WorkspaceRole.Member,
+    );
+    aiReportAccessService.isManagerRole.mockReturnValue(false);
+
+    const result = await service.getActionItems(
+      'member-id',
+      'workspace-id',
+      'project-id',
+      'report-id',
+    );
+
+    expect(result.data.items).toHaveLength(2);
+    expect(result.data.canHandle).toBe(false);
+    expect(aiReportAccessService.assertCanUseTeamReports).not.toHaveBeenCalled();
+  });
+
+  it('an danh sach cua phien chua phat hanh voi thanh vien thuong', async () => {
+    aiReportAccessService.assertCanViewTeamReport.mockResolvedValue(
+      WorkspaceRole.Member,
+    );
+    aiReportAccessService.isManagerRole.mockReturnValue(false);
+    reportModel.findById.mockReturnValue({
+      exec: jest.fn().mockResolvedValue({
+        ...report,
+        reviewStatus: AiReportReviewStatus.PendingReview,
+      }),
+    } as never);
+
+    await expect(
+      service.getActionItems(
+        'member-id',
+        'workspace-id',
+        'project-id',
+        'report-id',
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('van chan thanh vien thuong tao task tu de xuat', async () => {
+    aiReportAccessService.assertCanUseTeamReports.mockRejectedValue(
+      new ForbiddenException('You can not use AI team reports'),
+    );
+
+    await expect(
+      service.createTaskFromActionItem(
+        'member-id',
+        'workspace-id',
+        'project-id',
+        'report-id',
+        {
+          source: TeamReportActionItemSource.Blocker,
+          itemIndex: 0,
+        },
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(tasksService.createTask).not.toHaveBeenCalled();
   });
 
   it('tao task voi noi dung doc lai tu bao cao, khong lay tu client', async () => {

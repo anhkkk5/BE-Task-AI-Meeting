@@ -1,7 +1,13 @@
-import { HttpException, ServiceUnavailableException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { Model, Types } from 'mongoose';
+import { AiReportReviewStatus } from '../../../common/enums/ai-report-review-status.enum';
 import { AiReportStatus } from '../../../common/enums/ai-report-status.enum';
 import { AiReportType } from '../../../common/enums/ai-report-type.enum';
+import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { SprintAccessService } from '../../sprints/services/sprint-access.service';
 import { AiPromptLogDocument } from '../schemas/ai-prompt-log.schema';
@@ -31,7 +37,10 @@ describe('AiTeamReportService', () => {
     Pick<AiProviderService, 'generateTeamDailyReport'>
   >;
   let aiReportAccessService: jest.Mocked<
-    Pick<AiReportAccessService, 'assertCanUseTeamReports'>
+    Pick<
+      AiReportAccessService,
+      'assertCanUseTeamReports' | 'assertCanViewTeamReport' | 'isManagerRole'
+    >
   >;
   let dataBuilderService: jest.Mocked<
     Pick<
@@ -165,6 +174,10 @@ describe('AiTeamReportService', () => {
     };
     aiReportAccessService = {
       assertCanUseTeamReports: jest.fn(),
+      assertCanViewTeamReport: jest
+        .fn()
+        .mockResolvedValue(WorkspaceRole.Owner),
+      isManagerRole: jest.fn().mockReturnValue(true),
     };
     dataBuilderService = {
       buildTeamReportInput: jest.fn(),
@@ -355,6 +368,65 @@ describe('AiTeamReportService', () => {
 
     expect(response.data.report.inputData).toBeTruthy();
     expect(response.data.report.userId).toBeNull();
+    expect(response.data.canManage).toBe(true);
+  });
+
+  // Mail duyet bao cao gui cho moi thanh vien workspace nen link trong mail phai
+  // mo duoc voi thanh vien thuong, neu khong ho chi thay loi 403.
+  it('lets a plain member read a published team report without input data', async () => {
+    aiReportAccessService.assertCanViewTeamReport.mockResolvedValue(
+      WorkspaceRole.Member,
+    );
+    aiReportAccessService.isManagerRole.mockReturnValue(false);
+
+    const response = await service.getTeamDailyReportDetail(
+      'member-id',
+      'workspace-id',
+      'project-id',
+      reportId.toString(),
+    );
+
+    expect(aiReportAccessService.assertCanUseTeamReports).not.toHaveBeenCalled();
+    expect(response.data.canManage).toBe(false);
+    // Du lieu dau vao la ban nhap noi bo, thanh vien chi can noi dung bao cao.
+    expect(response.data.report.inputData).toBeUndefined();
+  });
+
+  it('hides a team report that is not published yet from plain members', async () => {
+    aiReportAccessService.assertCanViewTeamReport.mockResolvedValue(
+      WorkspaceRole.Member,
+    );
+    aiReportAccessService.isManagerRole.mockReturnValue(false);
+    reportModel.findById.mockReturnValue({
+      exec: jest.fn().mockResolvedValue({
+        ...report,
+        reviewStatus: AiReportReviewStatus.PendingReview,
+      }),
+    } as never);
+
+    await expect(
+      service.getTeamDailyReportDetail(
+        'member-id',
+        'workspace-id',
+        'project-id',
+        reportId.toString(),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('still blocks plain members from approving a team report', async () => {
+    aiReportAccessService.assertCanUseTeamReports.mockRejectedValue(
+      new ForbiddenException('You can not use AI team reports'),
+    );
+
+    await expect(
+      service.approveTeamDailyReport(
+        'member-id',
+        'workspace-id',
+        'project-id',
+        reportId.toString(),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('returns 503 when MongoDB is disabled', async () => {

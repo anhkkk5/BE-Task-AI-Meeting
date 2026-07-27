@@ -14,7 +14,6 @@ const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class CreateProjectDto {
     name;
-    keyCode;
     description;
     startDate;
     endDate;
@@ -32,21 +31,6 @@ __decorate([
     (0, class_validator_1.MaxLength)(150),
     __metadata("design:type", String)
 ], CreateProjectDto.prototype, "name", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        example: 'AGILEAI',
-        description: 'Ma project viet hoa, khong dau, khong khoang trang.',
-        minLength: 2,
-        maxLength: 20,
-    }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(2),
-    (0, class_validator_1.MaxLength)(20),
-    (0, class_validator_1.Matches)(/^[A-Z0-9_]+$/, {
-        message: 'keyCode must contain only uppercase letters, numbers, and underscore',
-    }),
-    __metadata("design:type", String)
-], CreateProjectDto.prototype, "keyCode", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         example: 'Du an quan ly Agile/Scrum tich hop tro ly AI',

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -269,13 +270,21 @@ export class AiTeamReportService {
     };
   }
 
+  /**
+   * Doc chi tiet mot bao cao giao ban.
+   *
+   * Mail duyet bao cao duoc gui cho moi thanh vien workspace nen endpoint nay
+   * phai mo cho ca thanh vien thuong, neu khong link trong mail se tra 403.
+   * Bu lai, ban chua phat hanh van kin voi nguoi ngoai nhom quan ly de nhom
+   * khong doc nham so lieu chua chot.
+   */
   async getTeamDailyReportDetail(
     currentUserId: string,
     workspaceId: string,
     projectId: string,
     reportId: string,
   ) {
-    const report = await this.findTeamReportOrFail(
+    const { report, canManage } = await this.findTeamReportForRead(
       currentUserId,
       workspaceId,
       projectId,
@@ -286,7 +295,8 @@ export class AiTeamReportService {
       success: true,
       message: 'Get team daily report detail successfully',
       data: {
-        report: this.toReportResponse(report, true),
+        report: this.toReportResponse(report, canManage),
+        canManage,
       },
     };
   }
@@ -460,11 +470,54 @@ export class AiTeamReportService {
     projectId: string,
     reportId: string,
   ) {
-    const reportModel = this.getReportModel();
     await this.aiReportAccessService.assertCanUseTeamReports(
       currentUserId,
       workspaceId,
     );
+
+    return this.loadTeamReport(workspaceId, projectId, reportId);
+  }
+
+  /**
+   * Lay bao cao cho muc dich chi doc.
+   *
+   * Tach thanh ham rieng thay vi noi long `findTeamReportOrFail` de cac hanh
+   * dong ghi (sua, duyet, huy) khong bi mo quyen theo.
+   *
+   * Tra kem `canManage` de service khong phai hoi lai role lan hai va de
+   * frontend biet co nen hien nut sua/duyet hay khong.
+   */
+  async findTeamReportForRead(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    reportId: string,
+  ) {
+    const role = await this.aiReportAccessService.assertCanViewTeamReport(
+      currentUserId,
+      workspaceId,
+    );
+    const canManage = this.aiReportAccessService.isManagerRole(role);
+    const report = await this.loadTeamReport(workspaceId, projectId, reportId);
+
+    if (
+      !canManage &&
+      this.resolveReviewStatus(report) !== AiReportReviewStatus.Published
+    ) {
+      throw new ForbiddenException(
+        'Báo cáo giao ban này chưa được phát hành cho cả nhóm',
+      );
+    }
+
+    return { report, canManage };
+  }
+
+  private async loadTeamReport(
+    workspaceId: string,
+    projectId: string,
+    reportId: string,
+  ) {
+    const reportModel = this.getReportModel();
     await this.projectAccessService.assertProjectInWorkspace(
       projectId,
       workspaceId,

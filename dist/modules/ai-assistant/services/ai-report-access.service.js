@@ -50,6 +50,13 @@ let AiReportAccessService = class AiReportAccessService {
         }
         return role;
     }
+    async assertCanViewTeamReport(userId, workspaceId) {
+        const role = await this.workspaceAccessService.getUserWorkspaceRole(userId, workspaceId);
+        if (!role) {
+            throw new common_1.ForbiddenException('Bạn không thuộc workspace này');
+        }
+        return role;
+    }
     async assertCanViewReport(currentUserId, workspaceId, report) {
         const role = await this.assertCanUseOwnReports(currentUserId, workspaceId);
         if (report.userId === currentUserId) {

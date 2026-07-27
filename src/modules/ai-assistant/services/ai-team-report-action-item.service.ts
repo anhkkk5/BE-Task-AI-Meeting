@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   Optional,
@@ -8,6 +9,10 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import {
+  AiReportReviewStatus,
+  normalizeReviewStatus,
+} from '../../../common/enums/ai-report-review-status.enum';
 import { AiReportType } from '../../../common/enums/ai-report-type.enum';
 import {
   TeamReportActionItemSource,
@@ -62,7 +67,7 @@ export class AiTeamReportActionItemService {
     projectId: string,
     reportId: string,
   ) {
-    const report = await this.findReportOrFail(
+    const { report, canManage } = await this.findReportForRead(
       currentUserId,
       workspaceId,
       projectId,
@@ -93,6 +98,9 @@ export class AiTeamReportActionItemService {
             recordsByKey,
           ),
         ],
+        // Thanh vien thuong doc duoc danh sach nhung khong chot duoc, co nay de
+        // frontend an cac nut thao tac thay vi de nguoi dung bam roi nhan 403.
+        canHandle: canManage,
       },
     };
   }
@@ -313,11 +321,53 @@ export class AiTeamReportActionItemService {
     projectId: string,
     reportId: string,
   ) {
-    const reportModel = this.getReportModel();
     await this.aiReportAccessService.assertCanUseTeamReports(
       currentUserId,
       workspaceId,
     );
+
+    return this.loadReport(workspaceId, projectId, reportId);
+  }
+
+  /**
+   * Lay bao cao cho muc dich chi doc.
+   *
+   * Thanh vien thuong nhan mail bao cao da duyet nen phai xem duoc phan vuong
+   * mac va de xuat. Ban chua phat hanh van kin de nhom khong doc nham noi dung
+   * chua chot.
+   */
+  private async findReportForRead(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    reportId: string,
+  ) {
+    const role = await this.aiReportAccessService.assertCanViewTeamReport(
+      currentUserId,
+      workspaceId,
+    );
+    const canManage = this.aiReportAccessService.isManagerRole(role);
+    const report = await this.loadReport(workspaceId, projectId, reportId);
+
+    if (
+      !canManage &&
+      normalizeReviewStatus(report.reviewStatus) !==
+        AiReportReviewStatus.Published
+    ) {
+      throw new ForbiddenException(
+        'Báo cáo giao ban này chưa được phát hành cho cả nhóm',
+      );
+    }
+
+    return { report, canManage };
+  }
+
+  private async loadReport(
+    workspaceId: string,
+    projectId: string,
+    reportId: string,
+  ) {
+    const reportModel = this.getReportModel();
     await this.projectAccessService.assertProjectInWorkspace(
       projectId,
       workspaceId,

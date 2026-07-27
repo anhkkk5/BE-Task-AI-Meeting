@@ -4,5 +4,6 @@ export declare class ProjectAccessService {
     constructor(projectsRepository: ProjectsRepository);
     getProjectInWorkspace(projectId: string, workspaceId: string): Promise<import("../entities/project.entity").Project | null>;
     assertProjectInWorkspace(projectId: string, workspaceId: string): Promise<import("../entities/project.entity").Project>;
+    assertProjectDetailInWorkspace(projectId: string, workspaceId: string): Promise<import("../entities/project.entity").Project>;
     assertProjectActive(projectId: string, workspaceId: string): Promise<import("../entities/project.entity").Project>;
 }

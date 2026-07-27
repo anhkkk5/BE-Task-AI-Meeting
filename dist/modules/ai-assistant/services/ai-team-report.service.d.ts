@@ -8,7 +8,7 @@ import { GenerateTeamReportDto } from '../dto/generate-team-report.dto';
 import { GetAiTeamReportsQueryDto } from '../dto/get-ai-team-reports-query.dto';
 import { UpdateTeamReportDto } from '../dto/update-team-report.dto';
 import { AiPromptLogDocument } from '../schemas/ai-prompt-log.schema';
-import { AiReportDocument, TeamDailyReportOutput } from '../schemas/ai-report.schema';
+import { AiReport, AiReportDocument, TeamDailyReportOutput } from '../schemas/ai-report.schema';
 import { AiProviderService } from './ai-provider.service';
 import { AiReportAccessService } from './ai-report-access.service';
 import { AiReportEventsService } from './ai-report-events.service';
@@ -159,6 +159,7 @@ export declare class AiTeamReportService {
                 approvedAt: Date | null;
                 createdBy: string;
             };
+            canManage: boolean;
         };
     }>;
     updateTeamDailyReport(currentUserId: string, workspaceId: string, projectId: string, reportId: string, dto: UpdateTeamReportDto): Promise<{
@@ -255,6 +256,25 @@ export declare class AiTeamReportService {
         };
     }>;
     private findTeamReportOrFail;
+    findTeamReportForRead(currentUserId: string, workspaceId: string, projectId: string, reportId: string): Promise<{
+        report: import("mongoose").Document<unknown, {}, import("mongoose").Document<unknown, {}, AiReport, {}, import("mongoose").DefaultSchemaOptions> & AiReport & {
+            _id: import("mongoose").Types.ObjectId;
+        } & {
+            __v: number;
+        } & {
+            id: string;
+        }, {}, import("mongoose").DefaultSchemaOptions> & import("mongoose").Document<unknown, {}, AiReport, {}, import("mongoose").DefaultSchemaOptions> & AiReport & {
+            _id: import("mongoose").Types.ObjectId;
+        } & {
+            __v: number;
+        } & {
+            id: string;
+        } & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }>;
+        canManage: boolean;
+    }>;
+    private loadTeamReport;
     private resolveReviewStatus;
     private findReports;
     private assertValidQuery;

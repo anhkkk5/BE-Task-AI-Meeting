@@ -100,6 +100,14 @@ export class TeamReportNotificationListener implements OnModuleInit {
     }
   }
 
+  /**
+   * Link xem bao cao day du gui kem trong mail.
+   *
+   * Mail nay di den moi thanh vien workspace, nen endpoint dang sau link phai mo
+   * cho ca thanh vien thuong doc. Neu sau nay thu hep quyen doc bao cao giao ban
+   * ve rieng nhom quan ly, phai thu hep danh sach nguoi nhan o day cung luc,
+   * neu khong thanh vien se bam vao link roi nhan 403.
+   */
   private reportUrl(event: {
     workspaceId: string;
     projectId: string;

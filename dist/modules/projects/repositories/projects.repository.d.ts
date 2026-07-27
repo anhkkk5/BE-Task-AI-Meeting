@@ -5,8 +5,9 @@ export declare class ProjectsRepository {
     private readonly repository;
     constructor(repository: Repository<Project>);
     create(data: Pick<Project, 'createdBy' | 'description' | 'endDate' | 'keyCode' | 'name' | 'startDate' | 'workspaceId'>): Promise<Project>;
-    findByWorkspaceAndKeyCode(workspaceId: string, keyCode: string): Promise<Project | null>;
     findByIdAndWorkspace(projectId: string, workspaceId: string): Promise<Project | null>;
+    findDetailByIdAndWorkspace(projectId: string, workspaceId: string): Promise<Project | null>;
+    findKeyCodesByPrefix(workspaceId: string, prefix: string): Promise<string[]>;
     findByWorkspace(workspaceId: string, query: GetProjectsQueryDto): Promise<{
         items: Project[];
         total: number;

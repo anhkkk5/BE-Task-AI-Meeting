@@ -63,6 +63,30 @@ export class AiReportAccessService {
     return role;
   }
 
+  /**
+   * Quyen doc bao cao giao ban.
+   *
+   * Tach khoi `assertCanUseTeamReports` vi doc va quan ly la hai viec khac
+   * nhau: bao cao da phat hanh la tai lieu chung cua ca nhom (mail duyet duoc
+   * gui cho moi thanh vien), con tao/sua/duyet van thuoc rieng nhom quan ly.
+   *
+   * Ham nay chi kiem tra nguoi dung con la thanh vien dang hoat dong. Viec chan
+   * ban chua phat hanh do service quyet dinh dua tren role tra ve, vi thong tin
+   * trang thai bao cao khong co o day.
+   */
+  async assertCanViewTeamReport(userId: string, workspaceId: string) {
+    const role = await this.workspaceAccessService.getUserWorkspaceRole(
+      userId,
+      workspaceId,
+    );
+
+    if (!role) {
+      throw new ForbiddenException('Bạn không thuộc workspace này');
+    }
+
+    return role;
+  }
+
   async assertCanViewReport(
     currentUserId: string,
     workspaceId: string,

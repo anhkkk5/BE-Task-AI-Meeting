@@ -27,15 +27,6 @@ let ProjectsRepository = class ProjectsRepository {
         const project = this.repository.create(data);
         return this.repository.save(project);
     }
-    findByWorkspaceAndKeyCode(workspaceId, keyCode) {
-        return this.repository.findOne({
-            where: {
-                workspaceId,
-                keyCode,
-                deletedAt: (0, typeorm_2.IsNull)(),
-            },
-        });
-    }
     findByIdAndWorkspace(projectId, workspaceId) {
         return this.repository.findOne({
             where: {
@@ -44,6 +35,26 @@ let ProjectsRepository = class ProjectsRepository {
                 deletedAt: (0, typeorm_2.IsNull)(),
             },
         });
+    }
+    findDetailByIdAndWorkspace(projectId, workspaceId) {
+        return this.repository.findOne({
+            where: {
+                id: projectId,
+                workspaceId,
+                deletedAt: (0, typeorm_2.IsNull)(),
+            },
+            relations: { creator: true },
+        });
+    }
+    async findKeyCodesByPrefix(workspaceId, prefix) {
+        const rows = await this.repository
+            .createQueryBuilder('project')
+            .select('project.keyCode', 'keyCode')
+            .withDeleted()
+            .where('project.workspaceId = :workspaceId', { workspaceId })
+            .andWhere('project.keyCode LIKE :prefix', { prefix: `${prefix}%` })
+            .getRawMany();
+        return rows.map((row) => row.keyCode);
     }
     async findByWorkspace(workspaceId, query) {
         const page = query.page ?? 1;

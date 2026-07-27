@@ -18,6 +18,7 @@ const swagger_1 = require("@nestjs/swagger");
 const current_user_decorator_1 = require("../../../common/decorators/current-user.decorator");
 const workspace_roles_decorator_1 = require("../../../common/decorators/workspace-roles.decorator");
 const workspace_role_enum_1 = require("../../../common/enums/workspace-role.enum");
+const workspace_member_guard_1 = require("../../../common/guards/workspace-member.guard");
 const workspace_roles_guard_1 = require("../../../common/guards/workspace-roles.guard");
 const access_token_guard_1 = require("../../auth/guards/access-token.guard");
 const generate_team_report_dto_1 = require("../dto/generate-team-report.dto");
@@ -111,9 +112,11 @@ __decorate([
 ], AiTeamReportController.prototype, "getLatestTeamDailyReport", null);
 __decorate([
     (0, common_1.Get)('team-daily-reports/:reportId'),
-    (0, workspace_roles_decorator_1.WorkspaceRoles)(...managerRoles),
-    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
-    (0, swagger_1.ApiOperation)({ summary: 'Get AI team daily report detail' }),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get AI team daily report detail',
+        description: 'Moi thanh vien workspace doc duoc ban da phat hanh vi mail duyet bao cao gui cho ca nhom. Ban chua duyet chi nhom quan ly xem duoc.',
+    }),
     (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
     (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
     (0, swagger_1.ApiParam)({ name: 'reportId', example: 'mongo-report-id' }),

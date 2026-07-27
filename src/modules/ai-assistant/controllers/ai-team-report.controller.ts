@@ -18,6 +18,7 @@ import {
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { WorkspaceRoles } from '../../../common/decorators/workspace-roles.decorator';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
+import { WorkspaceMemberGuard } from '../../../common/guards/workspace-member.guard';
 import { WorkspaceRolesGuard } from '../../../common/guards/workspace-roles.guard';
 import { AccessTokenGuard } from '../../auth/guards/access-token.guard';
 import type { AuthUser } from '../../auth/types/auth-user.type';
@@ -108,9 +109,12 @@ export class AiTeamReportController {
   }
 
   @Get('team-daily-reports/:reportId')
-  @WorkspaceRoles(...managerRoles)
-  @UseGuards(WorkspaceRolesGuard)
-  @ApiOperation({ summary: 'Get AI team daily report detail' })
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({
+    summary: 'Get AI team daily report detail',
+    description:
+      'Moi thanh vien workspace doc duoc ban da phat hanh vi mail duyet bao cao gui cho ca nhom. Ban chua duyet chi nhom quan ly xem duoc.',
+  })
   @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
   @ApiParam({ name: 'projectId', example: 'project-uuid' })
   @ApiParam({ name: 'reportId', example: 'mongo-report-id' })

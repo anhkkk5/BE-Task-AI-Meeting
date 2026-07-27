@@ -133,6 +133,7 @@ export declare class AiTeamReportController {
                 approvedAt: Date | null;
                 createdBy: string;
             };
+            canManage: boolean;
         };
     }>;
     updateTeamDailyReport(user: AuthUser, workspaceId: string, projectId: string, reportId: string, dto: UpdateTeamReportDto): Promise<{

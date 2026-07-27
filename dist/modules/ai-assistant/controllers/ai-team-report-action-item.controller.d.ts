@@ -23,6 +23,7 @@ export declare class AiTeamReportActionItemController {
                 note: string | null;
                 handledAt: Date | null;
             }[];
+            canHandle: boolean;
         };
     }>;
     createTask(user: AuthUser, workspaceId: string, projectId: string, reportId: string, dto: CreateTeamReportTaskDto): Promise<{

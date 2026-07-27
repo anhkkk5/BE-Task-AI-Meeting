@@ -175,12 +175,13 @@ let AiTeamReportService = class AiTeamReportService {
         };
     }
     async getTeamDailyReportDetail(currentUserId, workspaceId, projectId, reportId) {
-        const report = await this.findTeamReportOrFail(currentUserId, workspaceId, projectId, reportId);
+        const { report, canManage } = await this.findTeamReportForRead(currentUserId, workspaceId, projectId, reportId);
         return {
             success: true,
             message: 'Get team daily report detail successfully',
             data: {
-                report: this.toReportResponse(report, true),
+                report: this.toReportResponse(report, canManage),
+                canManage,
             },
         };
     }
@@ -279,8 +280,21 @@ let AiTeamReportService = class AiTeamReportService {
         };
     }
     async findTeamReportOrFail(currentUserId, workspaceId, projectId, reportId) {
-        const reportModel = this.getReportModel();
         await this.aiReportAccessService.assertCanUseTeamReports(currentUserId, workspaceId);
+        return this.loadTeamReport(workspaceId, projectId, reportId);
+    }
+    async findTeamReportForRead(currentUserId, workspaceId, projectId, reportId) {
+        const role = await this.aiReportAccessService.assertCanViewTeamReport(currentUserId, workspaceId);
+        const canManage = this.aiReportAccessService.isManagerRole(role);
+        const report = await this.loadTeamReport(workspaceId, projectId, reportId);
+        if (!canManage &&
+            this.resolveReviewStatus(report) !== ai_report_review_status_enum_1.AiReportReviewStatus.Published) {
+            throw new common_1.ForbiddenException('Báo cáo giao ban này chưa được phát hành cho cả nhóm');
+        }
+        return { report, canManage };
+    }
+    async loadTeamReport(workspaceId, projectId, reportId) {
+        const reportModel = this.getReportModel();
         await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
         const report = await reportModel.findById(reportId).exec();
         if (!report ||
