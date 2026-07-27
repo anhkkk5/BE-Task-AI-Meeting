@@ -41,6 +41,7 @@ let DailyUpdatesService = class DailyUpdatesService {
         if (duplicate) {
             throw new common_1.ConflictException('Daily update already exists for this date');
         }
+        await this.assertNeedHelpFromMember(dto.needHelpFromId, workspaceId, currentUserId);
         const dailyUpdate = await this.dailyUpdatesRepository.create({
             workspaceId,
             projectId,
@@ -50,6 +51,7 @@ let DailyUpdatesService = class DailyUpdatesService {
             yesterdayWork: dto.yesterdayWork.trim(),
             todayPlan: dto.todayPlan.trim(),
             blockers: this.optionalText(dto.blockers),
+            needHelpFromId: dto.needHelpFromId ?? null,
             notes: this.optionalText(dto.notes),
             mood: dto.mood ?? null,
         });
@@ -124,6 +126,7 @@ let DailyUpdatesService = class DailyUpdatesService {
         if (dto.sprintId) {
             await this.sprintAccessService.assertSprintInProject(dto.sprintId, projectId);
         }
+        await this.assertNeedHelpFromMember(dto.needHelpFromId, workspaceId, currentUserId);
         const updatedDailyUpdate = await this.dailyUpdatesRepository.update(dailyUpdate, {
             sprintId: dto.sprintId === undefined ? dailyUpdate.sprintId : dto.sprintId,
             yesterdayWork: dto.yesterdayWork === undefined
@@ -135,6 +138,9 @@ let DailyUpdatesService = class DailyUpdatesService {
             blockers: dto.blockers === undefined
                 ? dailyUpdate.blockers
                 : this.optionalText(dto.blockers),
+            needHelpFromId: dto.needHelpFromId === undefined
+                ? dailyUpdate.needHelpFromId
+                : (dto.needHelpFromId ?? null),
             notes: dto.notes === undefined
                 ? dailyUpdate.notes
                 : this.optionalText(dto.notes),
@@ -176,6 +182,15 @@ let DailyUpdatesService = class DailyUpdatesService {
             await this.workspaceAccessService.assertWorkspaceMember(query.memberId, workspaceId);
         }
     }
+    async assertNeedHelpFromMember(needHelpFromId, workspaceId, currentUserId) {
+        if (!needHelpFromId) {
+            return;
+        }
+        if (needHelpFromId === currentUserId) {
+            throw new common_1.BadRequestException('Khong the tu nho chinh minh ho tro');
+        }
+        await this.workspaceAccessService.assertWorkspaceMember(needHelpFromId, workspaceId);
+    }
     normalizeDate(value) {
         return value.slice(0, 10);
     }
@@ -212,6 +227,15 @@ let DailyUpdatesService = class DailyUpdatesService {
             yesterdayWork: dailyUpdate.yesterdayWork,
             todayPlan: dailyUpdate.todayPlan,
             blockers: dailyUpdate.blockers,
+            needHelpFromId: dailyUpdate.needHelpFromId,
+            needHelpFrom: dailyUpdate.needHelpFrom
+                ? {
+                    id: dailyUpdate.needHelpFrom.id,
+                    fullName: dailyUpdate.needHelpFrom.fullName,
+                    email: dailyUpdate.needHelpFrom.email,
+                    avatarUrl: dailyUpdate.needHelpFrom.avatarUrl,
+                }
+                : null,
             notes: dailyUpdate.notes,
             mood: dailyUpdate.mood,
             createdAt: dailyUpdate.createdAt,

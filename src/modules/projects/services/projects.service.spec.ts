@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { ProjectStatus } from '../../../common/enums/project-status.enum';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { WorkspaceMember } from '../../workspaces/entities/workspace-member.entity';
@@ -6,6 +6,7 @@ import { WorkspaceAccessService } from '../../workspaces/services/workspace-acce
 import { Project } from '../entities/project.entity';
 import { ProjectsRepository } from '../repositories/projects.repository';
 import { ProjectAccessService } from './project-access.service';
+import { ProjectKeyCodeService } from './project-key-code.service';
 import { ProjectsService } from './projects.service';
 
 describe('ProjectsService', () => {
@@ -17,12 +18,17 @@ describe('ProjectsService', () => {
       | 'complete'
       | 'create'
       | 'findByWorkspace'
-      | 'findByWorkspaceAndKeyCode'
       | 'update'
     >
   >;
   let projectAccessService: jest.Mocked<
-    Pick<ProjectAccessService, 'assertProjectInWorkspace'>
+    Pick<
+      ProjectAccessService,
+      'assertProjectDetailInWorkspace' | 'assertProjectInWorkspace'
+    >
+  >;
+  let projectKeyCodeService: jest.Mocked<
+    Pick<ProjectKeyCodeService, 'generateUniqueKeyCode'>
   >;
   let workspaceAccessService: jest.Mocked<
     Pick<
@@ -52,11 +58,14 @@ describe('ProjectsService', () => {
       complete: jest.fn(),
       create: jest.fn(),
       findByWorkspace: jest.fn(),
-      findByWorkspaceAndKeyCode: jest.fn(),
       update: jest.fn(),
     };
     projectAccessService = {
+      assertProjectDetailInWorkspace: jest.fn(),
       assertProjectInWorkspace: jest.fn(),
+    };
+    projectKeyCodeService = {
+      generateUniqueKeyCode: jest.fn().mockResolvedValue('AGILEAI'),
     };
     workspaceAccessService = {
       assertWorkspaceActive: jest.fn(),
@@ -68,17 +77,16 @@ describe('ProjectsService', () => {
     service = new ProjectsService(
       projectsRepository as unknown as ProjectsRepository,
       projectAccessService as unknown as ProjectAccessService,
+      projectKeyCodeService as unknown as ProjectKeyCodeService,
       workspaceAccessService as unknown as WorkspaceAccessService,
     );
   });
 
-  it('creates project with normalized keyCode and current user as creator', async () => {
-    projectsRepository.findByWorkspaceAndKeyCode.mockResolvedValue(null);
+  it('creates project with generated keyCode and current user as creator', async () => {
     projectsRepository.create.mockResolvedValue(project);
 
     const response = await service.createProject('owner-id', 'workspace-id', {
       name: ' Agile AI ',
-      keyCode: 'AGILEAI',
       description: ' Project demo ',
       startDate: '2026-06-18',
       endDate: '2026-07-18',
@@ -86,6 +94,10 @@ describe('ProjectsService', () => {
 
     expect(workspaceAccessService.assertWorkspaceActive).toHaveBeenCalledWith(
       'workspace-id',
+    );
+    expect(projectKeyCodeService.generateUniqueKeyCode).toHaveBeenCalledWith(
+      'workspace-id',
+      'Agile AI',
     );
     expect(projectsRepository.create).toHaveBeenCalledWith({
       workspaceId: 'workspace-id',
@@ -99,27 +111,15 @@ describe('ProjectsService', () => {
     expect(response.data.project.keyCode).toBe('AGILEAI');
   });
 
-  it('rejects duplicated keyCode in the same workspace', async () => {
-    projectsRepository.findByWorkspaceAndKeyCode.mockResolvedValue(project);
-
+  it('rejects invalid date range before generating keyCode', async () => {
     await expect(
       service.createProject('owner-id', 'workspace-id', {
         name: 'Agile AI',
-        keyCode: 'AGILEAI',
-      }),
-    ).rejects.toBeInstanceOf(ConflictException);
-    expect(projectsRepository.create).not.toHaveBeenCalled();
-  });
-
-  it('rejects invalid date range', async () => {
-    await expect(
-      service.createProject('owner-id', 'workspace-id', {
-        name: 'Agile AI',
-        keyCode: 'AGILEAI',
         startDate: '2026-07-18',
         endDate: '2026-06-18',
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
+    expect(projectKeyCodeService.generateUniqueKeyCode).not.toHaveBeenCalled();
   });
 
   it('gets projects after workspace membership check', async () => {
@@ -144,8 +144,16 @@ describe('ProjectsService', () => {
     expect(response.data.meta.total).toBe(1);
   });
 
-  it('gets project detail only by projectId and workspaceId', async () => {
-    projectAccessService.assertProjectInWorkspace.mockResolvedValue(project);
+  it('gets project detail with creator profile instead of raw id', async () => {
+    projectAccessService.assertProjectDetailInWorkspace.mockResolvedValue({
+      ...project,
+      creator: {
+        id: 'owner-id',
+        fullName: 'Nguyen Van A',
+        email: 'a@example.com',
+        avatarUrl: null,
+      },
+    } as Project);
 
     const response = await service.getProjectDetail(
       'member-id',
@@ -153,11 +161,31 @@ describe('ProjectsService', () => {
       'project-id',
     );
 
-    expect(projectAccessService.assertProjectInWorkspace).toHaveBeenCalledWith(
-      'project-id',
-      'workspace-id',
-    );
+    expect(
+      projectAccessService.assertProjectDetailInWorkspace,
+    ).toHaveBeenCalledWith('project-id', 'workspace-id');
     expect(response.data.project.id).toBe('project-id');
+    expect(response.data.project.createdByUser).toEqual({
+      id: 'owner-id',
+      fullName: 'Nguyen Van A',
+      email: 'a@example.com',
+      avatarUrl: null,
+    });
+  });
+
+  it('keeps project detail working when creator relation is missing', async () => {
+    projectAccessService.assertProjectDetailInWorkspace.mockResolvedValue(
+      project,
+    );
+
+    const response = await service.getProjectDetail(
+      'member-id',
+      'workspace-id',
+      'project-id',
+    );
+
+    expect(response.data.project.createdByUser).toBeNull();
+    expect(response.data.project.createdBy).toBe('owner-id');
   });
 
   it('updates project without changing keyCode/status/workspaceId/createdBy', async () => {

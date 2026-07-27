@@ -15,6 +15,11 @@ import {
   PersonalDailyReportOutput,
   TeamDailyReportOutput,
 } from '../schemas/ai-report.schema';
+import {
+  DailyUpdateDraftOutput,
+  HandoverDraftInputData,
+  HandoverDraftOutput,
+} from '../types/ai-draft.type';
 import { MeetingSummaryInputData } from './ai-meeting-summary-data-builder.service';
 import { PersonalizedMeetingSummaryInputData } from './ai-personalized-meeting-summary-data-builder.service';
 import { PersonalReportInputData } from './ai-report-data-builder.service';
@@ -161,6 +166,204 @@ export class AiProviderService {
       'mock',
     );
     return result;
+  }
+
+  /**
+   * Sinh nhap 4 o cua form bao cao ca nhan.
+   *
+   * Khi chua cau hinh Groq van tra ve nhap dung tu du lieu task/ban giao thay vi
+   * bao loi: tinh nang nay chi tiet kiem thao tac go, khong nhat thiet phai co
+   * AI that moi dung duoc.
+   */
+  async generateDailyUpdateDraft(
+    prompt: string,
+    inputData: PersonalReportInputData,
+  ): Promise<AiProviderResult<DailyUpdateDraftOutput>> {
+    const provider = process.env.AI_PROVIDER ?? 'mock';
+    const apiKey = process.env.AI_API_KEY ?? '';
+
+    if (provider === 'groq' && apiKey) {
+      const model = this.getGroqModel();
+      const output = await this.callGroqJson<Partial<DailyUpdateDraftOutput>>({
+        apiKey,
+        model,
+        system:
+          'Bạn là trợ lý Scrum. Chỉ trả về JSON hợp lệ bằng tiếng Việt có dấu, không dùng markdown và không thêm dữ liệu ngoài thông tin được cung cấp.',
+        user: [
+          prompt,
+          '',
+          'Trả về đúng cấu trúc JSON sau:',
+          JSON.stringify(
+            {
+              yesterdayWork: 'string',
+              todayPlan: 'string',
+              blockers: 'string',
+              notes: 'string',
+            },
+            null,
+            2,
+          ),
+        ].join('\n'),
+      });
+
+      return {
+        model,
+        rawResponse: JSON.stringify(output),
+        output: this.normalizeDailyUpdateDraft(output, inputData),
+      };
+    }
+
+    const mockOutput = this.buildMockDailyUpdateDraft(inputData);
+
+    return {
+      model: 'mock-daily-update-draft',
+      rawResponse: JSON.stringify(mockOutput),
+      output: mockOutput,
+    };
+  }
+
+  /** Sinh nhap noi dung ban giao cho mot task. */
+  async generateHandoverDraft(
+    prompt: string,
+    inputData: HandoverDraftInputData,
+  ): Promise<AiProviderResult<HandoverDraftOutput>> {
+    const provider = process.env.AI_PROVIDER ?? 'mock';
+    const apiKey = process.env.AI_API_KEY ?? '';
+
+    if (provider === 'groq' && apiKey) {
+      const model = this.getGroqModel();
+      const output = await this.callGroqJson<Partial<HandoverDraftOutput>>({
+        apiKey,
+        model,
+        system:
+          'Bạn là trợ lý Scrum. Chỉ trả về JSON hợp lệ bằng tiếng Việt có dấu, không dùng markdown và không thêm dữ liệu ngoài thông tin được cung cấp.',
+        user: [
+          prompt,
+          '',
+          'Trả về đúng cấu trúc JSON sau:',
+          JSON.stringify(
+            {
+              completedWork: 'string',
+              remainingWork: 'string',
+              blockers: 'string',
+              nextSteps: 'string',
+              referenceLinks: 'string',
+            },
+            null,
+            2,
+          ),
+        ].join('\n'),
+      });
+
+      return {
+        model,
+        rawResponse: JSON.stringify(output),
+        output: this.normalizeHandoverDraft(output, inputData),
+      };
+    }
+
+    const mockOutput = this.buildMockHandoverDraft(inputData);
+
+    return {
+      model: 'mock-handover-draft',
+      rawResponse: JSON.stringify(mockOutput),
+      output: mockOutput,
+    };
+  }
+
+  private normalizeDailyUpdateDraft(
+    output: Partial<DailyUpdateDraftOutput>,
+    inputData: PersonalReportInputData,
+  ): DailyUpdateDraftOutput {
+    const fallback = this.buildMockDailyUpdateDraft(inputData);
+
+    return {
+      yesterdayWork: output.yesterdayWork?.trim() || fallback.yesterdayWork,
+      todayPlan: output.todayPlan?.trim() || fallback.todayPlan,
+      // Vuong mac va ghi chu duoc phep rong: khong co thi khong nen bia ra.
+      blockers: output.blockers?.trim() ?? '',
+      notes: output.notes?.trim() ?? '',
+    };
+  }
+
+  private normalizeHandoverDraft(
+    output: Partial<HandoverDraftOutput>,
+    inputData: HandoverDraftInputData,
+  ): HandoverDraftOutput {
+    const fallback = this.buildMockHandoverDraft(inputData);
+
+    return {
+      completedWork: output.completedWork?.trim() || fallback.completedWork,
+      // Phan viec con lai la muc nguoi nhan dua vao de lam tiep, khong de trong.
+      remainingWork: output.remainingWork?.trim() || fallback.remainingWork,
+      blockers: output.blockers?.trim() ?? '',
+      nextSteps: output.nextSteps?.trim() ?? '',
+      referenceLinks: output.referenceLinks?.trim() ?? '',
+    };
+  }
+
+  private buildMockDailyUpdateDraft(
+    inputData: PersonalReportInputData,
+  ): DailyUpdateDraftOutput {
+    const { completed, inProgress, overdue } = inputData.taskSummary;
+    const todayLines = [
+      ...inProgress.map((item) => `Tiếp tục ${item}`),
+      ...inputData.handovers.received.map(
+        (item) =>
+          `Tiếp nhận ${item.taskCode ?? 'task'} từ ${item.counterpartName ?? 'đồng nghiệp'}`,
+      ),
+    ];
+    const blockerLines = [
+      ...overdue.map((item) => `Trễ hạn: ${item}`),
+      ...inputData.handovers.received
+        .filter((item) => Boolean(item.blockers))
+        .map((item) => `${item.taskCode ?? 'Task'}: ${item.blockers ?? ''}`),
+    ];
+
+    if (inputData.handovers.pendingForMe > 0) {
+      blockerLines.push(
+        `Còn ${inputData.handovers.pendingForMe} bàn giao chờ tôi xác nhận`,
+      );
+    }
+
+    return {
+      yesterdayWork: completed.length
+        ? completed.map((item) => `Hoàn thành ${item}`).join('\n')
+        : 'Chưa có task nào hoàn thành trong dữ liệu hệ thống.',
+      todayPlan: todayLines.length
+        ? todayLines.join('\n')
+        : 'Chưa có task đang thực hiện trong dữ liệu hệ thống.',
+      blockers: blockerLines.join('\n'),
+      notes: inputData.handovers.given.length
+        ? inputData.handovers.given
+            .map(
+              (item) =>
+                `Đã bàn giao ${item.taskCode ?? 'task'} cho ${item.counterpartName ?? 'đồng nghiệp'}`,
+            )
+            .join('\n')
+        : '',
+    };
+  }
+
+  private buildMockHandoverDraft(
+    inputData: HandoverDraftInputData,
+  ): HandoverDraftOutput {
+    const latestUpdate = inputData.recentDailyUpdates[0] ?? null;
+    const taskLabel = `${inputData.task.taskCode} - ${inputData.task.title}`;
+
+    return {
+      completedWork:
+        latestUpdate?.yesterdayWork?.trim() ||
+        `Đã thực hiện ${taskLabel} đến trạng thái ${inputData.task.status}.`,
+      remainingWork:
+        latestUpdate?.todayPlan?.trim() ||
+        `Cần bổ sung phần việc còn lại của ${taskLabel}: dữ liệu hệ thống chưa đủ để xác định.`,
+      blockers: latestUpdate?.blockers?.trim() ?? '',
+      nextSteps: inputData.task.dueDate
+        ? `Ưu tiên hoàn thành trước hạn ${inputData.task.dueDate}.`
+        : '',
+      referenceLinks: '',
+    };
   }
 
   private resolveMockResponse(

@@ -48,6 +48,7 @@ let DailyUpdatesRepository = class DailyUpdatesRepository {
             relations: {
                 sprint: true,
                 user: true,
+                needHelpFrom: true,
             },
         });
     }
@@ -72,6 +73,7 @@ let DailyUpdatesRepository = class DailyUpdatesRepository {
             .createQueryBuilder('dailyUpdate')
             .leftJoinAndSelect('dailyUpdate.user', 'user')
             .leftJoinAndSelect('dailyUpdate.sprint', 'sprint')
+            .leftJoinAndSelect('dailyUpdate.needHelpFrom', 'needHelpFrom')
             .where('dailyUpdate.projectId = :projectId', { projectId })
             .andWhere('dailyUpdate.deletedAt IS NULL');
         if (options.userId) {

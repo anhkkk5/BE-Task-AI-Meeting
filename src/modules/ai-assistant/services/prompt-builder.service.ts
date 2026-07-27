@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { DAILY_UPDATE_DRAFT_PROMPT_TEMPLATE } from '../prompts/daily-update-draft.prompt';
+import { HANDOVER_DRAFT_PROMPT_TEMPLATE } from '../prompts/handover-draft.prompt';
 import { MEETING_SUMMARY_PROMPT_TEMPLATE } from '../prompts/meeting-summary.prompt';
 import { personalDailyReportPromptTemplate } from '../prompts/personal-daily-report.prompt';
 import { PERSONALIZED_MEETING_SUMMARY_PROMPT_TEMPLATE } from '../prompts/personalized-meeting-summary.prompt';
@@ -7,6 +9,7 @@ import { MeetingSummaryInputData } from './ai-meeting-summary-data-builder.servi
 import { PersonalizedMeetingSummaryInputData } from './ai-personalized-meeting-summary-data-builder.service';
 import { PersonalReportInputData } from './ai-report-data-builder.service';
 import { TeamReportInputData } from './ai-team-report-data-builder.service';
+import { HandoverDraftInputData } from '../types/ai-draft.type';
 import { AiFocusArea } from '../../users/enums/ai-focus-area.enum';
 import { AiResponseStyle } from '../../users/enums/ai-response-style.enum';
 import { AiTone } from '../../users/enums/ai-tone.enum';
@@ -24,6 +27,30 @@ export class PromptBuilderService {
     return personalDailyReportPromptTemplate
       .replace('{{PERSONALIZATION}}', this.buildPersonalization(preferences))
       .replace('{{INPUT_DATA}}', JSON.stringify(inputData, null, 2));
+  }
+
+  /**
+   * Prompt sinh nhap cho form bao cao ca nhan.
+   *
+   * Dung lai `PersonalReportInputData` de khong phai xay them data builder:
+   * du lieu can cho ban nhap la tap con cua du lieu bao cao ca nhan.
+   */
+  buildDailyUpdateDraftPrompt(
+    inputData: PersonalReportInputData,
+    preferences: ResolvedAiUserPreferences = DEFAULT_AI_USER_PREFERENCES,
+  ) {
+    return DAILY_UPDATE_DRAFT_PROMPT_TEMPLATE.replace(
+      '{{PERSONALIZATION}}',
+      this.buildPersonalization(preferences),
+    ).replace('{{INPUT_DATA}}', JSON.stringify(inputData, null, 2));
+  }
+
+  /** Prompt sinh nhap cho form ban giao mot task cu the. */
+  buildHandoverDraftPrompt(inputData: HandoverDraftInputData) {
+    return HANDOVER_DRAFT_PROMPT_TEMPLATE.replace(
+      '{{INPUT_DATA}}',
+      JSON.stringify(inputData, null, 2),
+    );
   }
 
   buildTeamDailyReportPrompt(

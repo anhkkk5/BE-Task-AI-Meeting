@@ -20,6 +20,24 @@ export class ProjectAccessService {
     return project;
   }
 
+  /**
+   * Ban chi tiet, co kem nguoi tao du an.
+   *
+   * Dung cho trang chi tiet du an de hien ten nguoi quan tri thay vi UUID.
+   */
+  async assertProjectDetailInWorkspace(projectId: string, workspaceId: string) {
+    const project = await this.projectsRepository.findDetailByIdAndWorkspace(
+      projectId,
+      workspaceId,
+    );
+
+    if (!project) {
+      throw new NotFoundException('Project not found in this workspace');
+    }
+
+    return project;
+  }
+
   async assertProjectActive(projectId: string, workspaceId: string) {
     const project = await this.assertProjectInWorkspace(projectId, workspaceId);
 

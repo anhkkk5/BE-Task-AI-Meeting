@@ -52,6 +52,9 @@ let AiTeamReportController = class AiTeamReportController {
     approveTeamDailyReport(user, workspaceId, projectId, reportId) {
         return this.aiTeamReportService.approveTeamDailyReport(user.id, workspaceId, projectId, reportId);
     }
+    cancelTeamDailyReport(user, workspaceId, projectId, reportId) {
+        return this.aiTeamReportService.cancelTeamDailyReport(user.id, workspaceId, projectId, reportId);
+    }
 };
 exports.AiTeamReportController = AiTeamReportController;
 __decorate([
@@ -163,6 +166,26 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", void 0)
 ], AiTeamReportController.prototype, "approveTeamDailyReport", null);
+__decorate([
+    (0, common_1.Post)('team-daily-reports/:reportId/cancel'),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...managerRoles),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Cancel AI team daily report',
+        description: 'Huy phien giao ban chua duyet. Du lieu duoc giu lai de doi chieu lich su, khong gui mail cho nhom.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
+    (0, swagger_1.ApiParam)({ name: 'reportId', example: 'mongo-report-id' }),
+    (0, swagger_1.ApiResponse)({ status: 409, description: 'Bao cao da duyet hoac da huy.' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('reportId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String]),
+    __metadata("design:returntype", void 0)
+], AiTeamReportController.prototype, "cancelTeamDailyReport", null);
 exports.AiTeamReportController = AiTeamReportController = __decorate([
     (0, common_1.Controller)('workspaces/:workspaceId/projects/:projectId/ai'),
     (0, swagger_1.ApiTags)('AI Team Reports'),

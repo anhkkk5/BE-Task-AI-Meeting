@@ -181,4 +181,30 @@ export class AiTeamReportController {
       reportId,
     );
   }
+
+  @Post('team-daily-reports/:reportId/cancel')
+  @WorkspaceRoles(...managerRoles)
+  @UseGuards(WorkspaceRolesGuard)
+  @ApiOperation({
+    summary: 'Cancel AI team daily report',
+    description:
+      'Huy phien giao ban chua duyet. Du lieu duoc giu lai de doi chieu lich su, khong gui mail cho nhom.',
+  })
+  @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
+  @ApiParam({ name: 'projectId', example: 'project-uuid' })
+  @ApiParam({ name: 'reportId', example: 'mongo-report-id' })
+  @ApiResponse({ status: 409, description: 'Bao cao da duyet hoac da huy.' })
+  cancelTeamDailyReport(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('reportId') reportId: string,
+  ) {
+    return this.aiTeamReportService.cancelTeamDailyReport(
+      user.id,
+      workspaceId,
+      projectId,
+      reportId,
+    );
+  }
 }

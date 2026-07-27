@@ -16,6 +16,7 @@ export class DailyUpdatesRepository {
       DailyUpdate,
       | 'blockers'
       | 'mood'
+      | 'needHelpFromId'
       | 'notes'
       | 'projectId'
       | 'sprintId'
@@ -61,6 +62,7 @@ export class DailyUpdatesRepository {
       relations: {
         sprint: true,
         user: true,
+        needHelpFrom: true,
       },
     });
   }
@@ -100,6 +102,7 @@ export class DailyUpdatesRepository {
       .createQueryBuilder('dailyUpdate')
       .leftJoinAndSelect('dailyUpdate.user', 'user')
       .leftJoinAndSelect('dailyUpdate.sprint', 'sprint')
+      .leftJoinAndSelect('dailyUpdate.needHelpFrom', 'needHelpFrom')
       .where('dailyUpdate.projectId = :projectId', { projectId })
       .andWhere('dailyUpdate.deletedAt IS NULL');
 

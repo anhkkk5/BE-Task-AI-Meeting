@@ -26,12 +26,14 @@ let DailyUpdate = class DailyUpdate {
     yesterdayWork;
     todayPlan;
     blockers;
+    needHelpFromId;
     notes;
     mood;
     workspace;
     project;
     sprint;
     user;
+    needHelpFrom;
     createdAt;
     updatedAt;
     deletedAt;
@@ -79,6 +81,11 @@ __decorate([
     __metadata("design:type", Object)
 ], DailyUpdate.prototype, "blockers", void 0);
 __decorate([
+    (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ name: 'need_help_from_id', type: 'varchar', length: 36, nullable: true }),
+    __metadata("design:type", Object)
+], DailyUpdate.prototype, "needHelpFromId", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: 'text', nullable: true }),
     __metadata("design:type", Object)
 ], DailyUpdate.prototype, "notes", void 0);
@@ -111,6 +118,11 @@ __decorate([
     (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", user_entity_1.User)
 ], DailyUpdate.prototype, "user", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, { nullable: true, onDelete: 'SET NULL' }),
+    (0, typeorm_1.JoinColumn)({ name: 'need_help_from_id' }),
+    __metadata("design:type", Object)
+], DailyUpdate.prototype, "needHelpFrom", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)

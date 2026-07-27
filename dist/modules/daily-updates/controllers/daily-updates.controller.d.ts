@@ -31,6 +31,13 @@ export declare class DailyUpdatesController {
                 yesterdayWork: string;
                 todayPlan: string;
                 blockers: string | null;
+                needHelpFromId: string | null;
+                needHelpFrom: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
                 createdAt: Date;
@@ -63,6 +70,13 @@ export declare class DailyUpdatesController {
                 yesterdayWork: string;
                 todayPlan: string;
                 blockers: string | null;
+                needHelpFromId: string | null;
+                needHelpFrom: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
                 createdAt: Date;
@@ -100,6 +114,13 @@ export declare class DailyUpdatesController {
                 yesterdayWork: string;
                 todayPlan: string;
                 blockers: string | null;
+                needHelpFromId: string | null;
+                needHelpFrom: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
                 createdAt: Date;
@@ -137,6 +158,13 @@ export declare class DailyUpdatesController {
                 yesterdayWork: string;
                 todayPlan: string;
                 blockers: string | null;
+                needHelpFromId: string | null;
+                needHelpFrom: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
                 createdAt: Date;
@@ -169,6 +197,13 @@ export declare class DailyUpdatesController {
                 yesterdayWork: string;
                 todayPlan: string;
                 blockers: string | null;
+                needHelpFromId: string | null;
+                needHelpFrom: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
                 createdAt: Date;

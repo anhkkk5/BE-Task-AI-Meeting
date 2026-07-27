@@ -55,6 +55,16 @@ export class UpdateDailyUpdateDto {
   blockers?: string | null;
 
   @ApiPropertyOptional({
+    example: '9d38e4c2-0d77-4d6c-9127-b06b66d01002',
+    description:
+      'UUID nguoi can ho tro moi, hoac null de bo yeu cau ho tro. Phai la thanh vien ACTIVE cua workspace.',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsUUID()
+  needHelpFromId?: string | null;
+
+  @ApiPropertyOptional({
     example: 'Can push code len Git.',
     description: 'Ghi chu moi, toi da 3000 ky tu.',
     maxLength: 3000,

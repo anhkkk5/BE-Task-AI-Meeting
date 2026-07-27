@@ -28,16 +28,6 @@ export class ProjectsRepository {
     return this.repository.save(project);
   }
 
-  findByWorkspaceAndKeyCode(workspaceId: string, keyCode: string) {
-    return this.repository.findOne({
-      where: {
-        workspaceId,
-        keyCode,
-        deletedAt: IsNull(),
-      },
-    });
-  }
-
   findByIdAndWorkspace(projectId: string, workspaceId: string) {
     return this.repository.findOne({
       where: {
@@ -46,6 +36,44 @@ export class ProjectsRepository {
         deletedAt: IsNull(),
       },
     });
+  }
+
+  /**
+   * Ban chi tiet co kem nguoi tao.
+   *
+   * Tach khoi findByIdAndWorkspace vi ham do duoc goi o rat nhieu luong chi can
+   * kiem tra quyen, khong can join sang bang users.
+   */
+  findDetailByIdAndWorkspace(projectId: string, workspaceId: string) {
+    return this.repository.findOne({
+      where: {
+        id: projectId,
+        workspaceId,
+        deletedAt: IsNull(),
+      },
+      relations: { creator: true },
+    });
+  }
+
+  /**
+   * Lay cac key code dang dung trong workspace co cung tien to.
+   *
+   * Dung khi sinh key code tu dong: mot truy van roi doi chieu trong bo nho,
+   * thay vi hoi database moi lan thu mot ung vien.
+   *
+   * Co tinh ca project da xoa mem vi unique index tren (workspace_id, key_code)
+   * khong loai tru dong da xoa.
+   */
+  async findKeyCodesByPrefix(workspaceId: string, prefix: string) {
+    const rows = await this.repository
+      .createQueryBuilder('project')
+      .select('project.keyCode', 'keyCode')
+      .withDeleted()
+      .where('project.workspaceId = :workspaceId', { workspaceId })
+      .andWhere('project.keyCode LIKE :prefix', { prefix: `${prefix}%` })
+      .getRawMany<{ keyCode: string }>();
+
+    return rows.map((row) => row.keyCode);
   }
 
   async findByWorkspace(workspaceId: string, query: GetProjectsQueryDto) {

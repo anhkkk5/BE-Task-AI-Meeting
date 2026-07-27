@@ -91,7 +91,7 @@ __decorate([
         type: String,
         required: true,
         enum: ai_report_review_status_enum_1.AiReportReviewStatus,
-        default: ai_report_review_status_enum_1.AiReportReviewStatus.Draft,
+        default: ai_report_review_status_enum_1.AiReportReviewStatus.PendingReview,
     }),
     __metadata("design:type", String)
 ], AiReport.prototype, "reviewStatus", void 0);

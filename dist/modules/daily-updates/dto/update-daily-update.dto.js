@@ -18,6 +18,7 @@ class UpdateDailyUpdateDto {
     yesterdayWork;
     todayPlan;
     blockers;
+    needHelpFromId;
     notes;
     mood;
 }
@@ -70,6 +71,16 @@ __decorate([
     (0, class_validator_1.MaxLength)(3000),
     __metadata("design:type", Object)
 ], UpdateDailyUpdateDto.prototype, "blockers", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: '9d38e4c2-0d77-4d6c-9127-b06b66d01002',
+        description: 'UUID nguoi can ho tro moi, hoac null de bo yeu cau ho tro. Phai la thanh vien ACTIVE cua workspace.',
+        nullable: true,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", Object)
+], UpdateDailyUpdateDto.prototype, "needHelpFromId", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         example: 'Can push code len Git.',

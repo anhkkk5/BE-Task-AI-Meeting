@@ -118,7 +118,7 @@ export class AiReport {
     type: String,
     required: true,
     enum: AiReportReviewStatus,
-    default: AiReportReviewStatus.Draft,
+    default: AiReportReviewStatus.PendingReview,
   })
   reviewStatus: AiReportReviewStatus;
 

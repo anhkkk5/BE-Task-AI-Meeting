@@ -55,6 +55,12 @@ export class DailyUpdatesService {
       throw new ConflictException('Daily update already exists for this date');
     }
 
+    await this.assertNeedHelpFromMember(
+      dto.needHelpFromId,
+      workspaceId,
+      currentUserId,
+    );
+
     const dailyUpdate = await this.dailyUpdatesRepository.create({
       workspaceId,
       projectId,
@@ -64,6 +70,7 @@ export class DailyUpdatesService {
       yesterdayWork: dto.yesterdayWork.trim(),
       todayPlan: dto.todayPlan.trim(),
       blockers: this.optionalText(dto.blockers),
+      needHelpFromId: dto.needHelpFromId ?? null,
       notes: this.optionalText(dto.notes),
       mood: dto.mood ?? null,
     });
@@ -224,6 +231,12 @@ export class DailyUpdatesService {
       );
     }
 
+    await this.assertNeedHelpFromMember(
+      dto.needHelpFromId,
+      workspaceId,
+      currentUserId,
+    );
+
     const updatedDailyUpdate = await this.dailyUpdatesRepository.update(
       dailyUpdate,
       {
@@ -241,6 +254,10 @@ export class DailyUpdatesService {
           dto.blockers === undefined
             ? dailyUpdate.blockers
             : this.optionalText(dto.blockers),
+        needHelpFromId:
+          dto.needHelpFromId === undefined
+            ? dailyUpdate.needHelpFromId
+            : (dto.needHelpFromId ?? null),
         notes:
           dto.notes === undefined
             ? dailyUpdate.notes
@@ -324,6 +341,30 @@ export class DailyUpdatesService {
     }
   }
 
+  /**
+   * Nguoi duoc nho ho tro phai la thanh vien cua workspace, va khong the la
+   * chinh minh. Khong kiem tra thi bao cao co the tro den nguoi ngoai du an,
+   * lam sai phan tong hop "ai dang can ho tro" cua bao cao giao ban.
+   */
+  private async assertNeedHelpFromMember(
+    needHelpFromId: string | null | undefined,
+    workspaceId: string,
+    currentUserId: string,
+  ) {
+    if (!needHelpFromId) {
+      return;
+    }
+
+    if (needHelpFromId === currentUserId) {
+      throw new BadRequestException('Khong the tu nho chinh minh ho tro');
+    }
+
+    await this.workspaceAccessService.assertWorkspaceMember(
+      needHelpFromId,
+      workspaceId,
+    );
+  }
+
   private normalizeDate(value: string) {
     return value.slice(0, 10);
   }
@@ -363,6 +404,15 @@ export class DailyUpdatesService {
       yesterdayWork: dailyUpdate.yesterdayWork,
       todayPlan: dailyUpdate.todayPlan,
       blockers: dailyUpdate.blockers,
+      needHelpFromId: dailyUpdate.needHelpFromId,
+      needHelpFrom: dailyUpdate.needHelpFrom
+        ? {
+            id: dailyUpdate.needHelpFrom.id,
+            fullName: dailyUpdate.needHelpFrom.fullName,
+            email: dailyUpdate.needHelpFrom.email,
+            avatarUrl: dailyUpdate.needHelpFrom.avatarUrl,
+          }
+        : null,
       notes: dailyUpdate.notes,
       mood: dailyUpdate.mood,
       createdAt: dailyUpdate.createdAt,

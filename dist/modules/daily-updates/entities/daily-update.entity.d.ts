@@ -13,12 +13,14 @@ export declare class DailyUpdate {
     yesterdayWork: string;
     todayPlan: string;
     blockers: string | null;
+    needHelpFromId: string | null;
     notes: string | null;
     mood: DailyMood | null;
     workspace: Workspace;
     project: Project;
     sprint: Sprint | null;
     user: User;
+    needHelpFrom: User | null;
     createdAt: Date;
     updatedAt: Date;
     deletedAt: Date | null;

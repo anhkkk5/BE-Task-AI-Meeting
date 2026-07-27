@@ -81,7 +81,7 @@ let AiTeamReportService = class AiTeamReportService {
                 aiOutput: aiResult.output,
                 aiModel: aiResult.model,
                 status: ai_report_status_enum_1.AiReportStatus.Completed,
-                reviewStatus: ai_report_review_status_enum_1.AiReportReviewStatus.Draft,
+                reviewStatus: ai_report_review_status_enum_1.AiReportReviewStatus.PendingReview,
                 metrics: this.dataBuilderService.computeMetrics(inputData),
                 dataSources: inputData.dataSources,
                 extraInstruction: dto.extraInstruction?.trim() || null,
@@ -186,8 +186,11 @@ let AiTeamReportService = class AiTeamReportService {
     }
     async updateTeamDailyReport(currentUserId, workspaceId, projectId, reportId, dto) {
         const report = await this.findTeamReportOrFail(currentUserId, workspaceId, projectId, reportId);
-        if (this.resolveReviewStatus(report) === ai_report_review_status_enum_1.AiReportReviewStatus.Approved) {
-            throw new common_1.ConflictException('Báo cáo đã được duyệt nên không thể chỉnh sửa');
+        const currentStatus = this.resolveReviewStatus(report);
+        if ((0, ai_report_review_status_enum_1.isFinalReviewStatus)(currentStatus)) {
+            throw new common_1.ConflictException(currentStatus === ai_report_review_status_enum_1.AiReportReviewStatus.Cancelled
+                ? 'Phiên giao ban đã bị hủy nên không thể chỉnh sửa'
+                : 'Báo cáo đã được duyệt nên không thể chỉnh sửa');
         }
         const currentOutput = (report.aiOutput ?? {});
         const patch = {};
@@ -210,7 +213,7 @@ let AiTeamReportService = class AiTeamReportService {
             throw new common_1.BadRequestException('Không có nội dung nào được thay đổi');
         }
         report.aiOutput = { ...currentOutput, ...patch };
-        report.reviewStatus = ai_report_review_status_enum_1.AiReportReviewStatus.Draft;
+        report.reviewStatus = ai_report_review_status_enum_1.AiReportReviewStatus.PendingReview;
         report.editedBy = currentUserId;
         report.editedAt = new Date();
         report.markModified('aiOutput');
@@ -225,10 +228,14 @@ let AiTeamReportService = class AiTeamReportService {
     }
     async approveTeamDailyReport(currentUserId, workspaceId, projectId, reportId) {
         const report = await this.findTeamReportOrFail(currentUserId, workspaceId, projectId, reportId);
-        if (this.resolveReviewStatus(report) === ai_report_review_status_enum_1.AiReportReviewStatus.Approved) {
+        const currentStatus = this.resolveReviewStatus(report);
+        if (currentStatus === ai_report_review_status_enum_1.AiReportReviewStatus.Published) {
             throw new common_1.ConflictException('Báo cáo này đã được duyệt trước đó');
         }
-        report.reviewStatus = ai_report_review_status_enum_1.AiReportReviewStatus.Approved;
+        if (currentStatus === ai_report_review_status_enum_1.AiReportReviewStatus.Cancelled) {
+            throw new common_1.ConflictException('Phiên giao ban đã bị hủy nên không thể duyệt');
+        }
+        report.reviewStatus = ai_report_review_status_enum_1.AiReportReviewStatus.Published;
         report.approvedBy = currentUserId;
         report.approvedAt = new Date();
         await report.save();
@@ -250,6 +257,27 @@ let AiTeamReportService = class AiTeamReportService {
             },
         };
     }
+    async cancelTeamDailyReport(currentUserId, workspaceId, projectId, reportId) {
+        const report = await this.findTeamReportOrFail(currentUserId, workspaceId, projectId, reportId);
+        const currentStatus = this.resolveReviewStatus(report);
+        if (currentStatus === ai_report_review_status_enum_1.AiReportReviewStatus.Published) {
+            throw new common_1.ConflictException('Báo cáo đã duyệt và gửi cho cả nhóm nên không thể hủy');
+        }
+        if (currentStatus === ai_report_review_status_enum_1.AiReportReviewStatus.Cancelled) {
+            throw new common_1.ConflictException('Phiên giao ban này đã bị hủy trước đó');
+        }
+        report.reviewStatus = ai_report_review_status_enum_1.AiReportReviewStatus.Cancelled;
+        report.editedBy = currentUserId;
+        report.editedAt = new Date();
+        await report.save();
+        return {
+            success: true,
+            message: 'Cancel team daily report successfully',
+            data: {
+                report: this.toReportResponse(report, true),
+            },
+        };
+    }
     async findTeamReportOrFail(currentUserId, workspaceId, projectId, reportId) {
         const reportModel = this.getReportModel();
         await this.aiReportAccessService.assertCanUseTeamReports(currentUserId, workspaceId);
@@ -264,7 +292,7 @@ let AiTeamReportService = class AiTeamReportService {
         return report;
     }
     resolveReviewStatus(report) {
-        return report.reviewStatus ?? ai_report_review_status_enum_1.AiReportReviewStatus.Approved;
+        return (0, ai_report_review_status_enum_1.normalizeReviewStatus)(report.reviewStatus);
     }
     async findReports(workspaceId, projectId, query) {
         const reportModel = this.getReportModel();

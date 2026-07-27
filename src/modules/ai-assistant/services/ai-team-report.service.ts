@@ -10,7 +10,11 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { AiReportReviewStatus } from '../../../common/enums/ai-report-review-status.enum';
+import {
+  AiReportReviewStatus,
+  isFinalReviewStatus,
+  normalizeReviewStatus,
+} from '../../../common/enums/ai-report-review-status.enum';
 import { AiReportStatus } from '../../../common/enums/ai-report-status.enum';
 import { AiReportType } from '../../../common/enums/ai-report-type.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
@@ -127,7 +131,7 @@ export class AiTeamReportService {
         aiModel: aiResult.model,
         status: AiReportStatus.Completed,
         // AI chi sinh ban nhap, phai co nguoi duyet moi thanh bao cao chinh thuc.
-        reviewStatus: AiReportReviewStatus.Draft,
+        reviewStatus: AiReportReviewStatus.PendingReview,
         metrics: this.dataBuilderService.computeMetrics(inputData),
         dataSources: inputData.dataSources,
         extraInstruction: dto.extraInstruction?.trim() || null,
@@ -307,9 +311,13 @@ export class AiTeamReportService {
       reportId,
     );
 
-    if (this.resolveReviewStatus(report) === AiReportReviewStatus.Approved) {
+    const currentStatus = this.resolveReviewStatus(report);
+
+    if (isFinalReviewStatus(currentStatus)) {
       throw new ConflictException(
-        'Báo cáo đã được duyệt nên không thể chỉnh sửa',
+        currentStatus === AiReportReviewStatus.Cancelled
+          ? 'Phiên giao ban đã bị hủy nên không thể chỉnh sửa'
+          : 'Báo cáo đã được duyệt nên không thể chỉnh sửa',
       );
     }
 
@@ -331,7 +339,8 @@ export class AiTeamReportService {
     }
 
     report.aiOutput = { ...currentOutput, ...patch };
-    report.reviewStatus = AiReportReviewStatus.Draft;
+    // Sua noi dung xong van la ban cho duyet, chua phai bao cao chinh thuc.
+    report.reviewStatus = AiReportReviewStatus.PendingReview;
     report.editedBy = currentUserId;
     report.editedAt = new Date();
     report.markModified('aiOutput');
@@ -365,11 +374,17 @@ export class AiTeamReportService {
       reportId,
     );
 
-    if (this.resolveReviewStatus(report) === AiReportReviewStatus.Approved) {
+    const currentStatus = this.resolveReviewStatus(report);
+
+    if (currentStatus === AiReportReviewStatus.Published) {
       throw new ConflictException('Báo cáo này đã được duyệt trước đó');
     }
 
-    report.reviewStatus = AiReportReviewStatus.Approved;
+    if (currentStatus === AiReportReviewStatus.Cancelled) {
+      throw new ConflictException('Phiên giao ban đã bị hủy nên không thể duyệt');
+    }
+
+    report.reviewStatus = AiReportReviewStatus.Published;
     report.approvedBy = currentUserId;
     report.approvedAt = new Date();
     await report.save();
@@ -388,6 +403,51 @@ export class AiTeamReportService {
     return {
       success: true,
       message: 'Approve team daily report successfully',
+      data: {
+        report: this.toReportResponse(report, true),
+      },
+    };
+  }
+
+  /**
+   * Huy phien giao ban.
+   *
+   * Dung khi phien duoc tao nham hoac ca doi khong giao ban ngay do. Khong xoa
+   * du lieu vi con dung de doi chieu lich su, chi danh dau CANCELLED de khong
+   * tinh vao bao cao chinh thuc va khong gui mail cho ca nhom.
+   */
+  async cancelTeamDailyReport(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    reportId: string,
+  ) {
+    const report = await this.findTeamReportOrFail(
+      currentUserId,
+      workspaceId,
+      projectId,
+      reportId,
+    );
+    const currentStatus = this.resolveReviewStatus(report);
+
+    if (currentStatus === AiReportReviewStatus.Published) {
+      throw new ConflictException(
+        'Báo cáo đã duyệt và gửi cho cả nhóm nên không thể hủy',
+      );
+    }
+
+    if (currentStatus === AiReportReviewStatus.Cancelled) {
+      throw new ConflictException('Phiên giao ban này đã bị hủy trước đó');
+    }
+
+    report.reviewStatus = AiReportReviewStatus.Cancelled;
+    report.editedBy = currentUserId;
+    report.editedAt = new Date();
+    await report.save();
+
+    return {
+      success: true,
+      message: 'Cancel team daily report successfully',
       data: {
         report: this.toReportResponse(report, true),
       },
@@ -425,13 +485,12 @@ export class AiTeamReportService {
   }
 
   /**
-   * Bao cao tao truoc khi co tinh nang duyet khong co reviewStatus.
+   * Doc trang thai phien giao ban, co anh xa du lieu cu.
    *
-   * Coi cac ban do la da duyet, neu khong chung se dot ngot hien thanh "ban nhap
-   * cho duyet" du da dung tu lau.
+   * Logic anh xa nam trong enum de cac service khac dung lai duoc.
    */
   private resolveReviewStatus(report: AiReportDocument) {
-    return report.reviewStatus ?? AiReportReviewStatus.Approved;
+    return normalizeReviewStatus(report.reviewStatus);
   }
 
   private async findReports(

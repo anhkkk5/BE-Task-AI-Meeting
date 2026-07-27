@@ -1,6 +1,7 @@
 import { MeetingSummaryOutput } from '../schemas/meeting-summary.schema';
 import { PersonalizedMeetingSummaryOutput } from '../schemas/personalized-meeting-summary.schema';
 import { PersonalDailyReportOutput, TeamDailyReportOutput } from '../schemas/ai-report.schema';
+import { DailyUpdateDraftOutput, HandoverDraftInputData, HandoverDraftOutput } from '../types/ai-draft.type';
 import { MeetingSummaryInputData } from './ai-meeting-summary-data-builder.service';
 import { PersonalizedMeetingSummaryInputData } from './ai-personalized-meeting-summary-data-builder.service';
 import { PersonalReportInputData } from './ai-report-data-builder.service';
@@ -20,6 +21,12 @@ export declare class AiProviderService {
     generateTeamDailyReport(prompt: string, inputData: TeamReportInputData): Promise<AiProviderResult<TeamDailyReportOutput>>;
     generateMeetingSummary(prompt: string, inputData: MeetingSummaryInputData): Promise<AiProviderResult<MeetingSummaryOutput>>;
     generatePersonalizedMeetingSummary(prompt: string, inputData: PersonalizedMeetingSummaryInputData): Promise<AiProviderResult<PersonalizedMeetingSummaryOutput>>;
+    generateDailyUpdateDraft(prompt: string, inputData: PersonalReportInputData): Promise<AiProviderResult<DailyUpdateDraftOutput>>;
+    generateHandoverDraft(prompt: string, inputData: HandoverDraftInputData): Promise<AiProviderResult<HandoverDraftOutput>>;
+    private normalizeDailyUpdateDraft;
+    private normalizeHandoverDraft;
+    private buildMockDailyUpdateDraft;
+    private buildMockHandoverDraft;
     private resolveMockResponse;
     private generateMockResponse;
     private resolveTeamMockResponse;

@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { CreateProjectDto } from '../dto/create-project.dto';
@@ -11,6 +7,7 @@ import { UpdateProjectDto } from '../dto/update-project.dto';
 import { Project } from '../entities/project.entity';
 import { ProjectsRepository } from '../repositories/projects.repository';
 import { ProjectAccessService } from './project-access.service';
+import { ProjectKeyCodeService } from './project-key-code.service';
 
 const projectWriteRoles = [
   WorkspaceRole.Owner,
@@ -23,6 +20,7 @@ export class ProjectsService {
   constructor(
     private readonly projectsRepository: ProjectsRepository,
     private readonly projectAccessService: ProjectAccessService,
+    private readonly projectKeyCodeService: ProjectKeyCodeService,
     private readonly workspaceAccessService: WorkspaceAccessService,
   ) {}
 
@@ -38,22 +36,17 @@ export class ProjectsService {
     );
     this.assertDateRange(dto.startDate, dto.endDate);
 
-    const keyCode = dto.keyCode.trim().toUpperCase();
-    const existingProject =
-      await this.projectsRepository.findByWorkspaceAndKeyCode(
-        workspaceId,
-        keyCode,
-      );
-
-    if (existingProject) {
-      throw new ConflictException(
-        'Project key code already exists in this workspace',
-      );
-    }
+    const name = dto.name.trim();
+    // Key code sinh tu ten project. Nguoi dung khong nhap nen khong the trung,
+    // ham nay tu them so dem khi can.
+    const keyCode = await this.projectKeyCodeService.generateUniqueKeyCode(
+      workspaceId,
+      name,
+    );
 
     const project = await this.projectsRepository.create({
       workspaceId,
-      name: dto.name.trim(),
+      name,
       keyCode,
       description: dto.description?.trim() || null,
       startDate: dto.startDate ?? null,
@@ -107,16 +100,27 @@ export class ProjectsService {
       currentUserId,
       workspaceId,
     );
-    const project = await this.projectAccessService.assertProjectInWorkspace(
-      projectId,
-      workspaceId,
-    );
+    const project =
+      await this.projectAccessService.assertProjectDetailInWorkspace(
+        projectId,
+        workspaceId,
+      );
 
     return {
       success: true,
       message: 'Get project detail successfully',
       data: {
-        project: this.toProjectResponse(project),
+        project: {
+          ...this.toProjectResponse(project),
+          createdByUser: project.creator
+            ? {
+                id: project.creator.id,
+                fullName: project.creator.fullName,
+                email: project.creator.email,
+                avatarUrl: project.creator.avatarUrl,
+              }
+            : null,
+        },
       },
     };
   }

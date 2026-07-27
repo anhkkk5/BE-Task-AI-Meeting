@@ -3,7 +3,6 @@ import {
   IsDateString,
   IsOptional,
   IsString,
-  Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -19,21 +18,6 @@ export class CreateProjectDto {
   @MinLength(2)
   @MaxLength(150)
   name: string;
-
-  @ApiProperty({
-    example: 'AGILEAI',
-    description: 'Ma project viet hoa, khong dau, khong khoang trang.',
-    minLength: 2,
-    maxLength: 20,
-  })
-  @IsString()
-  @MinLength(2)
-  @MaxLength(20)
-  @Matches(/^[A-Z0-9_]+$/, {
-    message:
-      'keyCode must contain only uppercase letters, numbers, and underscore',
-  })
-  keyCode: string;
 
   @ApiPropertyOptional({
     example: 'Du an quan ly Agile/Scrum tich hop tro ly AI',

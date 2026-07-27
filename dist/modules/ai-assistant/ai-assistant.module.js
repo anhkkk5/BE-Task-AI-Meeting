@@ -23,6 +23,7 @@ const users_module_1 = require("../users/users.module");
 const workspaces_module_1 = require("../workspaces/workspaces.module");
 const ai_meeting_summary_controller_1 = require("./controllers/ai-meeting-summary.controller");
 const ai_personalized_meeting_summary_controller_1 = require("./controllers/ai-personalized-meeting-summary.controller");
+const ai_draft_controller_1 = require("./controllers/ai-draft.controller");
 const ai_personal_report_controller_1 = require("./controllers/ai-personal-report.controller");
 const ai_project_assistant_controller_1 = require("./controllers/ai-project-assistant.controller");
 const ai_team_report_controller_1 = require("./controllers/ai-team-report.controller");
@@ -36,6 +37,7 @@ const ai_meeting_summary_service_1 = require("./services/ai-meeting-summary.serv
 const ai_personalized_meeting_summary_access_service_1 = require("./services/ai-personalized-meeting-summary-access.service");
 const ai_personalized_meeting_summary_data_builder_service_1 = require("./services/ai-personalized-meeting-summary-data-builder.service");
 const ai_personalized_meeting_summary_service_1 = require("./services/ai-personalized-meeting-summary.service");
+const ai_draft_service_1 = require("./services/ai-draft.service");
 const ai_personal_report_service_1 = require("./services/ai-personal-report.service");
 const ai_project_assistant_service_1 = require("./services/ai-project-assistant.service");
 const ai_provider_service_1 = require("./services/ai-provider.service");
@@ -51,6 +53,10 @@ const ai_daily_report_scheduler_service_1 = require("./schedulers/ai-daily-repor
 const meeting_action_item_review_entity_1 = require("./entities/meeting-action-item-review.entity");
 const meeting_action_item_reviews_repository_1 = require("./repositories/meeting-action-item-reviews.repository");
 const ai_meeting_action_item_review_service_1 = require("./services/ai-meeting-action-item-review.service");
+const team_report_action_item_entity_1 = require("./entities/team-report-action-item.entity");
+const team_report_action_items_repository_1 = require("./repositories/team-report-action-items.repository");
+const ai_team_report_action_item_service_1 = require("./services/ai-team-report-action-item.service");
+const ai_team_report_action_item_controller_1 = require("./controllers/ai-team-report-action-item.controller");
 const mongoImports = (0, mongodb_config_1.mongodbConfig)().enabled
     ? [
         mongoose_1.MongooseModule.forFeature([
@@ -71,7 +77,7 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
     (0, common_1.Module)({
         imports: [
             ...mongoImports,
-            typeorm_1.TypeOrmModule.forFeature([meeting_action_item_review_entity_1.MeetingActionItemReview]),
+            typeorm_1.TypeOrmModule.forFeature([meeting_action_item_review_entity_1.MeetingActionItemReview, team_report_action_item_entity_1.TeamReportActionItem]),
             daily_updates_module_1.DailyUpdatesModule,
             meetings_module_1.MeetingsModule,
             projects_module_1.ProjectsModule,
@@ -82,15 +88,18 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
             workspaces_module_1.WorkspacesModule,
         ],
         controllers: [
+            ai_draft_controller_1.AiDraftController,
             ai_personal_report_controller_1.AiPersonalReportController,
             ai_project_assistant_controller_1.AiProjectAssistantController,
             ai_team_report_controller_1.AiTeamReportController,
+            ai_team_report_action_item_controller_1.AiTeamReportActionItemController,
             ai_meeting_summary_controller_1.AiMeetingSummaryController,
             ai_meeting_summary_controller_1.AiMeetingSummaryDetailController,
             ai_personalized_meeting_summary_controller_1.AiPersonalizedMeetingSummaryController,
             ai_personalized_meeting_summary_controller_1.AiPersonalizedMeetingSummaryProjectController,
         ],
         providers: [
+            ai_draft_service_1.AiDraftService,
             ai_personal_report_service_1.AiPersonalReportService,
             ai_project_assistant_service_1.AiProjectAssistantService,
             ai_team_report_service_1.AiTeamReportService,
@@ -111,6 +120,8 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
             ai_daily_report_scheduler_service_1.AiDailyReportSchedulerService,
             ai_meeting_action_item_review_service_1.AiMeetingActionItemReviewService,
             meeting_action_item_reviews_repository_1.MeetingActionItemReviewsRepository,
+            ai_team_report_action_item_service_1.AiTeamReportActionItemService,
+            team_report_action_items_repository_1.TeamReportActionItemsRepository,
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,
         ],

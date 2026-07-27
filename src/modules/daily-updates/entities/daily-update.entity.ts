@@ -50,6 +50,14 @@ export class DailyUpdate {
   @Column({ type: 'text', nullable: true })
   blockers: string | null;
 
+  /**
+   * Nguoi ma thanh vien can ho tro trong ngay (noi dung thu 4 cua bao cao
+   * giao ban). Nullable vi khong phai ngay nao cung can ho tro.
+   */
+  @Index()
+  @Column({ name: 'need_help_from_id', type: 'varchar', length: 36, nullable: true })
+  needHelpFromId: string | null;
+
   @Column({ type: 'text', nullable: true })
   notes: string | null;
 
@@ -76,6 +84,10 @@ export class DailyUpdate {
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'need_help_from_id' })
+  needHelpFrom: User | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

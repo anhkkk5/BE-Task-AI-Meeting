@@ -223,6 +223,37 @@ export declare class AiTeamReportService {
             };
         };
     }>;
+    cancelTeamDailyReport(currentUserId: string, workspaceId: string, projectId: string, reportId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            report: {
+                createdAt: Date | undefined;
+                updatedAt: Date | undefined;
+                inputData?: Record<string, unknown> | undefined;
+                id: string;
+                workspaceId: string;
+                projectId: string;
+                sprintId: string | null;
+                userId: string | null;
+                reportType: AiReportType;
+                reportDate: string;
+                aiOutput: import("../schemas/ai-report.schema").PersonalDailyReportOutput | TeamDailyReportOutput;
+                summary: string;
+                model: string | null;
+                status: AiReportStatus;
+                reviewStatus: AiReportReviewStatus;
+                metrics: import("../schemas/ai-report.schema").TeamReportMetrics | null;
+                dataSources: import("../schemas/ai-report.schema").TeamReportDataSources | null;
+                extraInstruction: string | null;
+                editedBy: string | null;
+                editedAt: Date | null;
+                approvedBy: string | null;
+                approvedAt: Date | null;
+                createdBy: string;
+            };
+        };
+    }>;
     private findTeamReportOrFail;
     private resolveReviewStatus;
     private findReports;

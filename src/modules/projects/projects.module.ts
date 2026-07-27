@@ -7,6 +7,7 @@ import { ProjectsController } from './controllers/projects.controller';
 import { Project } from './entities/project.entity';
 import { ProjectsRepository } from './repositories/projects.repository';
 import { ProjectAccessService } from './services/project-access.service';
+import { ProjectKeyCodeService } from './services/project-key-code.service';
 import { ProjectsService } from './services/projects.service';
 
 @Module({
@@ -14,6 +15,7 @@ import { ProjectsService } from './services/projects.service';
   controllers: [ProjectsController],
   providers: [
     ProjectAccessService,
+    ProjectKeyCodeService,
     ProjectsRepository,
     ProjectsService,
     WorkspaceMemberGuard,

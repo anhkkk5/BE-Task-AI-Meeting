@@ -8,6 +8,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PromptBuilderService = void 0;
 const common_1 = require("@nestjs/common");
+const daily_update_draft_prompt_1 = require("../prompts/daily-update-draft.prompt");
+const handover_draft_prompt_1 = require("../prompts/handover-draft.prompt");
 const meeting_summary_prompt_1 = require("../prompts/meeting-summary.prompt");
 const personal_daily_report_prompt_1 = require("../prompts/personal-daily-report.prompt");
 const personalized_meeting_summary_prompt_1 = require("../prompts/personalized-meeting-summary.prompt");
@@ -21,6 +23,12 @@ let PromptBuilderService = class PromptBuilderService {
         return personal_daily_report_prompt_1.personalDailyReportPromptTemplate
             .replace('{{PERSONALIZATION}}', this.buildPersonalization(preferences))
             .replace('{{INPUT_DATA}}', JSON.stringify(inputData, null, 2));
+    }
+    buildDailyUpdateDraftPrompt(inputData, preferences = ai_user_preferences_type_1.DEFAULT_AI_USER_PREFERENCES) {
+        return daily_update_draft_prompt_1.DAILY_UPDATE_DRAFT_PROMPT_TEMPLATE.replace('{{PERSONALIZATION}}', this.buildPersonalization(preferences)).replace('{{INPUT_DATA}}', JSON.stringify(inputData, null, 2));
+    }
+    buildHandoverDraftPrompt(inputData) {
+        return handover_draft_prompt_1.HANDOVER_DRAFT_PROMPT_TEMPLATE.replace('{{INPUT_DATA}}', JSON.stringify(inputData, null, 2));
     }
     buildTeamDailyReportPrompt(inputData, extraInstruction) {
         return team_daily_report_prompt_1.TEAM_DAILY_REPORT_PROMPT_TEMPLATE.replace('{{EXTRA_INSTRUCTION}}', this.buildExtraInstruction(extraInstruction)).replace('{{INPUT_DATA}}', JSON.stringify(inputData, null, 2));

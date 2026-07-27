@@ -20,6 +20,7 @@ import {
   AiPersonalizedMeetingSummaryController,
   AiPersonalizedMeetingSummaryProjectController,
 } from './controllers/ai-personalized-meeting-summary.controller';
+import { AiDraftController } from './controllers/ai-draft.controller';
 import { AiPersonalReportController } from './controllers/ai-personal-report.controller';
 import { AiProjectAssistantController } from './controllers/ai-project-assistant.controller';
 import { AiTeamReportController } from './controllers/ai-team-report.controller';
@@ -39,6 +40,7 @@ import { AiMeetingSummaryService } from './services/ai-meeting-summary.service';
 import { AiPersonalizedMeetingSummaryAccessService } from './services/ai-personalized-meeting-summary-access.service';
 import { AiPersonalizedMeetingSummaryDataBuilderService } from './services/ai-personalized-meeting-summary-data-builder.service';
 import { AiPersonalizedMeetingSummaryService } from './services/ai-personalized-meeting-summary.service';
+import { AiDraftService } from './services/ai-draft.service';
 import { AiPersonalReportService } from './services/ai-personal-report.service';
 import { AiProjectAssistantService } from './services/ai-project-assistant.service';
 import { AiProviderService } from './services/ai-provider.service';
@@ -54,6 +56,10 @@ import { AiDailyReportSchedulerService } from './schedulers/ai-daily-report-sche
 import { MeetingActionItemReview } from './entities/meeting-action-item-review.entity';
 import { MeetingActionItemReviewsRepository } from './repositories/meeting-action-item-reviews.repository';
 import { AiMeetingActionItemReviewService } from './services/ai-meeting-action-item-review.service';
+import { TeamReportActionItem } from './entities/team-report-action-item.entity';
+import { TeamReportActionItemsRepository } from './repositories/team-report-action-items.repository';
+import { AiTeamReportActionItemService } from './services/ai-team-report-action-item.service';
+import { AiTeamReportActionItemController } from './controllers/ai-team-report-action-item.controller';
 
 const mongoImports = mongodbConfig().enabled
   ? [
@@ -72,7 +78,7 @@ const mongoImports = mongodbConfig().enabled
 @Module({
   imports: [
     ...mongoImports,
-    TypeOrmModule.forFeature([MeetingActionItemReview]),
+    TypeOrmModule.forFeature([MeetingActionItemReview, TeamReportActionItem]),
     DailyUpdatesModule,
     MeetingsModule,
     ProjectsModule,
@@ -83,15 +89,18 @@ const mongoImports = mongodbConfig().enabled
     WorkspacesModule,
   ],
   controllers: [
+    AiDraftController,
     AiPersonalReportController,
     AiProjectAssistantController,
     AiTeamReportController,
+    AiTeamReportActionItemController,
     AiMeetingSummaryController,
     AiMeetingSummaryDetailController,
     AiPersonalizedMeetingSummaryController,
     AiPersonalizedMeetingSummaryProjectController,
   ],
   providers: [
+    AiDraftService,
     AiPersonalReportService,
     AiProjectAssistantService,
     AiTeamReportService,
@@ -112,6 +121,8 @@ const mongoImports = mongodbConfig().enabled
     AiDailyReportSchedulerService,
     AiMeetingActionItemReviewService,
     MeetingActionItemReviewsRepository,
+    AiTeamReportActionItemService,
+    TeamReportActionItemsRepository,
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,
   ],

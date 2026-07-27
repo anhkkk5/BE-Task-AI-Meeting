@@ -79,6 +79,139 @@ let AiProviderService = class AiProviderService {
         const result = await this.resolvePersonalizedMeetingSummaryMockResponse(prompt, inputData, 'mock');
         return result;
     }
+    async generateDailyUpdateDraft(prompt, inputData) {
+        const provider = process.env.AI_PROVIDER ?? 'mock';
+        const apiKey = process.env.AI_API_KEY ?? '';
+        if (provider === 'groq' && apiKey) {
+            const model = this.getGroqModel();
+            const output = await this.callGroqJson({
+                apiKey,
+                model,
+                system: 'Bạn là trợ lý Scrum. Chỉ trả về JSON hợp lệ bằng tiếng Việt có dấu, không dùng markdown và không thêm dữ liệu ngoài thông tin được cung cấp.',
+                user: [
+                    prompt,
+                    '',
+                    'Trả về đúng cấu trúc JSON sau:',
+                    JSON.stringify({
+                        yesterdayWork: 'string',
+                        todayPlan: 'string',
+                        blockers: 'string',
+                        notes: 'string',
+                    }, null, 2),
+                ].join('\n'),
+            });
+            return {
+                model,
+                rawResponse: JSON.stringify(output),
+                output: this.normalizeDailyUpdateDraft(output, inputData),
+            };
+        }
+        const mockOutput = this.buildMockDailyUpdateDraft(inputData);
+        return {
+            model: 'mock-daily-update-draft',
+            rawResponse: JSON.stringify(mockOutput),
+            output: mockOutput,
+        };
+    }
+    async generateHandoverDraft(prompt, inputData) {
+        const provider = process.env.AI_PROVIDER ?? 'mock';
+        const apiKey = process.env.AI_API_KEY ?? '';
+        if (provider === 'groq' && apiKey) {
+            const model = this.getGroqModel();
+            const output = await this.callGroqJson({
+                apiKey,
+                model,
+                system: 'Bạn là trợ lý Scrum. Chỉ trả về JSON hợp lệ bằng tiếng Việt có dấu, không dùng markdown và không thêm dữ liệu ngoài thông tin được cung cấp.',
+                user: [
+                    prompt,
+                    '',
+                    'Trả về đúng cấu trúc JSON sau:',
+                    JSON.stringify({
+                        completedWork: 'string',
+                        remainingWork: 'string',
+                        blockers: 'string',
+                        nextSteps: 'string',
+                        referenceLinks: 'string',
+                    }, null, 2),
+                ].join('\n'),
+            });
+            return {
+                model,
+                rawResponse: JSON.stringify(output),
+                output: this.normalizeHandoverDraft(output, inputData),
+            };
+        }
+        const mockOutput = this.buildMockHandoverDraft(inputData);
+        return {
+            model: 'mock-handover-draft',
+            rawResponse: JSON.stringify(mockOutput),
+            output: mockOutput,
+        };
+    }
+    normalizeDailyUpdateDraft(output, inputData) {
+        const fallback = this.buildMockDailyUpdateDraft(inputData);
+        return {
+            yesterdayWork: output.yesterdayWork?.trim() || fallback.yesterdayWork,
+            todayPlan: output.todayPlan?.trim() || fallback.todayPlan,
+            blockers: output.blockers?.trim() ?? '',
+            notes: output.notes?.trim() ?? '',
+        };
+    }
+    normalizeHandoverDraft(output, inputData) {
+        const fallback = this.buildMockHandoverDraft(inputData);
+        return {
+            completedWork: output.completedWork?.trim() || fallback.completedWork,
+            remainingWork: output.remainingWork?.trim() || fallback.remainingWork,
+            blockers: output.blockers?.trim() ?? '',
+            nextSteps: output.nextSteps?.trim() ?? '',
+            referenceLinks: output.referenceLinks?.trim() ?? '',
+        };
+    }
+    buildMockDailyUpdateDraft(inputData) {
+        const { completed, inProgress, overdue } = inputData.taskSummary;
+        const todayLines = [
+            ...inProgress.map((item) => `Tiếp tục ${item}`),
+            ...inputData.handovers.received.map((item) => `Tiếp nhận ${item.taskCode ?? 'task'} từ ${item.counterpartName ?? 'đồng nghiệp'}`),
+        ];
+        const blockerLines = [
+            ...overdue.map((item) => `Trễ hạn: ${item}`),
+            ...inputData.handovers.received
+                .filter((item) => Boolean(item.blockers))
+                .map((item) => `${item.taskCode ?? 'Task'}: ${item.blockers ?? ''}`),
+        ];
+        if (inputData.handovers.pendingForMe > 0) {
+            blockerLines.push(`Còn ${inputData.handovers.pendingForMe} bàn giao chờ tôi xác nhận`);
+        }
+        return {
+            yesterdayWork: completed.length
+                ? completed.map((item) => `Hoàn thành ${item}`).join('\n')
+                : 'Chưa có task nào hoàn thành trong dữ liệu hệ thống.',
+            todayPlan: todayLines.length
+                ? todayLines.join('\n')
+                : 'Chưa có task đang thực hiện trong dữ liệu hệ thống.',
+            blockers: blockerLines.join('\n'),
+            notes: inputData.handovers.given.length
+                ? inputData.handovers.given
+                    .map((item) => `Đã bàn giao ${item.taskCode ?? 'task'} cho ${item.counterpartName ?? 'đồng nghiệp'}`)
+                    .join('\n')
+                : '',
+        };
+    }
+    buildMockHandoverDraft(inputData) {
+        const latestUpdate = inputData.recentDailyUpdates[0] ?? null;
+        const taskLabel = `${inputData.task.taskCode} - ${inputData.task.title}`;
+        return {
+            completedWork: latestUpdate?.yesterdayWork?.trim() ||
+                `Đã thực hiện ${taskLabel} đến trạng thái ${inputData.task.status}.`,
+            remainingWork: latestUpdate?.todayPlan?.trim() ||
+                `Cần bổ sung phần việc còn lại của ${taskLabel}: dữ liệu hệ thống chưa đủ để xác định.`,
+            blockers: latestUpdate?.blockers?.trim() ?? '',
+            nextSteps: inputData.task.dueDate
+                ? `Ưu tiên hoàn thành trước hạn ${inputData.task.dueDate}.`
+                : '',
+            referenceLinks: '',
+        };
+    }
     resolveMockResponse(prompt, inputData, provider) {
         return Promise.resolve(this.generateMockResponse(prompt, inputData, provider));
     }

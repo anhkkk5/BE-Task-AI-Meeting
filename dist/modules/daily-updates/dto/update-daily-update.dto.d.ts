@@ -4,6 +4,7 @@ export declare class UpdateDailyUpdateDto {
     yesterdayWork?: string;
     todayPlan?: string;
     blockers?: string | null;
+    needHelpFromId?: string | null;
     notes?: string | null;
     mood?: DailyMood | null;
 }

@@ -157,6 +157,7 @@ describe('DailyUpdatesService', () => {
       blockers: null,
       notes: 'Need review',
       mood: DailyMood.Normal,
+      needHelpFromId: null,
     });
     expect(response.data.dailyUpdate.userId).toBe('member-id');
   });
