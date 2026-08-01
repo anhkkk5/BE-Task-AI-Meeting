@@ -9,4 +9,13 @@ export class AppController {
   getHealth() {
     return this.appService.getHealth();
   }
+
+  @Get('health')
+  getHealthPing() {
+    return {
+      status: 'ok',
+      service: 'AgileFlow AI Backend',
+      timestamp: new Date().toISOString(),
+    };
+  }
 }

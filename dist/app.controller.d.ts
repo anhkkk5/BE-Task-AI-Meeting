@@ -12,4 +12,9 @@ export declare class AppController {
             redis: string;
         };
     }>;
+    getHealthPing(): {
+        status: string;
+        service: string;
+        timestamp: string;
+    };
 }
