@@ -39,6 +39,9 @@ export class User {
   })
   status: UserStatus;
 
+  @Column({ name: 'is_system_admin', type: 'tinyint', width: 1, default: 0 })
+  isSystemAdmin: boolean;
+
   /**
    * Thoi diem email duoc xac thuc bang OTP.
    *

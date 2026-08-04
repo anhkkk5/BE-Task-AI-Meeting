@@ -37,6 +37,7 @@ export declare class AuthService {
                     phoneNumber: string | null;
                     jobTitle: string | null;
                     status: UserStatus;
+                    isSystemAdmin: boolean;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -70,6 +71,7 @@ export declare class AuthService {
                     phoneNumber: string | null;
                     jobTitle: string | null;
                     status: UserStatus;
+                    isSystemAdmin: boolean;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -93,6 +95,7 @@ export declare class AuthService {
                     phoneNumber: string | null;
                     jobTitle: string | null;
                     status: UserStatus;
+                    isSystemAdmin: boolean;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -119,6 +122,7 @@ export declare class AuthService {
             phoneNumber: string | null;
             jobTitle: string | null;
             status: UserStatus;
+            isSystemAdmin: boolean;
             createdAt: Date;
             updatedAt: Date;
         };

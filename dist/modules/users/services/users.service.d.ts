@@ -21,6 +21,7 @@ export declare class UsersService {
             phoneNumber: string | null;
             jobTitle: string | null;
             status: import("../enums/user-status.enum").UserStatus;
+            isSystemAdmin: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -36,6 +37,7 @@ export declare class UsersService {
             phoneNumber: string | null;
             jobTitle: string | null;
             status: import("../enums/user-status.enum").UserStatus;
+            isSystemAdmin: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -53,6 +55,7 @@ export declare class UsersService {
         phoneNumber: string | null;
         jobTitle: string | null;
         status: import("../enums/user-status.enum").UserStatus;
+        isSystemAdmin: boolean;
         createdAt: Date;
         updatedAt: Date;
     };

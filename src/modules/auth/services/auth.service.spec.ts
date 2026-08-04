@@ -63,6 +63,7 @@ describe('AuthService', () => {
         phoneNumber: input.phoneNumber,
         jobTitle: input.jobTitle,
         status: input.status,
+        isSystemAdmin: input.isSystemAdmin ?? false,
         createdAt: input.createdAt,
         updatedAt: input.updatedAt,
       })),

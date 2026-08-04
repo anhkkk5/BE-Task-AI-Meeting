@@ -10,6 +10,7 @@ import appConfig from './config/app.config';
 import { mysqlConfig } from './config/database.config';
 import { mongodbConfig } from './config/mongodb.config';
 import { RedisModule } from './database/redis/redis.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DailyUpdatesModule } from './modules/daily-updates/daily-updates.module';
@@ -43,6 +44,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     RedisModule,
     MailModule,
     ScheduleModule.forRoot(),
+    AdminModule,
     AiAssistantModule,
     AuthModule,
     UsersModule,

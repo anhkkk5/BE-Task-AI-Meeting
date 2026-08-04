@@ -96,6 +96,7 @@ export class UsersService {
       phoneNumber: user.phoneNumber,
       jobTitle: user.jobTitle,
       status: user.status,
+      isSystemAdmin: user.isSystemAdmin ?? false,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
