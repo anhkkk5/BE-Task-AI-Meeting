@@ -6,10 +6,13 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
+import { TaskType } from '../../../common/enums/task-type.enum';
+import { TaskPriority } from '../../../common/enums/task-priority.enum';
 import { Project } from '../../projects/entities/project.entity';
 import { Sprint } from '../../sprints/entities/sprint.entity';
 import { User } from '../../users/entities/user.entity';
@@ -48,6 +51,18 @@ export class Task {
   status: TaskStatus;
 
   @Index()
+  @Column({ name: 'task_type', type: 'enum', enum: TaskType, default: TaskType.Task })
+  taskType: TaskType;
+
+  @Index()
+  @Column({ type: 'enum', enum: TaskPriority, default: TaskPriority.Medium })
+  priority: TaskPriority;
+
+  @Index()
+  @Column({ name: 'parent_id', type: 'varchar', length: 36, nullable: true })
+  parentId: string | null;
+
+  @Index()
   @Column({ name: 'assignee_id', type: 'varchar', length: 36, nullable: true })
   assigneeId: string | null;
 
@@ -79,6 +94,13 @@ export class Task {
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'created_by' })
   creator: User;
+
+  @ManyToOne(() => Task, (task) => task.children, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'parent_id' })
+  parent: Task | null;
+
+  @OneToMany(() => Task, (task) => task.parent)
+  children: Task[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

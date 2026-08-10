@@ -1,4 +1,9 @@
+import { TaskType } from '../../../common/enums/task-type.enum';
+import { TaskPriority } from '../../../common/enums/task-priority.enum';
 export declare class CreateTaskDto {
+    taskType?: TaskType;
+    priority?: TaskPriority;
+    parentId?: string;
     title: string;
     description?: string;
     sprintId?: string;

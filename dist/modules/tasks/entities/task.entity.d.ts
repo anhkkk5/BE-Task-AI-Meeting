@@ -1,4 +1,6 @@
 import { TaskStatus } from '../../../common/enums/task-status.enum';
+import { TaskType } from '../../../common/enums/task-type.enum';
+import { TaskPriority } from '../../../common/enums/task-priority.enum';
 import { Project } from '../../projects/entities/project.entity';
 import { Sprint } from '../../sprints/entities/sprint.entity';
 import { User } from '../../users/entities/user.entity';
@@ -12,6 +14,9 @@ export declare class Task {
     title: string;
     description: string | null;
     status: TaskStatus;
+    taskType: TaskType;
+    priority: TaskPriority;
+    parentId: string | null;
     assigneeId: string | null;
     createdBy: string;
     dueDate: string | null;
@@ -21,6 +26,8 @@ export declare class Task {
     sprint: Sprint | null;
     assignee: User | null;
     creator: User;
+    parent: Task | null;
+    children: Task[];
     createdAt: Date;
     updatedAt: Date;
     deletedAt: Date | null;

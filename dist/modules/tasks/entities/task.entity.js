@@ -12,6 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Task = void 0;
 const typeorm_1 = require("typeorm");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
+const task_type_enum_1 = require("../../../common/enums/task-type.enum");
+const task_priority_enum_1 = require("../../../common/enums/task-priority.enum");
 const project_entity_1 = require("../../projects/entities/project.entity");
 const sprint_entity_1 = require("../../sprints/entities/sprint.entity");
 const user_entity_1 = require("../../users/entities/user.entity");
@@ -25,6 +27,9 @@ let Task = class Task {
     title;
     description;
     status;
+    taskType;
+    priority;
+    parentId;
     assigneeId;
     createdBy;
     dueDate;
@@ -34,6 +39,8 @@ let Task = class Task {
     sprint;
     assignee;
     creator;
+    parent;
+    children;
     createdAt;
     updatedAt;
     deletedAt;
@@ -76,6 +83,21 @@ __decorate([
 ], Task.prototype, "status", void 0);
 __decorate([
     (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ name: 'task_type', type: 'enum', enum: task_type_enum_1.TaskType, default: task_type_enum_1.TaskType.Task }),
+    __metadata("design:type", String)
+], Task.prototype, "taskType", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ type: 'enum', enum: task_priority_enum_1.TaskPriority, default: task_priority_enum_1.TaskPriority.Medium }),
+    __metadata("design:type", String)
+], Task.prototype, "priority", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ name: 'parent_id', type: 'varchar', length: 36, nullable: true }),
+    __metadata("design:type", Object)
+], Task.prototype, "parentId", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({ name: 'assignee_id', type: 'varchar', length: 36, nullable: true }),
     __metadata("design:type", Object)
 ], Task.prototype, "assigneeId", void 0);
@@ -116,6 +138,15 @@ __decorate([
     (0, typeorm_1.JoinColumn)({ name: 'created_by' }),
     __metadata("design:type", user_entity_1.User)
 ], Task.prototype, "creator", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => Task, (task) => task.children, { nullable: true, onDelete: 'SET NULL' }),
+    (0, typeorm_1.JoinColumn)({ name: 'parent_id' }),
+    __metadata("design:type", Object)
+], Task.prototype, "parent", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => Task, (task) => task.parent),
+    __metadata("design:type", Array)
+], Task.prototype, "children", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)

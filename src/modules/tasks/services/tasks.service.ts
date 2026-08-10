@@ -8,6 +8,8 @@ import {
 import ExcelJS from 'exceljs';
 import { SprintStatus } from '../../../common/enums/sprint-status.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
+import { TaskType } from '../../../common/enums/task-type.enum';
+import { TaskPriority } from '../../../common/enums/task-priority.enum';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { NotificationType } from '../../notifications/entities/notification.entity';
@@ -187,6 +189,12 @@ export class TasksService {
         workspaceId,
       );
     }
+    const parent = dto.parentId
+      ? await this.assertValidParent(dto.parentId, projectId, dto.taskType ?? TaskType.Task)
+      : null;
+    if ((dto.taskType ?? TaskType.Task) === TaskType.Subtask && !parent) {
+      throw new BadRequestException('SUBTASK must have a parent task');
+    }
 
     const taskCode = await this.taskCodeService.generateTaskCode(project);
     const task = await this.tasksRepository.create({
@@ -201,6 +209,9 @@ export class TasksService {
       dueDate: dto.dueDate ?? null,
       estimatedHours: dto.estimatedHours ?? null,
       storyPoints: dto.storyPoints ?? null,
+      taskType: dto.taskType ?? TaskType.Task,
+      priority: dto.priority ?? TaskPriority.Medium,
+      parentId: parent?.id ?? null,
     });
     await this.recordActivity(task, currentUserId, TaskActivityAction.Created);
 
@@ -458,6 +469,9 @@ export class TasksService {
         dueDate: item.dueDate ?? null,
         estimatedHours: item.estimatedHours ?? null,
         storyPoints: item.storyPoints ?? null,
+        taskType: TaskType.Task,
+        priority: TaskPriority.Medium,
+        parentId: null,
       });
       await this.recordActivity(task, currentUserId, TaskActivityAction.Created, {
         source: { from: null, to: 'IMPORT' },
@@ -780,7 +794,19 @@ export class TasksService {
       'dueDate',
       'estimatedHours',
       'storyPoints',
+      'taskType',
+      'priority',
+      'parentId',
     ]);
+
+    const nextTaskType = dto.taskType ?? task.taskType;
+    const nextParentId = dto.parentId === undefined ? task.parentId : dto.parentId;
+    const parent = nextParentId
+      ? await this.assertValidParent(nextParentId, projectId, nextTaskType, task.id)
+      : null;
+    if (nextTaskType === TaskType.Subtask && !parent) {
+      throw new BadRequestException('SUBTASK must have a parent task');
+    }
 
     const updatedTask = await this.tasksRepository.update(task, {
       title: dto.title?.trim() ?? task.title,
@@ -791,6 +817,9 @@ export class TasksService {
       dueDate: dto.dueDate ?? task.dueDate,
       estimatedHours: dto.estimatedHours ?? task.estimatedHours,
       storyPoints: dto.storyPoints ?? task.storyPoints,
+      taskType: nextTaskType,
+      priority: dto.priority ?? task.priority,
+      parentId: parent?.id ?? null,
     });
     await this.recordActivity(
       updatedTask,
@@ -837,6 +866,15 @@ export class TasksService {
       dto.status === TaskStatus.Done && this.taskDependenciesRepository
         ? await this.taskDependenciesRepository.findIncompleteBlockers(task.id)
         : [];
+    if (dto.status === TaskStatus.Done) {
+      const incompleteChildren = await this.tasksRepository.findIncompleteChildren(task.id);
+      if (incompleteChildren.length) {
+        throw new BadRequestException({
+          message: 'Complete all child tasks before closing the parent task',
+          children: incompleteChildren.map((child) => ({ id: child.id, taskCode: child.taskCode, title: child.title, status: child.status })),
+        });
+      }
+    }
     if (incompleteBlockers.length) {
       const managerRoles = [WorkspaceRole.Owner, WorkspaceRole.ScrumMaster, WorkspaceRole.ProjectManager];
       const canOverride = managerRoles.includes(role) && dto.overrideBlocked === true && Boolean(dto.overrideReason?.trim());
@@ -1624,6 +1662,30 @@ export class TasksService {
     }
   }
 
+  private async assertValidParent(
+    parentId: string,
+    projectId: string,
+    childType: TaskType,
+    currentTaskId?: string,
+  ) {
+    if (parentId === currentTaskId) throw new BadRequestException('Task can not be its own parent');
+    if (childType === TaskType.Epic) throw new BadRequestException('EPIC can not have a parent');
+    const parent = await this.taskAccessService.assertTaskInProject(parentId, projectId);
+    if (parent.taskType === TaskType.Subtask) throw new BadRequestException('SUBTASK can not be a parent');
+    if (childType === TaskType.Story && parent.taskType !== TaskType.Epic) {
+      throw new BadRequestException('STORY parent must be an EPIC');
+    }
+    let ancestor = parent;
+    const visited = new Set<string>();
+    while (ancestor.parentId) {
+      if (ancestor.parentId === currentTaskId) throw new BadRequestException('Task hierarchy can not contain a cycle');
+      if (visited.has(ancestor.parentId)) throw new BadRequestException('Existing task hierarchy contains a cycle');
+      visited.add(ancestor.parentId);
+      ancestor = await this.taskAccessService.assertTaskInProject(ancestor.parentId, projectId);
+    }
+    return parent;
+  }
+
   private toTaskResponse(task: Task) {
     return {
       id: task.id,
@@ -1633,6 +1695,16 @@ export class TasksService {
       title: task.title,
       description: task.description,
       status: task.status,
+      taskType: task.taskType ?? TaskType.Task,
+      priority: task.priority ?? TaskPriority.Medium,
+      parentId: task.parentId ?? null,
+      parent: task.parent ? { id: task.parent.id, taskCode: task.parent.taskCode, title: task.parent.title, taskType: task.parent.taskType } : null,
+      children: task.children?.map((child) => ({ id: child.id, taskCode: child.taskCode, title: child.title, taskType: child.taskType, status: child.status })) ?? [],
+      childProgress: task.children?.length ? {
+        total: task.children.length,
+        done: task.children.filter((child) => child.status === TaskStatus.Done).length,
+        percent: Math.round((task.children.filter((child) => child.status === TaskStatus.Done).length / task.children.length) * 100),
+      } : null,
       assigneeId: task.assigneeId,
       assignee: task.assignee
         ? {

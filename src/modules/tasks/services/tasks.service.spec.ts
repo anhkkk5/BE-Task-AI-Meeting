@@ -176,6 +176,9 @@ describe('TasksService', () => {
       dueDate: '2026-06-25',
       estimatedHours: 6,
       storyPoints: 3,
+      taskType: 'TASK',
+      priority: 'MEDIUM',
+      parentId: null,
     });
     expect(response.data.task.status).toBe(TaskStatus.Backlog);
   });

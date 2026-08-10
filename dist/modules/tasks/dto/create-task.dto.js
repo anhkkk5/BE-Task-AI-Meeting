@@ -13,7 +13,12 @@ exports.CreateTaskDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
+const task_type_enum_1 = require("../../../common/enums/task-type.enum");
+const task_priority_enum_1 = require("../../../common/enums/task-priority.enum");
 class CreateTaskDto {
+    taskType;
+    priority;
+    parentId;
     title;
     description;
     sprintId;
@@ -23,6 +28,24 @@ class CreateTaskDto {
     storyPoints;
 }
 exports.CreateTaskDto = CreateTaskDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: task_type_enum_1.TaskType, default: task_type_enum_1.TaskType.Task }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(task_type_enum_1.TaskType),
+    __metadata("design:type", String)
+], CreateTaskDto.prototype, "taskType", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: task_priority_enum_1.TaskPriority, default: task_priority_enum_1.TaskPriority.Medium }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(task_priority_enum_1.TaskPriority),
+    __metadata("design:type", String)
+], CreateTaskDto.prototype, "priority", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Task cha trong cùng Project.' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], CreateTaskDto.prototype, "parentId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         example: 'Code API tao task',

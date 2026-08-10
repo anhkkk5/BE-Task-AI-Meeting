@@ -17,6 +17,8 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
+const task_type_enum_1 = require("../../../common/enums/task-type.enum");
+const task_priority_enum_1 = require("../../../common/enums/task-priority.enum");
 const get_tasks_query_dto_1 = require("../dto/get-tasks-query.dto");
 const task_entity_1 = require("../entities/task.entity");
 let TasksRepository = class TasksRepository {
@@ -25,7 +27,12 @@ let TasksRepository = class TasksRepository {
         this.repository = repository;
     }
     create(data) {
-        const task = this.repository.create(data);
+        const task = this.repository.create({
+            taskType: data.taskType ?? task_type_enum_1.TaskType.Task,
+            priority: data.priority ?? task_priority_enum_1.TaskPriority.Medium,
+            parentId: data.parentId ?? null,
+            ...data,
+        });
         return this.repository.save(task);
     }
     countByProject(projectId) {
@@ -47,6 +54,8 @@ let TasksRepository = class TasksRepository {
                 assignee: true,
                 creator: true,
                 sprint: true,
+                parent: true,
+                children: true,
             },
         });
     }
@@ -58,6 +67,7 @@ let TasksRepository = class TasksRepository {
             .leftJoinAndSelect('task.assignee', 'assignee')
             .leftJoinAndSelect('task.creator', 'creator')
             .leftJoinAndSelect('task.sprint', 'sprint')
+            .leftJoinAndSelect('task.parent', 'parent')
             .where('task.projectId = :projectId', { projectId })
             .andWhere('task.deletedAt IS NULL'));
         if (query.sprintId) {
@@ -73,6 +83,12 @@ let TasksRepository = class TasksRepository {
                 assigneeId: query.assigneeId,
             });
         }
+        if (query.taskType)
+            builder.andWhere('task.taskType = :taskType', { taskType: query.taskType });
+        if (query.priority)
+            builder.andWhere('task.priority = :priority', { priority: query.priority });
+        if (query.parentId)
+            builder.andWhere('task.parentId = :parentId', { parentId: query.parentId });
         if (query.keyword?.trim()) {
             const keyword = `%${query.keyword.trim()}%`;
             builder.andWhere('(task.title LIKE :keyword OR task.taskCode LIKE :keyword)', { keyword });
@@ -95,6 +111,7 @@ let TasksRepository = class TasksRepository {
     async findBacklogByProject(projectId) {
         const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
             .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator')
+            .leftJoinAndSelect('task.parent', 'parent')
             .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId IS NULL')
             .andWhere('task.status != :cancelled', { cancelled: task_status_enum_1.TaskStatus.Cancelled }).andWhere('task.deletedAt IS NULL')
             .orderBy('task.createdAt', 'DESC').getRawAndEntities();
@@ -103,6 +120,7 @@ let TasksRepository = class TasksRepository {
     async findBySprint(projectId, sprintId) {
         const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
             .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator')
+            .leftJoinAndSelect('task.parent', 'parent')
             .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId = :sprintId', { sprintId })
             .andWhere('task.deletedAt IS NULL').orderBy('task.createdAt', 'DESC').getRawAndEntities();
         return this.attachDependencyState(result.entities, result.raw);
@@ -110,6 +128,13 @@ let TasksRepository = class TasksRepository {
     async update(task, data) {
         Object.assign(task, data);
         return this.repository.save(task);
+    }
+    findIncompleteChildren(parentId) {
+        return this.repository.createQueryBuilder('task')
+            .where('task.parentId = :parentId', { parentId })
+            .andWhere('task.deletedAt IS NULL')
+            .andWhere('task.status NOT IN (:...closed)', { closed: [task_status_enum_1.TaskStatus.Done, task_status_enum_1.TaskStatus.Cancelled] })
+            .getMany();
     }
     findDueNotificationCandidates(throughDate) {
         return this.repository.createQueryBuilder('task')

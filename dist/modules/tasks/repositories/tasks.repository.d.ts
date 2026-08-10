@@ -4,7 +4,7 @@ import { Task } from '../entities/task.entity';
 export declare class TasksRepository {
     private readonly repository;
     constructor(repository: Repository<Task>);
-    create(data: Pick<Task, 'assigneeId' | 'createdBy' | 'description' | 'dueDate' | 'estimatedHours' | 'projectId' | 'sprintId' | 'status' | 'storyPoints' | 'taskCode' | 'title'>): Promise<Task>;
+    create(data: Pick<Task, 'assigneeId' | 'createdBy' | 'description' | 'dueDate' | 'estimatedHours' | 'projectId' | 'sprintId' | 'status' | 'storyPoints' | 'taskCode' | 'title'> & Partial<Pick<Task, 'taskType' | 'priority' | 'parentId'>>): Promise<Task>;
     countByProject(projectId: string): Promise<number>;
     findByIdAndProject(taskId: string, projectId: string): Promise<Task | null>;
     findByProject(projectId: string, query: GetTasksQueryDto): Promise<{
@@ -16,6 +16,7 @@ export declare class TasksRepository {
     findBacklogByProject(projectId: string): Promise<Task[]>;
     findBySprint(projectId: string, sprintId: string): Promise<Task[]>;
     update(task: Task, data: Partial<Task>): Promise<Task>;
+    findIncompleteChildren(parentId: string): Promise<Task[]>;
     findDueNotificationCandidates(throughDate: string): Promise<Task[]>;
     softDelete(task: Task): Promise<Task>;
     private withDependencyState;

@@ -1,6 +1,8 @@
 import ExcelJS from 'exceljs';
 import { SprintStatus } from '../../../common/enums/sprint-status.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
+import { TaskType } from '../../../common/enums/task-type.enum';
+import { TaskPriority } from '../../../common/enums/task-priority.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { SprintsRepository } from '../../sprints/repositories/sprints.repository';
@@ -61,6 +63,27 @@ export declare class TasksService {
                 title: string;
                 description: string | null;
                 status: TaskStatus;
+                taskType: TaskType;
+                priority: TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                    status: TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -114,6 +137,27 @@ export declare class TasksService {
                 title: string;
                 description: string | null;
                 status: TaskStatus;
+                taskType: TaskType;
+                priority: TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                    status: TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -157,6 +201,27 @@ export declare class TasksService {
                 title: string;
                 description: string | null;
                 status: TaskStatus;
+                taskType: TaskType;
+                priority: TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                    status: TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -202,6 +267,27 @@ export declare class TasksService {
                 title: string;
                 description: string | null;
                 status: TaskStatus;
+                taskType: TaskType;
+                priority: TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                    status: TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -242,6 +328,27 @@ export declare class TasksService {
                 title: string;
                 description: string | null;
                 status: TaskStatus;
+                taskType: TaskType;
+                priority: TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                    status: TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -282,6 +389,27 @@ export declare class TasksService {
                 title: string;
                 description: string | null;
                 status: TaskStatus;
+                taskType: TaskType;
+                priority: TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                    status: TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -408,6 +536,27 @@ export declare class TasksService {
                 title: string;
                 description: string | null;
                 status: TaskStatus;
+                taskType: TaskType;
+                priority: TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                    status: TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -448,6 +597,27 @@ export declare class TasksService {
                 title: string;
                 description: string | null;
                 status: TaskStatus;
+                taskType: TaskType;
+                priority: TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                    status: TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -488,6 +658,27 @@ export declare class TasksService {
                 title: string;
                 description: string | null;
                 status: TaskStatus;
+                taskType: TaskType;
+                priority: TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                    status: TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -528,6 +719,27 @@ export declare class TasksService {
                 title: string;
                 description: string | null;
                 status: TaskStatus;
+                taskType: TaskType;
+                priority: TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                    status: TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -568,6 +780,27 @@ export declare class TasksService {
                 title: string;
                 description: string | null;
                 status: TaskStatus;
+                taskType: TaskType;
+                priority: TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: TaskType;
+                    status: TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -628,6 +861,7 @@ export declare class TasksService {
     private buildChanges;
     private compactChanges;
     private assertBacklogStatusMatchesTaskLocation;
+    private assertValidParent;
     private toTaskResponse;
 }
 export {};

@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository, SelectQueryBuilder } from 'typeorm';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
+import { TaskType } from '../../../common/enums/task-type.enum';
+import { TaskPriority } from '../../../common/enums/task-priority.enum';
 import { GetTasksQueryDto, TaskDependencyStateFilter } from '../dto/get-tasks-query.dto';
 import { Task } from '../entities/task.entity';
 
@@ -26,9 +28,14 @@ export class TasksRepository {
       | 'storyPoints'
       | 'taskCode'
       | 'title'
-    >,
+    > & Partial<Pick<Task, 'taskType' | 'priority' | 'parentId'>>,
   ) {
-    const task = this.repository.create(data);
+    const task = this.repository.create({
+      taskType: data.taskType ?? TaskType.Task,
+      priority: data.priority ?? TaskPriority.Medium,
+      parentId: data.parentId ?? null,
+      ...data,
+    });
     return this.repository.save(task);
   }
 
@@ -52,6 +59,8 @@ export class TasksRepository {
         assignee: true,
         creator: true,
         sprint: true,
+        parent: true,
+        children: true,
       },
     });
   }
@@ -64,6 +73,7 @@ export class TasksRepository {
       .leftJoinAndSelect('task.assignee', 'assignee')
       .leftJoinAndSelect('task.creator', 'creator')
       .leftJoinAndSelect('task.sprint', 'sprint')
+      .leftJoinAndSelect('task.parent', 'parent')
       .where('task.projectId = :projectId', { projectId })
       .andWhere('task.deletedAt IS NULL'));
 
@@ -82,6 +92,9 @@ export class TasksRepository {
         assigneeId: query.assigneeId,
       });
     }
+    if (query.taskType) builder.andWhere('task.taskType = :taskType', { taskType: query.taskType });
+    if (query.priority) builder.andWhere('task.priority = :priority', { priority: query.priority });
+    if (query.parentId) builder.andWhere('task.parentId = :parentId', { parentId: query.parentId });
 
     if (query.keyword?.trim()) {
       const keyword = `%${query.keyword.trim()}%`;
@@ -111,6 +124,7 @@ export class TasksRepository {
   async findBacklogByProject(projectId: string) {
     const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
       .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator')
+      .leftJoinAndSelect('task.parent', 'parent')
       .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId IS NULL')
       .andWhere('task.status != :cancelled', { cancelled: TaskStatus.Cancelled }).andWhere('task.deletedAt IS NULL')
       .orderBy('task.createdAt', 'DESC').getRawAndEntities();
@@ -120,6 +134,7 @@ export class TasksRepository {
   async findBySprint(projectId: string, sprintId: string) {
     const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
       .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator')
+      .leftJoinAndSelect('task.parent', 'parent')
       .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId = :sprintId', { sprintId })
       .andWhere('task.deletedAt IS NULL').orderBy('task.createdAt', 'DESC').getRawAndEntities();
     return this.attachDependencyState(result.entities, result.raw);
@@ -128,6 +143,14 @@ export class TasksRepository {
   async update(task: Task, data: Partial<Task>) {
     Object.assign(task, data);
     return this.repository.save(task);
+  }
+
+  findIncompleteChildren(parentId: string) {
+    return this.repository.createQueryBuilder('task')
+      .where('task.parentId = :parentId', { parentId })
+      .andWhere('task.deletedAt IS NULL')
+      .andWhere('task.status NOT IN (:...closed)', { closed: [TaskStatus.Done, TaskStatus.Cancelled] })
+      .getMany();
   }
 
   findDueNotificationCandidates(throughDate: string) {

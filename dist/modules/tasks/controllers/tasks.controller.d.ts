@@ -30,6 +30,27 @@ export declare class TasksController {
                 title: string;
                 description: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
+                taskType: import("../../../common/enums/task-type.enum").TaskType;
+                priority: import("../../../common/enums/task-priority.enum").TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -70,6 +91,27 @@ export declare class TasksController {
                 title: string;
                 description: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
+                taskType: import("../../../common/enums/task-type.enum").TaskType;
+                priority: import("../../../common/enums/task-priority.enum").TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -115,6 +157,27 @@ export declare class TasksController {
                 title: string;
                 description: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
+                taskType: import("../../../common/enums/task-type.enum").TaskType;
+                priority: import("../../../common/enums/task-priority.enum").TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -155,6 +218,27 @@ export declare class TasksController {
                 title: string;
                 description: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
+                taskType: import("../../../common/enums/task-type.enum").TaskType;
+                priority: import("../../../common/enums/task-priority.enum").TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -225,6 +309,27 @@ export declare class TasksController {
                 title: string;
                 description: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
+                taskType: import("../../../common/enums/task-type.enum").TaskType;
+                priority: import("../../../common/enums/task-priority.enum").TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -268,6 +373,27 @@ export declare class TasksController {
                 title: string;
                 description: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
+                taskType: import("../../../common/enums/task-type.enum").TaskType;
+                priority: import("../../../common/enums/task-priority.enum").TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -394,6 +520,27 @@ export declare class TasksController {
                 title: string;
                 description: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
+                taskType: import("../../../common/enums/task-type.enum").TaskType;
+                priority: import("../../../common/enums/task-priority.enum").TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -434,6 +581,27 @@ export declare class TasksController {
                 title: string;
                 description: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
+                taskType: import("../../../common/enums/task-type.enum").TaskType;
+                priority: import("../../../common/enums/task-priority.enum").TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -474,6 +642,27 @@ export declare class TasksController {
                 title: string;
                 description: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
+                taskType: import("../../../common/enums/task-type.enum").TaskType;
+                priority: import("../../../common/enums/task-priority.enum").TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -514,6 +703,27 @@ export declare class TasksController {
                 title: string;
                 description: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
+                taskType: import("../../../common/enums/task-type.enum").TaskType;
+                priority: import("../../../common/enums/task-priority.enum").TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;
@@ -554,6 +764,27 @@ export declare class TasksController {
                 title: string;
                 description: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
+                taskType: import("../../../common/enums/task-type.enum").TaskType;
+                priority: import("../../../common/enums/task-priority.enum").TaskPriority;
+                parentId: string | null;
+                parent: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                } | null;
+                children: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    taskType: import("../../../common/enums/task-type.enum").TaskType;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
+                }[];
+                childProgress: {
+                    total: number;
+                    done: number;
+                    percent: number;
+                } | null;
                 assigneeId: string | null;
                 assignee: {
                     id: string;

@@ -13,7 +13,12 @@ exports.UpdateTaskDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
+const task_type_enum_1 = require("../../../common/enums/task-type.enum");
+const task_priority_enum_1 = require("../../../common/enums/task-priority.enum");
 class UpdateTaskDto {
+    taskType;
+    priority;
+    parentId;
     title;
     description;
     dueDate;
@@ -21,6 +26,24 @@ class UpdateTaskDto {
     storyPoints;
 }
 exports.UpdateTaskDto = UpdateTaskDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: task_type_enum_1.TaskType }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(task_type_enum_1.TaskType),
+    __metadata("design:type", String)
+], UpdateTaskDto.prototype, "taskType", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: task_priority_enum_1.TaskPriority }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(task_priority_enum_1.TaskPriority),
+    __metadata("design:type", String)
+], UpdateTaskDto.prototype, "priority", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ nullable: true, description: 'UUID Task cha; null để bỏ liên kết.' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", Object)
+], UpdateTaskDto.prototype, "parentId", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         example: 'Code API tao va cap nhat task',

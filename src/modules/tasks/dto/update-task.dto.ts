@@ -5,13 +5,25 @@ import {
   IsInt,
   IsNumber,
   IsOptional,
+  IsEnum,
+  IsUUID,
   IsString,
   MaxLength,
   Min,
   MinLength,
 } from 'class-validator';
+import { TaskType } from '../../../common/enums/task-type.enum';
+import { TaskPriority } from '../../../common/enums/task-priority.enum';
 
 export class UpdateTaskDto {
+  @ApiPropertyOptional({ enum: TaskType })
+  @IsOptional() @IsEnum(TaskType) taskType?: TaskType;
+
+  @ApiPropertyOptional({ enum: TaskPriority })
+  @IsOptional() @IsEnum(TaskPriority) priority?: TaskPriority;
+
+  @ApiPropertyOptional({ nullable: true, description: 'UUID Task cha; null để bỏ liên kết.' })
+  @IsOptional() @IsUUID() parentId?: string | null;
   @ApiPropertyOptional({
     example: 'Code API tao va cap nhat task',
     description: 'Tieu de task moi, tu 2 den 200 ky tu.',
