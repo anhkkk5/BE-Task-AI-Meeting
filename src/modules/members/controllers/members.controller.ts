@@ -26,6 +26,7 @@ import { AddMemberDto } from '../dto/add-member.dto';
 import { ChangeMemberRoleDto } from '../dto/change-member-role.dto';
 import { LookupMemberQueryDto } from '../dto/lookup-member-query.dto';
 import { MembersService } from '../services/members.service';
+import { UpdateMemberCapacityDto } from '../dto/update-member-capacity.dto';
 
 @Controller('workspaces/:workspaceId/members')
 @ApiTags('Members')
@@ -138,5 +139,11 @@ export class MembersController {
     @Param('memberId') memberId: string,
   ) {
     return this.membersService.removeMember(user.id, workspaceId, memberId);
+  }
+
+  @Patch(':memberId/capacity')
+  @UseGuards(WorkspaceMemberGuard)
+  updateCapacity(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('memberId') memberId: string, @Body() dto: UpdateMemberCapacityDto) {
+    return this.membersService.updateCapacity(user.id, workspaceId, memberId, dto);
   }
 }

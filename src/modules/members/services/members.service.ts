@@ -14,6 +14,7 @@ import { WorkspaceMembersRepository } from '../../workspaces/repositories/worksp
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { AddMemberDto } from '../dto/add-member.dto';
 import { ChangeMemberRoleDto } from '../dto/change-member-role.dto';
+import { UpdateMemberCapacityDto } from '../dto/update-member-capacity.dto';
 
 @Injectable()
 export class MembersService {
@@ -38,6 +39,17 @@ export class MembersService {
         items: members.map((member) => this.toMemberResponse(member)),
       },
     };
+  }
+
+  async updateCapacity(currentUserId: string, workspaceId: string, memberId: string, dto: UpdateMemberCapacityDto) {
+    const current = await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
+    const target = await this.workspaceMembersRepository.findByIdAndWorkspace(memberId, workspaceId);
+    if (!target || target.status !== WorkspaceMemberStatus.Active) throw new NotFoundException('Workspace member not found');
+    const managers = [WorkspaceRole.Owner, WorkspaceRole.ScrumMaster, WorkspaceRole.ProjectManager];
+    if (target.userId !== currentUserId && !managers.includes(current.role)) throw new BadRequestException('You can only update your own capacity');
+    const unavailableDates = [...new Set(dto.unavailableDates ?? [])].sort();
+    const member = await this.workspaceMembersRepository.updateMember(target, { dailyCapacityHours: dto.dailyCapacityHours, unavailableDates });
+    return { success: true, message: 'Update member capacity successfully', data: { member: this.toMemberResponse(member) } };
   }
 
   async addMember(
@@ -284,6 +296,8 @@ export class MembersService {
       role: member.role,
       status: member.status,
       joinedAt: member.joinedAt,
+      dailyCapacityHours: member.dailyCapacityHours ?? 8,
+      unavailableDates: member.unavailableDates ?? [],
     };
   }
 

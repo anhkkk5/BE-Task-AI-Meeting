@@ -6,6 +6,7 @@ import { WorkspaceMembersRepository } from '../../workspaces/repositories/worksp
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { AddMemberDto } from '../dto/add-member.dto';
 import { ChangeMemberRoleDto } from '../dto/change-member-role.dto';
+import { UpdateMemberCapacityDto } from '../dto/update-member-capacity.dto';
 export declare class MembersService {
     private readonly usersService;
     private readonly workspaceAccessService;
@@ -24,7 +25,27 @@ export declare class MembersService {
                 role: WorkspaceRole;
                 status: WorkspaceMemberStatus;
                 joinedAt: Date | null;
+                dailyCapacityHours: number;
+                unavailableDates: string[];
             }[];
+        };
+    }>;
+    updateCapacity(currentUserId: string, workspaceId: string, memberId: string, dto: UpdateMemberCapacityDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            member: {
+                memberId: string;
+                userId: string;
+                fullName: string;
+                email: string;
+                avatarUrl: string | null;
+                role: WorkspaceRole;
+                status: WorkspaceMemberStatus;
+                joinedAt: Date | null;
+                dailyCapacityHours: number;
+                unavailableDates: string[];
+            };
         };
     }>;
     addMember(currentUserId: string, workspaceId: string, dto: AddMemberDto): Promise<{
@@ -40,6 +61,8 @@ export declare class MembersService {
                 role: WorkspaceRole;
                 status: WorkspaceMemberStatus;
                 joinedAt: Date | null;
+                dailyCapacityHours: number;
+                unavailableDates: string[];
             };
         };
     }>;
@@ -64,6 +87,8 @@ export declare class MembersService {
                 role: WorkspaceRole;
                 status: WorkspaceMemberStatus;
                 joinedAt: Date | null;
+                dailyCapacityHours: number;
+                unavailableDates: string[];
             } | null;
             canAdd: boolean;
             reason: string | null;
@@ -82,6 +107,8 @@ export declare class MembersService {
                 role: WorkspaceRole;
                 status: WorkspaceMemberStatus;
                 joinedAt: Date | null;
+                dailyCapacityHours: number;
+                unavailableDates: string[];
             };
         };
     }>;

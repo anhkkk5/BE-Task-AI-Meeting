@@ -25,6 +25,7 @@ const add_member_dto_1 = require("../dto/add-member.dto");
 const change_member_role_dto_1 = require("../dto/change-member-role.dto");
 const lookup_member_query_dto_1 = require("../dto/lookup-member-query.dto");
 const members_service_1 = require("../services/members.service");
+const update_member_capacity_dto_1 = require("../dto/update-member-capacity.dto");
 let MembersController = class MembersController {
     membersService;
     constructor(membersService) {
@@ -47,6 +48,9 @@ let MembersController = class MembersController {
     }
     removeMember(user, workspaceId, memberId) {
         return this.membersService.removeMember(user.id, workspaceId, memberId);
+    }
+    updateCapacity(user, workspaceId, memberId, dto) {
+        return this.membersService.updateCapacity(user.id, workspaceId, memberId, dto);
     }
 };
 exports.MembersController = MembersController;
@@ -149,6 +153,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", void 0)
 ], MembersController.prototype, "removeMember", null);
+__decorate([
+    (0, common_1.Patch)(':memberId/capacity'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('memberId')),
+    __param(3, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, update_member_capacity_dto_1.UpdateMemberCapacityDto]),
+    __metadata("design:returntype", void 0)
+], MembersController.prototype, "updateCapacity", null);
 exports.MembersController = MembersController = __decorate([
     (0, common_1.Controller)('workspaces/:workspaceId/members'),
     (0, swagger_1.ApiTags)('Members'),

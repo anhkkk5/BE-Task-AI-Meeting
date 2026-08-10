@@ -9,6 +9,8 @@ export declare class WorkspaceMember {
     role: WorkspaceRole;
     status: WorkspaceMemberStatus;
     joinedAt: Date | null;
+    dailyCapacityHours: number;
+    unavailableDates: string[] | null;
     workspace: Workspace;
     user: User;
     createdAt: Date;

@@ -22,6 +22,8 @@ let WorkspaceMember = class WorkspaceMember {
     role;
     status;
     joinedAt;
+    dailyCapacityHours;
+    unavailableDates;
     workspace;
     user;
     createdAt;
@@ -61,6 +63,14 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'joined_at', type: 'datetime', nullable: true }),
     __metadata("design:type", Object)
 ], WorkspaceMember.prototype, "joinedAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'daily_capacity_hours', type: 'float', default: 8 }),
+    __metadata("design:type", Number)
+], WorkspaceMember.prototype, "dailyCapacityHours", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'unavailable_dates', type: 'json', nullable: true }),
+    __metadata("design:type", Object)
+], WorkspaceMember.prototype, "unavailableDates", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => workspace_entity_1.Workspace, (workspace) => workspace.members, {
         onDelete: 'CASCADE',

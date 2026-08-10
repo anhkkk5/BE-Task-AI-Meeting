@@ -43,6 +43,12 @@ export class WorkspaceMember {
   @Column({ name: 'joined_at', type: 'datetime', nullable: true })
   joinedAt: Date | null;
 
+  @Column({ name: 'daily_capacity_hours', type: 'float', default: 8 })
+  dailyCapacityHours: number;
+
+  @Column({ name: 'unavailable_dates', type: 'json', nullable: true })
+  unavailableDates: string[] | null;
+
   @ManyToOne(() => Workspace, (workspace) => workspace.members, {
     onDelete: 'CASCADE',
   })
