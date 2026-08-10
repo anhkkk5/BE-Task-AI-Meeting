@@ -23,6 +23,7 @@ describe('TasksService', () => {
       | 'findBacklogByProject'
       | 'findByProject'
       | 'findBySprint'
+      | 'findChildren'
       | 'softDelete'
       | 'update'
     >
@@ -87,6 +88,7 @@ describe('TasksService', () => {
       findBacklogByProject: jest.fn(),
       findByProject: jest.fn(),
       findBySprint: jest.fn(),
+      findChildren: jest.fn().mockResolvedValue([]),
       softDelete: jest.fn(),
       update: jest.fn(),
     };
@@ -179,6 +181,10 @@ describe('TasksService', () => {
       taskType: 'TASK',
       priority: 'MEDIUM',
       parentId: null,
+      labels: null,
+      acceptanceCriteria: null,
+      reporterId: 'owner-id',
+      completedAt: null,
     });
     expect(response.data.task.status).toBe(TaskStatus.Backlog);
   });
@@ -393,6 +399,14 @@ describe('TasksService', () => {
       message: 'Delete task successfully',
       data: null,
     });
+  });
+
+  it('rejects deleting a parent task that still has children', async () => {
+    taskAccessService.assertTaskInProject.mockResolvedValue(task);
+    tasksRepository.findChildren.mockResolvedValue([{ id: 'child-id', taskCode: 'AGILEAI-2', title: 'Child' } as Task]);
+
+    await expect(service.deleteTask('owner-id', 'workspace-id', 'project-id', 'task-id')).rejects.toBeInstanceOf(BadRequestException);
+    expect(tasksRepository.softDelete).not.toHaveBeenCalled();
   });
 
   it('imports valid Excel preview rows into sprint and backlog', async () => {

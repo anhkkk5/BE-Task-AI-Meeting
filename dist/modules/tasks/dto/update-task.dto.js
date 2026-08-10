@@ -16,6 +16,9 @@ const class_validator_1 = require("class-validator");
 const task_type_enum_1 = require("../../../common/enums/task-type.enum");
 const task_priority_enum_1 = require("../../../common/enums/task-priority.enum");
 class UpdateTaskDto {
+    labels;
+    acceptanceCriteria;
+    reporterId;
     taskType;
     priority;
     parentId;
@@ -26,6 +29,27 @@ class UpdateTaskDto {
     storyPoints;
 }
 exports.UpdateTaskDto = UpdateTaskDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ type: [String] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.MaxLength)(40, { each: true }),
+    __metadata("design:type", Array)
+], UpdateTaskDto.prototype, "labels", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ maxLength: 4000 }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(4000),
+    __metadata("design:type", String)
+], UpdateTaskDto.prototype, "acceptanceCriteria", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ nullable: true }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", Object)
+], UpdateTaskDto.prototype, "reporterId", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ enum: task_type_enum_1.TaskType }),
     (0, class_validator_1.IsOptional)(),

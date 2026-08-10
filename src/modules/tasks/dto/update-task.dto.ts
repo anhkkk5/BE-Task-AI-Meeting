@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDateString,
+  IsArray,
   IsInt,
   IsNumber,
   IsOptional,
@@ -16,6 +17,14 @@ import { TaskType } from '../../../common/enums/task-type.enum';
 import { TaskPriority } from '../../../common/enums/task-priority.enum';
 
 export class UpdateTaskDto {
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional() @IsArray() @IsString({ each: true }) @MaxLength(40, { each: true }) labels?: string[];
+
+  @ApiPropertyOptional({ maxLength: 4000 })
+  @IsOptional() @IsString() @MaxLength(4000) acceptanceCriteria?: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional() @IsUUID() reporterId?: string | null;
   @ApiPropertyOptional({ enum: TaskType })
   @IsOptional() @IsEnum(TaskType) taskType?: TaskType;
 

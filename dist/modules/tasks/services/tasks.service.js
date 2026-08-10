@@ -127,6 +127,9 @@ let TasksService = class TasksService {
         if (dto.assigneeId) {
             await this.taskAccessService.assertAssignableUser(dto.assigneeId, workspaceId);
         }
+        if (dto.reporterId) {
+            await this.taskAccessService.assertAssignableUser(dto.reporterId, workspaceId);
+        }
         const parent = dto.parentId
             ? await this.assertValidParent(dto.parentId, projectId, dto.taskType ?? task_type_enum_1.TaskType.Task)
             : null;
@@ -149,6 +152,10 @@ let TasksService = class TasksService {
             taskType: dto.taskType ?? task_type_enum_1.TaskType.Task,
             priority: dto.priority ?? task_priority_enum_1.TaskPriority.Medium,
             parentId: parent?.id ?? null,
+            labels: this.normalizeLabels(dto.labels),
+            acceptanceCriteria: dto.acceptanceCriteria?.trim() || null,
+            reporterId: dto.reporterId ?? currentUserId,
+            completedAt: null,
         });
         await this.recordActivity(task, currentUserId, task_activity_log_entity_1.TaskActivityAction.Created);
         return {
@@ -536,6 +543,9 @@ let TasksService = class TasksService {
             'taskType',
             'priority',
             'parentId',
+            'labels',
+            'acceptanceCriteria',
+            'reporterId',
         ]);
         const nextTaskType = dto.taskType ?? task.taskType;
         const nextParentId = dto.parentId === undefined ? task.parentId : dto.parentId;
@@ -544,6 +554,9 @@ let TasksService = class TasksService {
             : null;
         if (nextTaskType === task_type_enum_1.TaskType.Subtask && !parent) {
             throw new common_1.BadRequestException('SUBTASK must have a parent task');
+        }
+        if (dto.reporterId) {
+            await this.taskAccessService.assertAssignableUser(dto.reporterId, workspaceId);
         }
         const updatedTask = await this.tasksRepository.update(task, {
             title: dto.title?.trim() ?? task.title,
@@ -556,6 +569,9 @@ let TasksService = class TasksService {
             taskType: nextTaskType,
             priority: dto.priority ?? task.priority,
             parentId: parent?.id ?? null,
+            labels: dto.labels === undefined ? task.labels : this.normalizeLabels(dto.labels),
+            acceptanceCriteria: dto.acceptanceCriteria === undefined ? task.acceptanceCriteria : dto.acceptanceCriteria.trim() || null,
+            reporterId: dto.reporterId === undefined ? task.reporterId : dto.reporterId,
         });
         await this.recordActivity(updatedTask, currentUserId, task_activity_log_entity_1.TaskActivityAction.Updated, this.buildChanges(previous, updatedTask));
         return {
@@ -602,6 +618,7 @@ let TasksService = class TasksService {
         const previousStatus = task.status;
         const updatedTask = await this.tasksRepository.update(task, {
             status: dto.status,
+            completedAt: dto.status === task_status_enum_1.TaskStatus.Done ? task.completedAt ?? new Date() : null,
         });
         await this.recordActivity(updatedTask, currentUserId, task_activity_log_entity_1.TaskActivityAction.StatusChanged, {
             status: { from: previousStatus, to: updatedTask.status },
@@ -703,6 +720,13 @@ let TasksService = class TasksService {
         await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
         const task = await this.taskAccessService.assertTaskInProject(taskId, projectId);
         await this.taskAccessService.assertUserCanDeleteTask(currentUserId, workspaceId, task);
+        const children = await this.tasksRepository.findChildren(task.id);
+        if (children.length) {
+            throw new common_1.BadRequestException({
+                message: 'Move or delete child tasks before deleting the parent task',
+                children: children.map((child) => ({ id: child.id, taskCode: child.taskCode, title: child.title })),
+            });
+        }
         await this.recordActivity(task, currentUserId, task_activity_log_entity_1.TaskActivityAction.Deleted);
         await this.tasksRepository.softDelete(task);
         return {
@@ -1111,6 +1135,11 @@ let TasksService = class TasksService {
         }
         return parent;
     }
+    normalizeLabels(labels) {
+        if (!labels?.length)
+            return null;
+        return [...new Set(labels.map((label) => label.trim().toLowerCase()).filter(Boolean))].slice(0, 20);
+    }
     toTaskResponse(task) {
         return {
             id: task.id,
@@ -1119,6 +1148,8 @@ let TasksService = class TasksService {
             taskCode: task.taskCode,
             title: task.title,
             description: task.description,
+            labels: task.labels ?? [],
+            acceptanceCriteria: task.acceptanceCriteria,
             status: task.status,
             taskType: task.taskType ?? task_type_enum_1.TaskType.Task,
             priority: task.priority ?? task_priority_enum_1.TaskPriority.Medium,
@@ -1139,6 +1170,8 @@ let TasksService = class TasksService {
                     avatarUrl: task.assignee.avatarUrl,
                 }
                 : null,
+            reporterId: task.reporterId,
+            reporter: task.reporter ? { id: task.reporter.id, fullName: task.reporter.fullName, email: task.reporter.email, avatarUrl: task.reporter.avatarUrl } : null,
             createdBy: task.createdBy,
             creator: task.creator
                 ? {
@@ -1157,6 +1190,7 @@ let TasksService = class TasksService {
             dueDate: task.dueDate,
             estimatedHours: task.estimatedHours,
             storyPoints: task.storyPoints,
+            completedAt: task.completedAt,
             createdAt: task.createdAt,
             updatedAt: task.updatedAt,
             isBlocked: task.isBlocked ?? false,

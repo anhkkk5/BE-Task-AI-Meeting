@@ -189,6 +189,9 @@ export class TasksService {
         workspaceId,
       );
     }
+    if (dto.reporterId) {
+      await this.taskAccessService.assertAssignableUser(dto.reporterId, workspaceId);
+    }
     const parent = dto.parentId
       ? await this.assertValidParent(dto.parentId, projectId, dto.taskType ?? TaskType.Task)
       : null;
@@ -212,6 +215,10 @@ export class TasksService {
       taskType: dto.taskType ?? TaskType.Task,
       priority: dto.priority ?? TaskPriority.Medium,
       parentId: parent?.id ?? null,
+      labels: this.normalizeLabels(dto.labels),
+      acceptanceCriteria: dto.acceptanceCriteria?.trim() || null,
+      reporterId: dto.reporterId ?? currentUserId,
+      completedAt: null,
     });
     await this.recordActivity(task, currentUserId, TaskActivityAction.Created);
 
@@ -797,6 +804,9 @@ export class TasksService {
       'taskType',
       'priority',
       'parentId',
+      'labels',
+      'acceptanceCriteria',
+      'reporterId',
     ]);
 
     const nextTaskType = dto.taskType ?? task.taskType;
@@ -806,6 +816,9 @@ export class TasksService {
       : null;
     if (nextTaskType === TaskType.Subtask && !parent) {
       throw new BadRequestException('SUBTASK must have a parent task');
+    }
+    if (dto.reporterId) {
+      await this.taskAccessService.assertAssignableUser(dto.reporterId, workspaceId);
     }
 
     const updatedTask = await this.tasksRepository.update(task, {
@@ -820,6 +833,9 @@ export class TasksService {
       taskType: nextTaskType,
       priority: dto.priority ?? task.priority,
       parentId: parent?.id ?? null,
+      labels: dto.labels === undefined ? task.labels : this.normalizeLabels(dto.labels),
+      acceptanceCriteria: dto.acceptanceCriteria === undefined ? task.acceptanceCriteria : dto.acceptanceCriteria.trim() || null,
+      reporterId: dto.reporterId === undefined ? task.reporterId : dto.reporterId,
     });
     await this.recordActivity(
       updatedTask,
@@ -894,6 +910,7 @@ export class TasksService {
 
     const updatedTask = await this.tasksRepository.update(task, {
       status: dto.status,
+      completedAt: dto.status === TaskStatus.Done ? task.completedAt ?? new Date() : null,
     });
     await this.recordActivity(
       updatedTask,
@@ -1090,6 +1107,13 @@ export class TasksService {
       workspaceId,
       task,
     );
+    const children = await this.tasksRepository.findChildren(task.id);
+    if (children.length) {
+      throw new BadRequestException({
+        message: 'Move or delete child tasks before deleting the parent task',
+        children: children.map((child) => ({ id: child.id, taskCode: child.taskCode, title: child.title })),
+      });
+    }
     await this.recordActivity(task, currentUserId, TaskActivityAction.Deleted);
     await this.tasksRepository.softDelete(task);
 
@@ -1686,6 +1710,11 @@ export class TasksService {
     return parent;
   }
 
+  private normalizeLabels(labels?: string[]) {
+    if (!labels?.length) return null;
+    return [...new Set(labels.map((label) => label.trim().toLowerCase()).filter(Boolean))].slice(0, 20);
+  }
+
   private toTaskResponse(task: Task) {
     return {
       id: task.id,
@@ -1694,6 +1723,8 @@ export class TasksService {
       taskCode: task.taskCode,
       title: task.title,
       description: task.description,
+      labels: task.labels ?? [],
+      acceptanceCriteria: task.acceptanceCriteria,
       status: task.status,
       taskType: task.taskType ?? TaskType.Task,
       priority: task.priority ?? TaskPriority.Medium,
@@ -1714,6 +1745,8 @@ export class TasksService {
             avatarUrl: task.assignee.avatarUrl,
           }
         : null,
+      reporterId: task.reporterId,
+      reporter: task.reporter ? { id: task.reporter.id, fullName: task.reporter.fullName, email: task.reporter.email, avatarUrl: task.reporter.avatarUrl } : null,
       createdBy: task.createdBy,
       creator: task.creator
         ? {
@@ -1732,6 +1765,7 @@ export class TasksService {
       dueDate: task.dueDate,
       estimatedHours: task.estimatedHours,
       storyPoints: task.storyPoints,
+      completedAt: task.completedAt,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
       isBlocked: task.isBlocked ?? false,

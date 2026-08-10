@@ -49,6 +49,8 @@ export declare class AiTeamReportActionItemController {
                 taskCode: string;
                 title: string;
                 description: string | null;
+                labels: string[];
+                acceptanceCriteria: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
                 taskType: import("../../../common/enums/task-type.enum").TaskType;
                 priority: import("../../../common/enums/task-priority.enum").TaskPriority;
@@ -78,6 +80,13 @@ export declare class AiTeamReportActionItemController {
                     email: string;
                     avatarUrl: string | null;
                 } | null;
+                reporterId: string | null;
+                reporter: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 createdBy: string;
                 creator: {
                     id: string;
@@ -92,6 +101,7 @@ export declare class AiTeamReportActionItemController {
                 dueDate: string | null;
                 estimatedHours: number | null;
                 storyPoints: number | null;
+                completedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;

@@ -42,6 +42,12 @@ export class Task {
   @Column({ type: 'varchar', length: 2000, nullable: true })
   description: string | null;
 
+  @Column({ type: 'json', nullable: true })
+  labels: string[] | null;
+
+  @Column({ name: 'acceptance_criteria', type: 'text', nullable: true })
+  acceptanceCriteria: string | null;
+
   @Index()
   @Column({
     type: 'enum',
@@ -67,6 +73,10 @@ export class Task {
   assigneeId: string | null;
 
   @Index()
+  @Column({ name: 'reporter_id', type: 'varchar', length: 36, nullable: true })
+  reporterId: string | null;
+
+  @Index()
   @Column({ name: 'created_by', type: 'varchar', length: 36 })
   createdBy: string;
 
@@ -79,6 +89,9 @@ export class Task {
   @Column({ name: 'story_points', type: 'int', nullable: true })
   storyPoints: number | null;
 
+  @Column({ name: 'completed_at', type: 'datetime', nullable: true })
+  completedAt: Date | null;
+
   @ManyToOne(() => Project, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })
   project: Project;
@@ -90,6 +103,10 @@ export class Task {
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'assignee_id' })
   assignee: User | null;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'reporter_id' })
+  reporter: User | null;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'created_by' })

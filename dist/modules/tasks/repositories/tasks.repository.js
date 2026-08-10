@@ -52,6 +52,7 @@ let TasksRepository = class TasksRepository {
             },
             relations: {
                 assignee: true,
+                reporter: true,
                 creator: true,
                 sprint: true,
                 parent: true,
@@ -65,6 +66,7 @@ let TasksRepository = class TasksRepository {
         const builder = this.withDependencyState(this.repository
             .createQueryBuilder('task')
             .leftJoinAndSelect('task.assignee', 'assignee')
+            .leftJoinAndSelect('task.reporter', 'reporter')
             .leftJoinAndSelect('task.creator', 'creator')
             .leftJoinAndSelect('task.sprint', 'sprint')
             .leftJoinAndSelect('task.parent', 'parent')
@@ -110,7 +112,7 @@ let TasksRepository = class TasksRepository {
     }
     async findBacklogByProject(projectId) {
         const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
-            .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator')
+            .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator').leftJoinAndSelect('task.reporter', 'reporter')
             .leftJoinAndSelect('task.parent', 'parent')
             .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId IS NULL')
             .andWhere('task.status != :cancelled', { cancelled: task_status_enum_1.TaskStatus.Cancelled }).andWhere('task.deletedAt IS NULL')
@@ -119,7 +121,7 @@ let TasksRepository = class TasksRepository {
     }
     async findBySprint(projectId, sprintId) {
         const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
-            .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator')
+            .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator').leftJoinAndSelect('task.reporter', 'reporter')
             .leftJoinAndSelect('task.parent', 'parent')
             .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId = :sprintId', { sprintId })
             .andWhere('task.deletedAt IS NULL').orderBy('task.createdAt', 'DESC').getRawAndEntities();
@@ -135,6 +137,9 @@ let TasksRepository = class TasksRepository {
             .andWhere('task.deletedAt IS NULL')
             .andWhere('task.status NOT IN (:...closed)', { closed: [task_status_enum_1.TaskStatus.Done, task_status_enum_1.TaskStatus.Cancelled] })
             .getMany();
+    }
+    findChildren(parentId) {
+        return this.repository.find({ where: { parentId, deletedAt: (0, typeorm_2.IsNull)() } });
     }
     findDueNotificationCandidates(throughDate) {
         return this.repository.createQueryBuilder('task')

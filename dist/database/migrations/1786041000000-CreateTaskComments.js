@@ -19,7 +19,7 @@ class CreateTaskComments1786041000000 {
         PRIMARY KEY (\`id\`),
         CONSTRAINT \`FK_task_comment_task\` FOREIGN KEY (\`task_id\`) REFERENCES \`tasks\`(\`id\`) ON DELETE CASCADE,
         CONSTRAINT \`FK_task_comment_author\` FOREIGN KEY (\`author_id\`) REFERENCES \`users\`(\`id\`) ON DELETE CASCADE
-      ) ENGINE=InnoDB
+      ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
     `);
     }
     async down(queryRunner) {

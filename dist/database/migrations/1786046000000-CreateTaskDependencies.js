@@ -12,7 +12,7 @@ class CreateTaskDependencies1786046000000 {
       CONSTRAINT \`FK_task_dependency_source\` FOREIGN KEY (\`source_task_id\`) REFERENCES \`tasks\`(\`id\`) ON DELETE CASCADE,
       CONSTRAINT \`FK_task_dependency_target\` FOREIGN KEY (\`target_task_id\`) REFERENCES \`tasks\`(\`id\`) ON DELETE CASCADE,
       CONSTRAINT \`FK_task_dependency_creator\` FOREIGN KEY (\`created_by\`) REFERENCES \`users\`(\`id\`) ON DELETE CASCADE
-    ) ENGINE=InnoDB`);
+    ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
     }
     async down(queryRunner) { await queryRunner.query('DROP TABLE `task_dependencies`'); }
 }

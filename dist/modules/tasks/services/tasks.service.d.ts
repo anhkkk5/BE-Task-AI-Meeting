@@ -62,6 +62,8 @@ export declare class TasksService {
                 taskCode: string;
                 title: string;
                 description: string | null;
+                labels: string[];
+                acceptanceCriteria: string | null;
                 status: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
@@ -91,6 +93,13 @@ export declare class TasksService {
                     email: string;
                     avatarUrl: string | null;
                 } | null;
+                reporterId: string | null;
+                reporter: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 createdBy: string;
                 creator: {
                     id: string;
@@ -105,6 +114,7 @@ export declare class TasksService {
                 dueDate: string | null;
                 estimatedHours: number | null;
                 storyPoints: number | null;
+                completedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;
@@ -136,6 +146,8 @@ export declare class TasksService {
                 taskCode: string;
                 title: string;
                 description: string | null;
+                labels: string[];
+                acceptanceCriteria: string | null;
                 status: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
@@ -165,6 +177,13 @@ export declare class TasksService {
                     email: string;
                     avatarUrl: string | null;
                 } | null;
+                reporterId: string | null;
+                reporter: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 createdBy: string;
                 creator: {
                     id: string;
@@ -179,6 +198,7 @@ export declare class TasksService {
                 dueDate: string | null;
                 estimatedHours: number | null;
                 storyPoints: number | null;
+                completedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;
@@ -200,6 +220,8 @@ export declare class TasksService {
                 taskCode: string;
                 title: string;
                 description: string | null;
+                labels: string[];
+                acceptanceCriteria: string | null;
                 status: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
@@ -229,6 +251,13 @@ export declare class TasksService {
                     email: string;
                     avatarUrl: string | null;
                 } | null;
+                reporterId: string | null;
+                reporter: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 createdBy: string;
                 creator: {
                     id: string;
@@ -243,6 +272,7 @@ export declare class TasksService {
                 dueDate: string | null;
                 estimatedHours: number | null;
                 storyPoints: number | null;
+                completedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;
@@ -266,6 +296,8 @@ export declare class TasksService {
                 taskCode: string;
                 title: string;
                 description: string | null;
+                labels: string[];
+                acceptanceCriteria: string | null;
                 status: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
@@ -295,6 +327,13 @@ export declare class TasksService {
                     email: string;
                     avatarUrl: string | null;
                 } | null;
+                reporterId: string | null;
+                reporter: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 createdBy: string;
                 creator: {
                     id: string;
@@ -309,6 +348,7 @@ export declare class TasksService {
                 dueDate: string | null;
                 estimatedHours: number | null;
                 storyPoints: number | null;
+                completedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;
@@ -327,6 +367,8 @@ export declare class TasksService {
                 taskCode: string;
                 title: string;
                 description: string | null;
+                labels: string[];
+                acceptanceCriteria: string | null;
                 status: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
@@ -356,6 +398,13 @@ export declare class TasksService {
                     email: string;
                     avatarUrl: string | null;
                 } | null;
+                reporterId: string | null;
+                reporter: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 createdBy: string;
                 creator: {
                     id: string;
@@ -370,6 +419,7 @@ export declare class TasksService {
                 dueDate: string | null;
                 estimatedHours: number | null;
                 storyPoints: number | null;
+                completedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;
@@ -388,6 +438,8 @@ export declare class TasksService {
                 taskCode: string;
                 title: string;
                 description: string | null;
+                labels: string[];
+                acceptanceCriteria: string | null;
                 status: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
@@ -417,6 +469,13 @@ export declare class TasksService {
                     email: string;
                     avatarUrl: string | null;
                 } | null;
+                reporterId: string | null;
+                reporter: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 createdBy: string;
                 creator: {
                     id: string;
@@ -431,6 +490,7 @@ export declare class TasksService {
                 dueDate: string | null;
                 estimatedHours: number | null;
                 storyPoints: number | null;
+                completedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;
@@ -535,6 +595,8 @@ export declare class TasksService {
                 taskCode: string;
                 title: string;
                 description: string | null;
+                labels: string[];
+                acceptanceCriteria: string | null;
                 status: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
@@ -564,6 +626,13 @@ export declare class TasksService {
                     email: string;
                     avatarUrl: string | null;
                 } | null;
+                reporterId: string | null;
+                reporter: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 createdBy: string;
                 creator: {
                     id: string;
@@ -578,6 +647,7 @@ export declare class TasksService {
                 dueDate: string | null;
                 estimatedHours: number | null;
                 storyPoints: number | null;
+                completedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;
@@ -596,6 +666,8 @@ export declare class TasksService {
                 taskCode: string;
                 title: string;
                 description: string | null;
+                labels: string[];
+                acceptanceCriteria: string | null;
                 status: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
@@ -625,6 +697,13 @@ export declare class TasksService {
                     email: string;
                     avatarUrl: string | null;
                 } | null;
+                reporterId: string | null;
+                reporter: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 createdBy: string;
                 creator: {
                     id: string;
@@ -639,6 +718,7 @@ export declare class TasksService {
                 dueDate: string | null;
                 estimatedHours: number | null;
                 storyPoints: number | null;
+                completedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;
@@ -657,6 +737,8 @@ export declare class TasksService {
                 taskCode: string;
                 title: string;
                 description: string | null;
+                labels: string[];
+                acceptanceCriteria: string | null;
                 status: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
@@ -686,6 +768,13 @@ export declare class TasksService {
                     email: string;
                     avatarUrl: string | null;
                 } | null;
+                reporterId: string | null;
+                reporter: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 createdBy: string;
                 creator: {
                     id: string;
@@ -700,6 +789,7 @@ export declare class TasksService {
                 dueDate: string | null;
                 estimatedHours: number | null;
                 storyPoints: number | null;
+                completedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;
@@ -718,6 +808,8 @@ export declare class TasksService {
                 taskCode: string;
                 title: string;
                 description: string | null;
+                labels: string[];
+                acceptanceCriteria: string | null;
                 status: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
@@ -747,6 +839,13 @@ export declare class TasksService {
                     email: string;
                     avatarUrl: string | null;
                 } | null;
+                reporterId: string | null;
+                reporter: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 createdBy: string;
                 creator: {
                     id: string;
@@ -761,6 +860,7 @@ export declare class TasksService {
                 dueDate: string | null;
                 estimatedHours: number | null;
                 storyPoints: number | null;
+                completedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;
@@ -779,6 +879,8 @@ export declare class TasksService {
                 taskCode: string;
                 title: string;
                 description: string | null;
+                labels: string[];
+                acceptanceCriteria: string | null;
                 status: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
@@ -808,6 +910,13 @@ export declare class TasksService {
                     email: string;
                     avatarUrl: string | null;
                 } | null;
+                reporterId: string | null;
+                reporter: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
                 createdBy: string;
                 creator: {
                     id: string;
@@ -822,6 +931,7 @@ export declare class TasksService {
                 dueDate: string | null;
                 estimatedHours: number | null;
                 storyPoints: number | null;
+                completedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;
@@ -862,6 +972,7 @@ export declare class TasksService {
     private compactChanges;
     private assertBacklogStatusMatchesTaskLocation;
     private assertValidParent;
+    private normalizeLabels;
     private toTaskResponse;
 }
 export {};

@@ -16,6 +16,9 @@ const class_validator_1 = require("class-validator");
 const task_type_enum_1 = require("../../../common/enums/task-type.enum");
 const task_priority_enum_1 = require("../../../common/enums/task-priority.enum");
 class CreateTaskDto {
+    labels;
+    acceptanceCriteria;
+    reporterId;
     taskType;
     priority;
     parentId;
@@ -28,6 +31,27 @@ class CreateTaskDto {
     storyPoints;
 }
 exports.CreateTaskDto = CreateTaskDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ type: [String], example: ['frontend', 'urgent'] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.MaxLength)(40, { each: true }),
+    __metadata("design:type", Array)
+], CreateTaskDto.prototype, "labels", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ maxLength: 4000 }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(4000),
+    __metadata("design:type", String)
+], CreateTaskDto.prototype, "acceptanceCriteria", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'User báo cáo Task; mặc định là người tạo.' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], CreateTaskDto.prototype, "reporterId", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ enum: task_type_enum_1.TaskType, default: task_type_enum_1.TaskType.Task }),
     (0, class_validator_1.IsOptional)(),

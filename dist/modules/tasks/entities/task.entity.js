@@ -26,18 +26,23 @@ let Task = class Task {
     taskCode;
     title;
     description;
+    labels;
+    acceptanceCriteria;
     status;
     taskType;
     priority;
     parentId;
     assigneeId;
+    reporterId;
     createdBy;
     dueDate;
     estimatedHours;
     storyPoints;
+    completedAt;
     project;
     sprint;
     assignee;
+    reporter;
     creator;
     parent;
     children;
@@ -73,6 +78,14 @@ __decorate([
     __metadata("design:type", Object)
 ], Task.prototype, "description", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'json', nullable: true }),
+    __metadata("design:type", Object)
+], Task.prototype, "labels", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'acceptance_criteria', type: 'text', nullable: true }),
+    __metadata("design:type", Object)
+], Task.prototype, "acceptanceCriteria", void 0);
+__decorate([
     (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({
         type: 'enum',
@@ -103,6 +116,11 @@ __decorate([
 ], Task.prototype, "assigneeId", void 0);
 __decorate([
     (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ name: 'reporter_id', type: 'varchar', length: 36, nullable: true }),
+    __metadata("design:type", Object)
+], Task.prototype, "reporterId", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({ name: 'created_by', type: 'varchar', length: 36 }),
     __metadata("design:type", String)
 ], Task.prototype, "createdBy", void 0);
@@ -119,6 +137,10 @@ __decorate([
     __metadata("design:type", Object)
 ], Task.prototype, "storyPoints", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ name: 'completed_at', type: 'datetime', nullable: true }),
+    __metadata("design:type", Object)
+], Task.prototype, "completedAt", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => project_entity_1.Project, { onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'project_id' }),
     __metadata("design:type", project_entity_1.Project)
@@ -133,6 +155,11 @@ __decorate([
     (0, typeorm_1.JoinColumn)({ name: 'assignee_id' }),
     __metadata("design:type", Object)
 ], Task.prototype, "assignee", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, { nullable: true, onDelete: 'SET NULL' }),
+    (0, typeorm_1.JoinColumn)({ name: 'reporter_id' }),
+    __metadata("design:type", Object)
+], Task.prototype, "reporter", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User, { onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'created_by' }),

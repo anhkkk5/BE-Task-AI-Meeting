@@ -11,7 +11,7 @@ export class CreateNotifications1786042000000 implements MigrationInterface {
       \`created_at\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
       INDEX \`IDX_notification_recipient_read_created\` (\`recipient_id\`, \`read_at\`, \`created_at\`),
       PRIMARY KEY (\`id\`), CONSTRAINT \`FK_notification_recipient\` FOREIGN KEY (\`recipient_id\`) REFERENCES \`users\`(\`id\`) ON DELETE CASCADE
-    ) ENGINE=InnoDB`);
+    ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
   }
   async down(queryRunner: QueryRunner): Promise<void> { await queryRunner.query('DROP TABLE `notifications`'); }
 }
