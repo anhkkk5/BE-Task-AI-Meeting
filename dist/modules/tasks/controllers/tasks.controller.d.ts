@@ -8,6 +8,7 @@ import { MoveTaskSprintDto } from '../dto/move-task-sprint.dto';
 import { UpdateTaskStatusDto } from '../dto/update-task-status.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { TasksService } from '../services/tasks.service';
+import { CreateTaskCommentDto, UpdateTaskCommentDto } from '../dto/task-comment.dto';
 type UploadedExcelFile = {
     buffer: Buffer;
     originalname?: string;
@@ -52,6 +53,8 @@ export declare class TasksController {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;
@@ -90,6 +93,8 @@ export declare class TasksController {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             }[];
             meta: {
                 total: number;
@@ -133,6 +138,8 @@ export declare class TasksController {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             }[];
         };
     }>;
@@ -171,6 +178,8 @@ export declare class TasksController {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             }[];
         };
     }>;
@@ -239,6 +248,8 @@ export declare class TasksController {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             }[];
             summary: {
                 created: number;
@@ -280,8 +291,96 @@ export declare class TasksController {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
+    }>;
+    getTaskActivities(user: AuthUser, workspaceId: string, projectId: string, taskId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            items: {
+                id: string;
+                action: import("../entities/task-activity-log.entity").TaskActivityAction;
+                changes: Record<string, {
+                    from: unknown;
+                    to: unknown;
+                }> | null;
+                actor: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                };
+                createdAt: Date;
+            }[];
+        };
+    }>;
+    getTaskComments(user: AuthUser, workspaceId: string, projectId: string, taskId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            items: {
+                id: string;
+                taskId: string;
+                content: string;
+                mentionedUserIds: string[];
+                author: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                };
+                createdAt: Date;
+                updatedAt: Date;
+            }[];
+        };
+    }>;
+    createTaskComment(user: AuthUser, workspaceId: string, projectId: string, taskId: string, dto: CreateTaskCommentDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            comment: {
+                id: string;
+                taskId: string;
+                content: string;
+                mentionedUserIds: string[];
+                author: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                };
+                createdAt: Date;
+                updatedAt: Date;
+            };
+        };
+    }>;
+    updateTaskComment(user: AuthUser, workspaceId: string, projectId: string, taskId: string, commentId: string, dto: UpdateTaskCommentDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            comment: {
+                id: string;
+                taskId: string;
+                content: string;
+                mentionedUserIds: string[];
+                author: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                };
+                createdAt: Date;
+                updatedAt: Date;
+            };
+        };
+    }>;
+    deleteTaskComment(user: AuthUser, workspaceId: string, projectId: string, taskId: string, commentId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
     }>;
     updateTask(user: AuthUser, workspaceId: string, projectId: string, taskId: string, dto: UpdateTaskDto): Promise<{
         success: boolean;
@@ -318,6 +417,8 @@ export declare class TasksController {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;
@@ -356,6 +457,8 @@ export declare class TasksController {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;
@@ -394,6 +497,8 @@ export declare class TasksController {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;
@@ -432,6 +537,8 @@ export declare class TasksController {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;
@@ -470,6 +577,8 @@ export declare class TasksController {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;

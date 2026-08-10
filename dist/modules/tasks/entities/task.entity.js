@@ -16,6 +16,8 @@ const project_entity_1 = require("../../projects/entities/project.entity");
 const sprint_entity_1 = require("../../sprints/entities/sprint.entity");
 const user_entity_1 = require("../../users/entities/user.entity");
 let Task = class Task {
+    isBlocked;
+    isBlocking;
     id;
     projectId;
     sprintId;

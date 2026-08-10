@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
+const get_tasks_query_dto_1 = require("../dto/get-tasks-query.dto");
 const task_entity_1 = require("../entities/task.entity");
 let TasksRepository = class TasksRepository {
     repository;
@@ -52,13 +53,13 @@ let TasksRepository = class TasksRepository {
     async findByProject(projectId, query) {
         const page = query.page ?? 1;
         const limit = query.limit ?? 20;
-        const builder = this.repository
+        const builder = this.withDependencyState(this.repository
             .createQueryBuilder('task')
             .leftJoinAndSelect('task.assignee', 'assignee')
             .leftJoinAndSelect('task.creator', 'creator')
             .leftJoinAndSelect('task.sprint', 'sprint')
             .where('task.projectId = :projectId', { projectId })
-            .andWhere('task.deletedAt IS NULL');
+            .andWhere('task.deletedAt IS NULL'));
         if (query.sprintId) {
             builder.andWhere('task.sprintId = :sprintId', {
                 sprintId: query.sprintId,
@@ -76,52 +77,72 @@ let TasksRepository = class TasksRepository {
             const keyword = `%${query.keyword.trim()}%`;
             builder.andWhere('(task.title LIKE :keyword OR task.taskCode LIKE :keyword)', { keyword });
         }
-        const [items, total] = await builder
+        if (query.dependencyState === get_tasks_query_dto_1.TaskDependencyStateFilter.Blocked) {
+            builder.andWhere(this.blockedExistsSql('task'));
+        }
+        else if (query.dependencyState === get_tasks_query_dto_1.TaskDependencyStateFilter.Blocking) {
+            builder.andWhere(this.blockingExistsSql('task'));
+        }
+        const total = await builder.getCount();
+        const result = await builder
             .orderBy('task.createdAt', 'DESC')
             .skip((page - 1) * limit)
             .take(limit)
-            .getManyAndCount();
+            .getRawAndEntities();
+        const items = this.attachDependencyState(result.entities, result.raw);
         return { items, total, page, limit };
     }
     async findBacklogByProject(projectId) {
-        return this.repository.find({
-            where: {
-                projectId,
-                sprintId: (0, typeorm_2.IsNull)(),
-                status: (0, typeorm_2.Not)(task_status_enum_1.TaskStatus.Cancelled),
-                deletedAt: (0, typeorm_2.IsNull)(),
-            },
-            relations: {
-                assignee: true,
-                creator: true,
-            },
-            order: {
-                createdAt: 'DESC',
-            },
-        });
+        const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
+            .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator')
+            .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId IS NULL')
+            .andWhere('task.status != :cancelled', { cancelled: task_status_enum_1.TaskStatus.Cancelled }).andWhere('task.deletedAt IS NULL')
+            .orderBy('task.createdAt', 'DESC').getRawAndEntities();
+        return this.attachDependencyState(result.entities, result.raw);
     }
     async findBySprint(projectId, sprintId) {
-        return this.repository.find({
-            where: {
-                projectId,
-                sprintId,
-                deletedAt: (0, typeorm_2.IsNull)(),
-            },
-            relations: {
-                assignee: true,
-                creator: true,
-            },
-            order: {
-                createdAt: 'DESC',
-            },
-        });
+        const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
+            .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator')
+            .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId = :sprintId', { sprintId })
+            .andWhere('task.deletedAt IS NULL').orderBy('task.createdAt', 'DESC').getRawAndEntities();
+        return this.attachDependencyState(result.entities, result.raw);
     }
     async update(task, data) {
         Object.assign(task, data);
         return this.repository.save(task);
     }
+    findDueNotificationCandidates(throughDate) {
+        return this.repository.createQueryBuilder('task')
+            .innerJoinAndSelect('task.project', 'project')
+            .where('task.deletedAt IS NULL')
+            .andWhere('task.assigneeId IS NOT NULL')
+            .andWhere('task.dueDate IS NOT NULL')
+            .andWhere('task.dueDate <= :throughDate', { throughDate })
+            .andWhere('task.status NOT IN (:...closedStatuses)', {
+            closedStatuses: [task_status_enum_1.TaskStatus.Done, task_status_enum_1.TaskStatus.Cancelled],
+        })
+            .getMany();
+    }
     softDelete(task) {
         return this.repository.softRemove(task);
+    }
+    withDependencyState(builder) {
+        return builder
+            .addSelect(`CASE WHEN ${this.blockedExistsSql('task')} THEN 1 ELSE 0 END`, 'task_isBlocked')
+            .addSelect(`CASE WHEN ${this.blockingExistsSql('task')} THEN 1 ELSE 0 END`, 'task_isBlocking');
+    }
+    blockedExistsSql(alias) {
+        return `EXISTS (SELECT 1 FROM task_dependencies dependency LEFT JOIN tasks source_task ON source_task.id = dependency.source_task_id LEFT JOIN tasks target_task ON target_task.id = dependency.target_task_id WHERE (dependency.type = 'DEPENDS_ON' AND dependency.source_task_id = ${alias}.id AND target_task.status != 'DONE') OR (dependency.type = 'BLOCKS' AND dependency.target_task_id = ${alias}.id AND source_task.status != 'DONE'))`;
+    }
+    blockingExistsSql(alias) {
+        return `EXISTS (SELECT 1 FROM task_dependencies dependency LEFT JOIN tasks source_task ON source_task.id = dependency.source_task_id LEFT JOIN tasks target_task ON target_task.id = dependency.target_task_id WHERE (dependency.type = 'BLOCKS' AND dependency.source_task_id = ${alias}.id AND target_task.status != 'DONE') OR (dependency.type = 'DEPENDS_ON' AND dependency.target_task_id = ${alias}.id AND source_task.status != 'DONE'))`;
+    }
+    attachDependencyState(items, raw) {
+        return items.map((task, index) => {
+            task.isBlocked = Number(raw[index]?.task_isBlocked ?? 0) === 1;
+            task.isBlocking = Number(raw[index]?.task_isBlocking ?? 0) === 1;
+            return task;
+        });
     }
 };
 exports.TasksRepository = TasksRepository;

@@ -4,10 +4,13 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { MeetingParticipantRole } from '../../../common/enums/meeting-participant-role.enum';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { NotificationType } from '../../notifications/entities/notification.entity';
+import { NotificationsService } from '../../notifications/notifications.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { AddMeetingParticipantsDto } from '../dto/add-meeting-participants.dto';
 import { UpdateParticipantAttendanceDto } from '../dto/update-participant-attendance.dto';
@@ -28,6 +31,8 @@ export class MeetingParticipantsService {
     private readonly meetingAccessService: MeetingAccessService,
     private readonly workspaceAccessService: WorkspaceAccessService,
     private readonly projectAccessService: ProjectAccessService,
+    @Optional()
+    private readonly notificationsService?: NotificationsService,
   ) {}
 
   async addParticipants(
@@ -77,6 +82,23 @@ export class MeetingParticipantsService {
         role: participant.role ?? MeetingParticipantRole.Participant,
       })),
     );
+
+    if (this.notificationsService) {
+      await Promise.all(
+        uniqueParticipants
+          .filter((participant) => participant.userId !== currentUserId)
+          .map((participant) =>
+            this.notificationsService!.create({
+              recipientId: participant.userId,
+              type: NotificationType.MeetingInvited,
+              title: 'Bạn được mời tham gia cuộc họp',
+              body: `${meeting.title} - Ngày: ${meeting.meetingDate}`,
+              link: `/workspaces/${workspaceId}/projects/${projectId}/meetings/${meetingId}`,
+              metadata: { meetingId, workspaceId, projectId },
+            }),
+          ),
+      );
+    }
 
     return {
       success: true,

@@ -14,20 +14,25 @@ exports.HandoverNotificationListener = void 0;
 const common_1 = require("@nestjs/common");
 const mail_config_1 = require("../../../config/mail.config");
 const mail_service_1 = require("../../mail/services/mail.service");
+const notification_entity_1 = require("../../notifications/entities/notification.entity");
+const notifications_service_1 = require("../../notifications/notifications.service");
 const mail_templates_1 = require("../../mail/templates/mail-templates");
 const handover_events_service_1 = require("../services/handover-events.service");
 let HandoverNotificationListener = HandoverNotificationListener_1 = class HandoverNotificationListener {
     handoverEvents;
     mailService;
+    notificationsService;
     logger = new common_1.Logger(HandoverNotificationListener_1.name);
-    constructor(handoverEvents, mailService) {
+    constructor(handoverEvents, mailService, notificationsService) {
         this.handoverEvents = handoverEvents;
         this.mailService = mailService;
+        this.notificationsService = notificationsService;
     }
     onModuleInit() {
         this.handoverEvents.onHandoverEvent((event) => this.handleEvent(event));
     }
     async handleEvent(event) {
+        await this.createInAppNotification(event);
         switch (event.type) {
             case 'submitted':
                 await this.notifySubmitted(event.handover);
@@ -41,6 +46,51 @@ let HandoverNotificationListener = HandoverNotificationListener_1 = class Handov
             case 'changes_requested':
                 await this.notifyChangesRequested(event.handover, event.reason);
                 break;
+        }
+    }
+    createInAppNotification(event) {
+        const handover = event.handover;
+        const common = {
+            body: this.taskLabel(handover),
+            link: `/workspaces/${handover.workspaceId}/projects/${handover.projectId}/shift-handovers`,
+            metadata: {
+                handoverId: handover.id,
+                taskId: handover.taskId,
+                workspaceId: handover.workspaceId,
+                projectId: handover.projectId,
+            },
+        };
+        switch (event.type) {
+            case 'submitted':
+                return this.notificationsService.create({
+                    ...common,
+                    recipientId: handover.receiverId,
+                    type: notification_entity_1.NotificationType.HandoverSubmitted,
+                    title: 'Có yêu cầu bàn giao mới',
+                });
+            case 'accepted':
+                return this.notificationsService.create({
+                    ...common,
+                    recipientId: handover.senderId,
+                    type: notification_entity_1.NotificationType.HandoverAccepted,
+                    title: 'Yêu cầu bàn giao đã được chấp nhận',
+                });
+            case 'rejected':
+                return this.notificationsService.create({
+                    ...common,
+                    recipientId: handover.senderId,
+                    type: notification_entity_1.NotificationType.HandoverRejected,
+                    title: 'Yêu cầu bàn giao bị từ chối',
+                    metadata: { ...common.metadata, reason: event.reason ?? null },
+                });
+            case 'changes_requested':
+                return this.notificationsService.create({
+                    ...common,
+                    recipientId: handover.senderId,
+                    type: notification_entity_1.NotificationType.HandoverChangesRequested,
+                    title: 'Yêu cầu bổ sung thông tin bàn giao',
+                    metadata: { ...common.metadata, reason: event.reason ?? null },
+                });
         }
     }
     async notifySubmitted(handover) {
@@ -148,6 +198,7 @@ exports.HandoverNotificationListener = HandoverNotificationListener;
 exports.HandoverNotificationListener = HandoverNotificationListener = HandoverNotificationListener_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [handover_events_service_1.HandoverEventsService,
-        mail_service_1.MailService])
+        mail_service_1.MailService,
+        notifications_service_1.NotificationsService])
 ], HandoverNotificationListener);
 //# sourceMappingURL=handover-notification.listener.js.map

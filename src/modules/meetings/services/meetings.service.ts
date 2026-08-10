@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Optional,
 } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -10,6 +11,8 @@ import { MeetingParticipantRole } from '../../../common/enums/meeting-participan
 import { MeetingStatus } from '../../../common/enums/meeting-status.enum';
 import { MeetingType } from '../../../common/enums/meeting-type.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { NotificationType } from '../../notifications/entities/notification.entity';
+import { NotificationsService } from '../../notifications/notifications.service';
 import { SprintAccessService } from '../../sprints/services/sprint-access.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { CreateMeetingDto } from '../dto/create-meeting.dto';
@@ -34,6 +37,8 @@ export class MeetingsService {
     private readonly projectAccessService: ProjectAccessService,
     private readonly sprintAccessService: SprintAccessService,
     private readonly meetingLifecycleService: MeetingLifecycleService,
+    @Optional()
+    private readonly notificationsService?: NotificationsService,
   ) {}
 
   async createMeeting(
@@ -92,6 +97,14 @@ export class MeetingsService {
 
     const meetingWithParticipants =
       await this.meetingsRepository.findByIdAndProject(meeting.id, projectId);
+
+    await this.notifyParticipants(
+      participantIds.filter((userId) => userId !== currentUserId),
+      NotificationType.MeetingInvited,
+      'Bạn được mời tham gia cuộc họp',
+      `${meeting.title} - Ngày: ${meeting.meetingDate}`,
+      meeting,
+    );
 
     return {
       success: true,
@@ -213,6 +226,16 @@ export class MeetingsService {
           : this.toDateOrNull(dto.endTime),
     });
 
+    await this.notifyParticipants(
+      meeting.participants
+        ?.map((participant) => participant.userId)
+        .filter((userId) => userId !== currentUserId) ?? [],
+      NotificationType.MeetingUpdated,
+      'Thông tin cuộc họp đã thay đổi',
+      `${updatedMeeting.title} - Ngày: ${updatedMeeting.meetingDate}`,
+      updatedMeeting,
+    );
+
     return {
       success: true,
       message: 'Update meeting successfully',
@@ -228,12 +251,26 @@ export class MeetingsService {
     projectId: string,
     meetingId: string,
   ) {
+    const meeting = await this.meetingAccessService.assertMeetingInProject(
+      meetingId,
+      projectId,
+    );
     await this.changeMeetingStatus(
       currentUserId,
       workspaceId,
       projectId,
       meetingId,
       MeetingStatus.Cancelled,
+    );
+
+    await this.notifyParticipants(
+      meeting.participants
+        ?.map((participant) => participant.userId)
+        .filter((userId) => userId !== currentUserId) ?? [],
+      NotificationType.MeetingCancelled,
+      'Cuộc họp đã bị hủy',
+      meeting.title,
+      meeting,
     );
 
     return {
@@ -395,6 +432,33 @@ export class MeetingsService {
     }
 
     await this.assertSprintFilter(projectId, query.sprintId);
+  }
+
+  private async notifyParticipants(
+    recipientIds: string[],
+    type: NotificationType,
+    title: string,
+    body: string,
+    meeting: Meeting,
+  ) {
+    if (!this.notificationsService || recipientIds.length === 0) return;
+
+    await Promise.all(
+      [...new Set(recipientIds)].map((recipientId) =>
+        this.notificationsService!.create({
+          recipientId,
+          type,
+          title,
+          body,
+          link: `/workspaces/${meeting.workspaceId}/projects/${meeting.projectId}/meetings/${meeting.id}`,
+          metadata: {
+            meetingId: meeting.id,
+            workspaceId: meeting.workspaceId,
+            projectId: meeting.projectId,
+          },
+        }),
+      ),
+    );
   }
 
   private async assertSprintFilter(

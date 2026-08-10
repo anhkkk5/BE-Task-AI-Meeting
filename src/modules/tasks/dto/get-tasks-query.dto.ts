@@ -11,6 +11,11 @@ import {
 } from 'class-validator';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 
+export enum TaskDependencyStateFilter {
+  Blocked = 'BLOCKED',
+  Blocking = 'BLOCKING',
+}
+
 export class GetTasksQueryDto {
   @ApiPropertyOptional({
     example: '9d38e4c2-0d77-4d6c-9127-b06b66d01001',
@@ -43,6 +48,11 @@ export class GetTasksQueryDto {
   @IsOptional()
   @IsString()
   keyword?: string;
+
+  @ApiPropertyOptional({ enum: TaskDependencyStateFilter })
+  @IsOptional()
+  @IsEnum(TaskDependencyStateFilter)
+  dependencyState?: TaskDependencyStateFilter;
 
   @ApiPropertyOptional({ example: 1, minimum: 1 })
   @IsOptional()

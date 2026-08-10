@@ -3,6 +3,8 @@ import { Project } from '../../projects/entities/project.entity';
 import { Sprint } from '../../sprints/entities/sprint.entity';
 import { User } from '../../users/entities/user.entity';
 export declare class Task {
+    isBlocked?: boolean;
+    isBlocking?: boolean;
     id: string;
     projectId: string;
     sprintId: string | null;

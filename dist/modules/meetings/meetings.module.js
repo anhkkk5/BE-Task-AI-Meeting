@@ -15,6 +15,7 @@ const workspace_member_guard_1 = require("../../common/guards/workspace-member.g
 const workspace_roles_guard_1 = require("../../common/guards/workspace-roles.guard");
 const mongodb_config_1 = require("../../config/mongodb.config");
 const projects_module_1 = require("../projects/projects.module");
+const notifications_module_1 = require("../notifications/notifications.module");
 const sprints_module_1 = require("../sprints/sprints.module");
 const users_module_1 = require("../users/users.module");
 const workspaces_module_1 = require("../workspaces/workspaces.module");
@@ -51,6 +52,7 @@ exports.MeetingsModule = MeetingsModule = __decorate([
             typeorm_1.TypeOrmModule.forFeature([meeting_entity_1.Meeting, meeting_participant_entity_1.MeetingParticipant]),
             ...mongoImports,
             projects_module_1.ProjectsModule,
+            notifications_module_1.NotificationsModule,
             sprints_module_1.SprintsModule,
             users_module_1.UsersModule,
             workspaces_module_1.WorkspacesModule,

@@ -2,6 +2,7 @@ import ExcelJS from 'exceljs';
 import { SprintStatus } from '../../../common/enums/sprint-status.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 import { SprintsRepository } from '../../sprints/repositories/sprints.repository';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
@@ -12,7 +13,12 @@ import { CommitTaskImportDto, TaskImportItemDto } from '../dto/import-tasks.dto'
 import { MoveTaskSprintDto } from '../dto/move-task-sprint.dto';
 import { UpdateTaskStatusDto } from '../dto/update-task-status.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
+import { CreateTaskCommentDto, UpdateTaskCommentDto } from '../dto/task-comment.dto';
+import { TaskActivityAction } from '../entities/task-activity-log.entity';
+import { TaskActivityLogsRepository } from '../repositories/task-activity-logs.repository';
+import { TaskCommentsRepository } from '../repositories/task-comments.repository';
 import { TasksRepository } from '../repositories/tasks.repository';
+import { TaskDependenciesRepository } from '../repositories/task-dependencies.repository';
 import { TaskAccessService } from './task-access.service';
 import { TaskCodeService } from './task-code.service';
 type UploadedExcelFile = {
@@ -38,7 +44,11 @@ export declare class TasksService {
     private readonly projectAccessService;
     private readonly workspaceMembersRepository;
     private readonly sprintsRepository;
-    constructor(tasksRepository: TasksRepository, taskAccessService: TaskAccessService, taskCodeService: TaskCodeService, workspaceAccessService: WorkspaceAccessService, projectAccessService: ProjectAccessService, workspaceMembersRepository: WorkspaceMembersRepository, sprintsRepository: SprintsRepository);
+    private readonly taskActivityLogsRepository?;
+    private readonly taskCommentsRepository?;
+    private readonly notificationsService?;
+    private readonly taskDependenciesRepository?;
+    constructor(tasksRepository: TasksRepository, taskAccessService: TaskAccessService, taskCodeService: TaskCodeService, workspaceAccessService: WorkspaceAccessService, projectAccessService: ProjectAccessService, workspaceMembersRepository: WorkspaceMembersRepository, sprintsRepository: SprintsRepository, taskActivityLogsRepository?: TaskActivityLogsRepository | undefined, taskCommentsRepository?: TaskCommentsRepository | undefined, notificationsService?: NotificationsService | undefined, taskDependenciesRepository?: TaskDependenciesRepository | undefined);
     createTask(currentUserId: string, workspaceId: string, projectId: string, dto: CreateTaskDto): Promise<{
         success: boolean;
         message: string;
@@ -74,6 +84,8 @@ export declare class TasksService {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;
@@ -125,6 +137,8 @@ export declare class TasksService {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             }[];
             summary: {
                 created: number;
@@ -166,6 +180,8 @@ export declare class TasksService {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             }[];
             meta: {
                 total: number;
@@ -209,6 +225,8 @@ export declare class TasksService {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             }[];
         };
     }>;
@@ -247,6 +265,8 @@ export declare class TasksService {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             }[];
         };
     }>;
@@ -285,8 +305,96 @@ export declare class TasksService {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
+    }>;
+    getTaskActivities(currentUserId: string, workspaceId: string, projectId: string, taskId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            items: {
+                id: string;
+                action: TaskActivityAction;
+                changes: Record<string, {
+                    from: unknown;
+                    to: unknown;
+                }> | null;
+                actor: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                };
+                createdAt: Date;
+            }[];
+        };
+    }>;
+    getTaskComments(currentUserId: string, workspaceId: string, projectId: string, taskId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            items: {
+                id: string;
+                taskId: string;
+                content: string;
+                mentionedUserIds: string[];
+                author: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                };
+                createdAt: Date;
+                updatedAt: Date;
+            }[];
+        };
+    }>;
+    createTaskComment(currentUserId: string, workspaceId: string, projectId: string, taskId: string, dto: CreateTaskCommentDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            comment: {
+                id: string;
+                taskId: string;
+                content: string;
+                mentionedUserIds: string[];
+                author: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                };
+                createdAt: Date;
+                updatedAt: Date;
+            };
+        };
+    }>;
+    updateTaskComment(currentUserId: string, workspaceId: string, projectId: string, taskId: string, commentId: string, dto: UpdateTaskCommentDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            comment: {
+                id: string;
+                taskId: string;
+                content: string;
+                mentionedUserIds: string[];
+                author: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                };
+                createdAt: Date;
+                updatedAt: Date;
+            };
+        };
+    }>;
+    deleteTaskComment(currentUserId: string, workspaceId: string, projectId: string, taskId: string, commentId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
     }>;
     updateTask(currentUserId: string, workspaceId: string, projectId: string, taskId: string, dto: UpdateTaskDto): Promise<{
         success: boolean;
@@ -323,6 +431,8 @@ export declare class TasksService {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;
@@ -361,6 +471,8 @@ export declare class TasksService {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;
@@ -399,6 +511,8 @@ export declare class TasksService {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;
@@ -437,6 +551,8 @@ export declare class TasksService {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;
@@ -475,6 +591,8 @@ export declare class TasksService {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;
@@ -499,7 +617,16 @@ export declare class TasksService {
     private isEmptyImportRawRow;
     private cellToText;
     private formatDateOnly;
+    private notifyNewlyUnblockedTasks;
     private assertWritableProject;
+    private assertTaskReadable;
+    private requireOwnComment;
+    private resolveMentionedUserIds;
+    private toCommentResponse;
+    private recordActivity;
+    private pickTaskFields;
+    private buildChanges;
+    private compactChanges;
     private assertBacklogStatusMatchesTaskLocation;
     private toTaskResponse;
 }

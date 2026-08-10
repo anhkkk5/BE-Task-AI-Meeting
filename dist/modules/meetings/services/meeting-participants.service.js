@@ -8,12 +8,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MeetingParticipantsService = void 0;
 const common_1 = require("@nestjs/common");
 const meeting_participant_role_enum_1 = require("../../../common/enums/meeting-participant-role.enum");
 const workspace_role_enum_1 = require("../../../common/enums/workspace-role.enum");
 const project_access_service_1 = require("../../projects/services/project-access.service");
+const notification_entity_1 = require("../../notifications/entities/notification.entity");
+const notifications_service_1 = require("../../notifications/notifications.service");
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
 const meeting_participants_repository_1 = require("../repositories/meeting-participants.repository");
 const meeting_access_service_1 = require("./meeting-access.service");
@@ -27,11 +32,13 @@ let MeetingParticipantsService = class MeetingParticipantsService {
     meetingAccessService;
     workspaceAccessService;
     projectAccessService;
-    constructor(meetingParticipantsRepository, meetingAccessService, workspaceAccessService, projectAccessService) {
+    notificationsService;
+    constructor(meetingParticipantsRepository, meetingAccessService, workspaceAccessService, projectAccessService, notificationsService) {
         this.meetingParticipantsRepository = meetingParticipantsRepository;
         this.meetingAccessService = meetingAccessService;
         this.workspaceAccessService = workspaceAccessService;
         this.projectAccessService = projectAccessService;
+        this.notificationsService = notificationsService;
     }
     async addParticipants(currentUserId, workspaceId, projectId, meetingId, dto) {
         await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
@@ -50,6 +57,18 @@ let MeetingParticipantsService = class MeetingParticipantsService {
             userId: participant.userId,
             role: participant.role ?? meeting_participant_role_enum_1.MeetingParticipantRole.Participant,
         })));
+        if (this.notificationsService) {
+            await Promise.all(uniqueParticipants
+                .filter((participant) => participant.userId !== currentUserId)
+                .map((participant) => this.notificationsService.create({
+                recipientId: participant.userId,
+                type: notification_entity_1.NotificationType.MeetingInvited,
+                title: 'Bạn được mời tham gia cuộc họp',
+                body: `${meeting.title} - Ngày: ${meeting.meetingDate}`,
+                link: `/workspaces/${workspaceId}/projects/${projectId}/meetings/${meetingId}`,
+                metadata: { meetingId, workspaceId, projectId },
+            })));
+        }
         return {
             success: true,
             message: 'Add meeting participants successfully',
@@ -139,9 +158,11 @@ let MeetingParticipantsService = class MeetingParticipantsService {
 exports.MeetingParticipantsService = MeetingParticipantsService;
 exports.MeetingParticipantsService = MeetingParticipantsService = __decorate([
     (0, common_1.Injectable)(),
+    __param(4, (0, common_1.Optional)()),
     __metadata("design:paramtypes", [meeting_participants_repository_1.MeetingParticipantsRepository,
         meeting_access_service_1.MeetingAccessService,
         workspace_access_service_1.WorkspaceAccessService,
-        project_access_service_1.ProjectAccessService])
+        project_access_service_1.ProjectAccessService,
+        notifications_service_1.NotificationsService])
 ], MeetingParticipantsService);
 //# sourceMappingURL=meeting-participants.service.js.map

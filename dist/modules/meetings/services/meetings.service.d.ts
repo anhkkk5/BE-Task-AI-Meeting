@@ -3,6 +3,7 @@ import { MeetingParticipantRole } from '../../../common/enums/meeting-participan
 import { MeetingStatus } from '../../../common/enums/meeting-status.enum';
 import { MeetingType } from '../../../common/enums/meeting-type.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 import { SprintAccessService } from '../../sprints/services/sprint-access.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { CreateMeetingDto } from '../dto/create-meeting.dto';
@@ -22,7 +23,8 @@ export declare class MeetingsService {
     private readonly projectAccessService;
     private readonly sprintAccessService;
     private readonly meetingLifecycleService;
-    constructor(dataSource: DataSource, meetingsRepository: MeetingsRepository, meetingParticipantsRepository: MeetingParticipantsRepository, meetingAccessService: MeetingAccessService, workspaceAccessService: WorkspaceAccessService, projectAccessService: ProjectAccessService, sprintAccessService: SprintAccessService, meetingLifecycleService: MeetingLifecycleService);
+    private readonly notificationsService?;
+    constructor(dataSource: DataSource, meetingsRepository: MeetingsRepository, meetingParticipantsRepository: MeetingParticipantsRepository, meetingAccessService: MeetingAccessService, workspaceAccessService: WorkspaceAccessService, projectAccessService: ProjectAccessService, sprintAccessService: SprintAccessService, meetingLifecycleService: MeetingLifecycleService, notificationsService?: NotificationsService | undefined);
     createMeeting(currentUserId: string, workspaceId: string, projectId: string, dto: CreateMeetingDto): Promise<{
         success: boolean;
         message: string;
@@ -231,6 +233,7 @@ export declare class MeetingsService {
     }>;
     private changeMeetingStatus;
     private assertValidMeetingFilters;
+    private notifyParticipants;
     private assertSprintFilter;
     private assertParticipantsInWorkspace;
     private assertTimeRange;

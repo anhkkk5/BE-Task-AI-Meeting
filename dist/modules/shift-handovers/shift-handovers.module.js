@@ -13,6 +13,7 @@ const workspace_member_guard_1 = require("../../common/guards/workspace-member.g
 const workspace_roles_guard_1 = require("../../common/guards/workspace-roles.guard");
 const projects_module_1 = require("../projects/projects.module");
 const tasks_module_1 = require("../tasks/tasks.module");
+const notifications_module_1 = require("../notifications/notifications.module");
 const workspaces_module_1 = require("../workspaces/workspaces.module");
 const shift_handovers_controller_1 = require("./controllers/shift-handovers.controller");
 const shift_handover_entity_1 = require("./entities/shift-handover.entity");
@@ -30,6 +31,7 @@ exports.ShiftHandoversModule = ShiftHandoversModule = __decorate([
             workspaces_module_1.WorkspacesModule,
             projects_module_1.ProjectsModule,
             tasks_module_1.TasksModule,
+            notifications_module_1.NotificationsModule,
         ],
         controllers: [shift_handovers_controller_1.ShiftHandoversController],
         providers: [

@@ -24,6 +24,7 @@ import { StatsModule } from './modules/stats/stats.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { UsersModule } from './modules/users/users.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     ProjectsModule,
     SprintsModule,
     TasksModule,
+    NotificationsModule,
     DailyUpdatesModule,
     MeetingsModule,
     ShiftHandoversModule,

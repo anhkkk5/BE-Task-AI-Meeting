@@ -16,5 +16,10 @@ export declare class TasksRepository {
     findBacklogByProject(projectId: string): Promise<Task[]>;
     findBySprint(projectId: string, sprintId: string): Promise<Task[]>;
     update(task: Task, data: Partial<Task>): Promise<Task>;
+    findDueNotificationCandidates(throughDate: string): Promise<Task[]>;
     softDelete(task: Task): Promise<Task>;
+    private withDependencyState;
+    private blockedExistsSql;
+    private blockingExistsSql;
+    private attachDependencyState;
 }

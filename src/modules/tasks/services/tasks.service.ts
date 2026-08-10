@@ -1,8 +1,17 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  Optional,
+} from '@nestjs/common';
 import ExcelJS from 'exceljs';
 import { SprintStatus } from '../../../common/enums/sprint-status.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
+import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { NotificationType } from '../../notifications/entities/notification.entity';
+import { NotificationsService } from '../../notifications/notifications.service';
 import { Sprint } from '../../sprints/entities/sprint.entity';
 import { SprintsRepository } from '../../sprints/repositories/sprints.repository';
 import { WorkspaceMember } from '../../workspaces/entities/workspace-member.entity';
@@ -18,8 +27,16 @@ import {
 import { MoveTaskSprintDto } from '../dto/move-task-sprint.dto';
 import { UpdateTaskStatusDto } from '../dto/update-task-status.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
+import {
+  CreateTaskCommentDto,
+  UpdateTaskCommentDto,
+} from '../dto/task-comment.dto';
 import { Task } from '../entities/task.entity';
+import { TaskActivityAction } from '../entities/task-activity-log.entity';
+import { TaskActivityLogsRepository } from '../repositories/task-activity-logs.repository';
+import { TaskCommentsRepository } from '../repositories/task-comments.repository';
 import { TasksRepository } from '../repositories/tasks.repository';
+import { TaskDependenciesRepository } from '../repositories/task-dependencies.repository';
 import { TaskAccessService } from './task-access.service';
 import { TaskCodeService } from './task-code.service';
 
@@ -135,6 +152,14 @@ export class TasksService {
     private readonly projectAccessService: ProjectAccessService,
     private readonly workspaceMembersRepository: WorkspaceMembersRepository,
     private readonly sprintsRepository: SprintsRepository,
+    @Optional()
+    private readonly taskActivityLogsRepository?: TaskActivityLogsRepository,
+    @Optional()
+    private readonly taskCommentsRepository?: TaskCommentsRepository,
+    @Optional()
+    private readonly notificationsService?: NotificationsService,
+    @Optional()
+    private readonly taskDependenciesRepository?: TaskDependenciesRepository,
   ) {}
 
   async createTask(
@@ -177,6 +202,7 @@ export class TasksService {
       estimatedHours: dto.estimatedHours ?? null,
       storyPoints: dto.storyPoints ?? null,
     });
+    await this.recordActivity(task, currentUserId, TaskActivityAction.Created);
 
     return {
       success: true,
@@ -433,6 +459,9 @@ export class TasksService {
         estimatedHours: item.estimatedHours ?? null,
         storyPoints: item.storyPoints ?? null,
       });
+      await this.recordActivity(task, currentUserId, TaskActivityAction.Created, {
+        source: { from: null, to: 'IMPORT' },
+      });
       tasks.push(task);
     }
 
@@ -564,6 +593,169 @@ export class TasksService {
     };
   }
 
+  async getTaskActivities(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    taskId: string,
+  ) {
+    await this.workspaceAccessService.assertWorkspaceMember(
+      currentUserId,
+      workspaceId,
+    );
+    await this.projectAccessService.assertProjectInWorkspace(
+      projectId,
+      workspaceId,
+    );
+    await this.taskAccessService.assertTaskInProject(taskId, projectId);
+    const items = this.taskActivityLogsRepository
+      ? await this.taskActivityLogsRepository.findByTask(taskId)
+      : [];
+
+    return {
+      success: true,
+      message: 'Get task activities successfully',
+      data: {
+        items: items.map((item) => ({
+          id: item.id,
+          action: item.action,
+          changes: item.changes,
+          actor: {
+            id: item.actor.id,
+            fullName: item.actor.fullName,
+            email: item.actor.email,
+            avatarUrl: item.actor.avatarUrl,
+          },
+          createdAt: item.createdAt,
+        })),
+      },
+    };
+  }
+
+  async getTaskComments(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    taskId: string,
+  ) {
+    await this.assertTaskReadable(currentUserId, workspaceId, projectId, taskId);
+    const items = this.taskCommentsRepository
+      ? await this.taskCommentsRepository.findByTask(taskId)
+      : [];
+    return {
+      success: true,
+      message: 'Get task comments successfully',
+      data: { items: items.map((item) => this.toCommentResponse(item)) },
+    };
+  }
+
+  async createTaskComment(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    taskId: string,
+    dto: CreateTaskCommentDto,
+  ) {
+    const task = await this.assertTaskReadable(
+      currentUserId,
+      workspaceId,
+      projectId,
+      taskId,
+    );
+    if (!this.taskCommentsRepository) {
+      throw new BadRequestException('Task comments are unavailable');
+    }
+    const content = dto.content.trim();
+    const mentionedUserIds = await this.resolveMentionedUserIds(
+      content,
+      workspaceId,
+    );
+    const comment = await this.taskCommentsRepository.create({
+      taskId,
+      authorId: currentUserId,
+      content,
+      mentionedUserIds,
+    });
+    await Promise.all(
+      mentionedUserIds
+        .filter((userId) => userId !== currentUserId)
+        .map((recipientId) =>
+          this.notificationsService?.create({
+            recipientId,
+            type: NotificationType.TaskMentioned,
+            title: 'Bạn được nhắc trong bình luận',
+            body: `${task.taskCode} - ${task.title}`,
+            link: `/workspaces/${workspaceId}/projects/${projectId}/tasks/${task.id}`,
+            metadata: { taskId: task.id, commentId: comment.id, actorId: currentUserId },
+          }),
+        ),
+    );
+    await this.recordActivity(task, currentUserId, TaskActivityAction.Commented, {
+      commentId: { from: null, to: comment.id },
+      mentionedUserIds: { from: [], to: mentionedUserIds },
+    });
+    const saved = await this.taskCommentsRepository.findById(comment.id, taskId);
+    return {
+      success: true,
+      message: 'Create task comment successfully',
+      data: { comment: this.toCommentResponse(saved ?? comment) },
+    };
+  }
+
+  async updateTaskComment(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    taskId: string,
+    commentId: string,
+    dto: UpdateTaskCommentDto,
+  ) {
+    const task = await this.assertTaskReadable(
+      currentUserId,
+      workspaceId,
+      projectId,
+      taskId,
+    );
+    const comment = await this.requireOwnComment(currentUserId, taskId, commentId);
+    const previousContent = comment.content;
+    const content = dto.content.trim();
+    const mentionedUserIds = await this.resolveMentionedUserIds(content, workspaceId);
+    const updated = await this.taskCommentsRepository!.update(comment, {
+      content,
+      mentionedUserIds,
+    });
+    await this.recordActivity(task, currentUserId, TaskActivityAction.CommentUpdated, {
+      commentId: { from: commentId, to: commentId },
+      content: { from: previousContent, to: content },
+    });
+    return {
+      success: true,
+      message: 'Update task comment successfully',
+      data: { comment: this.toCommentResponse(updated) },
+    };
+  }
+
+  async deleteTaskComment(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    taskId: string,
+    commentId: string,
+  ) {
+    const task = await this.assertTaskReadable(
+      currentUserId,
+      workspaceId,
+      projectId,
+      taskId,
+    );
+    const comment = await this.requireOwnComment(currentUserId, taskId, commentId);
+    await this.recordActivity(task, currentUserId, TaskActivityAction.CommentDeleted, {
+      commentId: { from: comment.id, to: null },
+    });
+    await this.taskCommentsRepository!.softDelete(comment);
+    return { success: true, message: 'Delete task comment successfully', data: null };
+  }
+
   async updateTask(
     currentUserId: string,
     workspaceId: string,
@@ -582,6 +774,14 @@ export class TasksService {
     );
     this.taskAccessService.assertTaskEditable(task);
 
+    const previous = this.pickTaskFields(task, [
+      'title',
+      'description',
+      'dueDate',
+      'estimatedHours',
+      'storyPoints',
+    ]);
+
     const updatedTask = await this.tasksRepository.update(task, {
       title: dto.title?.trim() ?? task.title,
       description:
@@ -592,6 +792,12 @@ export class TasksService {
       estimatedHours: dto.estimatedHours ?? task.estimatedHours,
       storyPoints: dto.storyPoints ?? task.storyPoints,
     });
+    await this.recordActivity(
+      updatedTask,
+      currentUserId,
+      TaskActivityAction.Updated,
+      this.buildChanges(previous, updatedTask),
+    );
 
     return {
       success: true,
@@ -619,7 +825,7 @@ export class TasksService {
       projectId,
     );
     this.taskAccessService.assertTaskEditable(task);
-    await this.taskAccessService.assertUserCanUpdateTaskStatus(
+    const role = await this.taskAccessService.assertUserCanUpdateTaskStatus(
       currentUserId,
       workspaceId,
       task,
@@ -627,9 +833,43 @@ export class TasksService {
     );
     this.assertBacklogStatusMatchesTaskLocation(task, dto.status);
 
+    const incompleteBlockers =
+      dto.status === TaskStatus.Done && this.taskDependenciesRepository
+        ? await this.taskDependenciesRepository.findIncompleteBlockers(task.id)
+        : [];
+    if (incompleteBlockers.length) {
+      const managerRoles = [WorkspaceRole.Owner, WorkspaceRole.ScrumMaster, WorkspaceRole.ProjectManager];
+      const canOverride = managerRoles.includes(role) && dto.overrideBlocked === true && Boolean(dto.overrideReason?.trim());
+      if (!canOverride) {
+        throw new BadRequestException({
+          message: 'Task is blocked by incomplete dependencies',
+          blockers: incompleteBlockers.map((item) => {
+            const blocker = item.sourceTaskId === task.id ? item.targetTask : item.sourceTask;
+            return { id: blocker.id, taskCode: blocker.taskCode, title: blocker.title, status: blocker.status };
+          }),
+          overrideRequired: managerRoles.includes(role),
+        });
+      }
+    }
+
+    const previousStatus = task.status;
+
     const updatedTask = await this.tasksRepository.update(task, {
       status: dto.status,
     });
+    await this.recordActivity(
+      updatedTask,
+      currentUserId,
+      TaskActivityAction.StatusChanged,
+      {
+        status: { from: previousStatus, to: updatedTask.status },
+        ...(incompleteBlockers.length ? { dependencyOverrideReason: { from: null, to: dto.overrideReason!.trim() } } : {}),
+      },
+    );
+
+    if (dto.status === TaskStatus.Done && previousStatus !== TaskStatus.Done) {
+      await this.notifyNewlyUnblockedTasks(updatedTask, workspaceId, projectId);
+    }
 
     return {
       success: true,
@@ -665,9 +905,31 @@ export class TasksService {
       );
     }
 
+    const previousAssigneeId = task.assigneeId;
+
     const updatedTask = await this.tasksRepository.update(task, {
       assigneeId: dto.assigneeId,
     });
+    if (
+      dto.assigneeId &&
+      dto.assigneeId !== currentUserId &&
+      dto.assigneeId !== previousAssigneeId
+    ) {
+      await this.notificationsService?.create({
+        recipientId: dto.assigneeId,
+        type: NotificationType.TaskAssigned,
+        title: 'Bạn được giao một công việc mới',
+        body: `${updatedTask.taskCode} - ${updatedTask.title}`,
+        link: `/workspaces/${workspaceId}/projects/${projectId}/tasks/${updatedTask.id}`,
+        metadata: { taskId: updatedTask.id, actorId: currentUserId },
+      });
+    }
+    await this.recordActivity(
+      updatedTask,
+      currentUserId,
+      TaskActivityAction.Assigned,
+      { assigneeId: { from: previousAssigneeId, to: updatedTask.assigneeId } },
+    );
 
     return {
       success: true,
@@ -703,6 +965,9 @@ export class TasksService {
       );
     }
 
+    const previousSprintId = task.sprintId;
+    const previousStatus = task.status;
+
     const updatedTask = await this.tasksRepository.update(task, {
       sprintId: dto.sprintId,
       status: dto.sprintId
@@ -711,6 +976,15 @@ export class TasksService {
           : task.status
         : TaskStatus.Backlog,
     });
+    await this.recordActivity(
+      updatedTask,
+      currentUserId,
+      TaskActivityAction.SprintMoved,
+      this.compactChanges({
+        sprintId: { from: previousSprintId, to: updatedTask.sprintId },
+        status: { from: previousStatus, to: updatedTask.status },
+      }),
+    );
 
     return {
       success: true,
@@ -738,9 +1012,17 @@ export class TasksService {
     );
     this.taskAccessService.assertTaskEditable(task);
 
+    const previousStatus = task.status;
+
     const updatedTask = await this.tasksRepository.update(task, {
       status: TaskStatus.Cancelled,
     });
+    await this.recordActivity(
+      updatedTask,
+      currentUserId,
+      TaskActivityAction.Cancelled,
+      { status: { from: previousStatus, to: updatedTask.status } },
+    );
 
     return {
       success: true,
@@ -770,6 +1052,7 @@ export class TasksService {
       workspaceId,
       task,
     );
+    await this.recordActivity(task, currentUserId, TaskActivityAction.Deleted);
     await this.tasksRepository.softDelete(task);
 
     return {
@@ -1198,11 +1481,135 @@ export class TasksService {
     return `${year}-${month}-${day}`;
   }
 
+  private async notifyNewlyUnblockedTasks(
+    blocker: Task,
+    workspaceId: string,
+    projectId: string,
+  ) {
+    if (!this.taskDependenciesRepository || !this.notificationsService) return;
+    const relations = await this.taskDependenciesRepository.findTasksUnblockedBy(blocker.id);
+    const dependents = relations.map((item) =>
+      item.sourceTaskId === blocker.id ? item.targetTask : item.sourceTask,
+    );
+    for (const task of dependents) {
+      if (!task.assigneeId || [TaskStatus.Done, TaskStatus.Cancelled].includes(task.status)) continue;
+      const remaining = await this.taskDependenciesRepository.findIncompleteBlockers(task.id);
+      if (remaining.length) continue;
+      await this.notificationsService.create({
+        recipientId: task.assigneeId,
+        type: NotificationType.TaskBlockerResolved,
+        title: 'Công việc đã được gỡ chặn',
+        body: `${task.taskCode} - ${task.title}`,
+        link: `/workspaces/${workspaceId}/projects/${projectId}/tasks/${task.id}`,
+        metadata: { taskId: task.id, blockerTaskId: blocker.id },
+        idempotencyKey: `TASK_BLOCKER_RESOLVED:${task.id}:${blocker.id}`,
+      });
+    }
+  }
+
   private async assertWritableProject(workspaceId: string, projectId: string) {
     await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
     return this.projectAccessService.assertProjectActive(
       projectId,
       workspaceId,
+    );
+  }
+
+  private async assertTaskReadable(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    taskId: string,
+  ) {
+    await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
+    await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
+    return this.taskAccessService.assertTaskInProject(taskId, projectId);
+  }
+
+  private async requireOwnComment(
+    currentUserId: string,
+    taskId: string,
+    commentId: string,
+  ) {
+    if (!this.taskCommentsRepository) {
+      throw new BadRequestException('Task comments are unavailable');
+    }
+    const comment = await this.taskCommentsRepository.findById(commentId, taskId);
+    if (!comment) throw new NotFoundException('Task comment not found');
+    if (comment.authorId !== currentUserId) {
+      throw new ForbiddenException('You can only edit or delete your own comment');
+    }
+    return comment;
+  }
+
+  private async resolveMentionedUserIds(content: string, workspaceId: string) {
+    const emails = new Set(
+      Array.from(content.matchAll(/@([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/gi)).map(
+        (match) => match[1].toLowerCase(),
+      ),
+    );
+    if (emails.size === 0) return [];
+    const members = await this.workspaceMembersRepository.findActiveByWorkspace(workspaceId);
+    return members
+      .filter((member) => member.user?.email && emails.has(member.user.email.toLowerCase()))
+      .map((member) => member.userId);
+  }
+
+  private toCommentResponse(comment: import('../entities/task-comment.entity').TaskComment) {
+    return {
+      id: comment.id,
+      taskId: comment.taskId,
+      content: comment.content,
+      mentionedUserIds: comment.mentionedUserIds ?? [],
+      author: comment.author
+        ? {
+            id: comment.author.id,
+            fullName: comment.author.fullName,
+            email: comment.author.email,
+            avatarUrl: comment.author.avatarUrl,
+          }
+        : { id: comment.authorId, fullName: '', email: '', avatarUrl: null },
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+    };
+  }
+
+  private recordActivity(
+    task: Task,
+    actorId: string,
+    action: TaskActivityAction,
+    changes: Record<string, { from: unknown; to: unknown }> | null = null,
+  ) {
+    if (!this.taskActivityLogsRepository) return Promise.resolve();
+    return this.taskActivityLogsRepository.create({
+      taskId: task.id,
+      projectId: task.projectId,
+      actorId,
+      action,
+      changes: changes && Object.keys(changes).length > 0 ? changes : null,
+    });
+  }
+
+  private pickTaskFields(task: Task, fields: (keyof Task)[]) {
+    return Object.fromEntries(fields.map((field) => [field, task[field]]));
+  }
+
+  private buildChanges(previous: Record<string, unknown>, task: Task) {
+    return this.compactChanges(
+      Object.fromEntries(
+        Object.entries(previous).map(([field, from]) => [
+          field,
+          { from, to: task[field as keyof Task] },
+        ]),
+      ),
+    );
+  }
+
+  private compactChanges(
+    changes: Record<string, { from: unknown; to: unknown }>,
+  ) {
+    return Object.fromEntries(
+      Object.entries(changes).filter(([, value]) => value.from !== value.to),
     );
   }
 
@@ -1255,6 +1662,8 @@ export class TasksService {
       storyPoints: task.storyPoints,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
+      isBlocked: task.isBlocked ?? false,
+      isBlocking: task.isBlocking ?? false,
     };
   }
 }

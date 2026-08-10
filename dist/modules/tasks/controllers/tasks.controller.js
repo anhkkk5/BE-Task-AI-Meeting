@@ -30,6 +30,7 @@ const move_task_sprint_dto_1 = require("../dto/move-task-sprint.dto");
 const update_task_status_dto_1 = require("../dto/update-task-status.dto");
 const update_task_dto_1 = require("../dto/update-task.dto");
 const tasks_service_1 = require("../services/tasks.service");
+const task_comment_dto_1 = require("../dto/task-comment.dto");
 const taskWriteRoles = [
     workspace_role_enum_1.WorkspaceRole.Owner,
     workspace_role_enum_1.WorkspaceRole.ScrumMaster,
@@ -66,6 +67,21 @@ let TasksController = class TasksController {
     }
     getTaskDetail(user, workspaceId, projectId, taskId) {
         return this.tasksService.getTaskDetail(user.id, workspaceId, projectId, taskId);
+    }
+    getTaskActivities(user, workspaceId, projectId, taskId) {
+        return this.tasksService.getTaskActivities(user.id, workspaceId, projectId, taskId);
+    }
+    getTaskComments(user, workspaceId, projectId, taskId) {
+        return this.tasksService.getTaskComments(user.id, workspaceId, projectId, taskId);
+    }
+    createTaskComment(user, workspaceId, projectId, taskId, dto) {
+        return this.tasksService.createTaskComment(user.id, workspaceId, projectId, taskId, dto);
+    }
+    updateTaskComment(user, workspaceId, projectId, taskId, commentId, dto) {
+        return this.tasksService.updateTaskComment(user.id, workspaceId, projectId, taskId, commentId, dto);
+    }
+    deleteTaskComment(user, workspaceId, projectId, taskId, commentId) {
+        return this.tasksService.deleteTaskComment(user.id, workspaceId, projectId, taskId, commentId);
     }
     updateTask(user, workspaceId, projectId, taskId, dto) {
         return this.tasksService.updateTask(user.id, workspaceId, projectId, taskId, dto);
@@ -234,6 +250,66 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", void 0)
 ], TasksController.prototype, "getTaskDetail", null);
+__decorate([
+    (0, common_1.Get)('tasks/:taskId/activities'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Get task activity timeline' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('taskId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String]),
+    __metadata("design:returntype", void 0)
+], TasksController.prototype, "getTaskActivities", null);
+__decorate([
+    (0, common_1.Get)('tasks/:taskId/comments'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('taskId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String]),
+    __metadata("design:returntype", void 0)
+], TasksController.prototype, "getTaskComments", null);
+__decorate([
+    (0, common_1.Post)('tasks/:taskId/comments'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('taskId')),
+    __param(4, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String, task_comment_dto_1.CreateTaskCommentDto]),
+    __metadata("design:returntype", void 0)
+], TasksController.prototype, "createTaskComment", null);
+__decorate([
+    (0, common_1.Patch)('tasks/:taskId/comments/:commentId'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('taskId')),
+    __param(4, (0, common_1.Param)('commentId')),
+    __param(5, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String, String, task_comment_dto_1.UpdateTaskCommentDto]),
+    __metadata("design:returntype", void 0)
+], TasksController.prototype, "updateTaskComment", null);
+__decorate([
+    (0, common_1.Delete)('tasks/:taskId/comments/:commentId'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('taskId')),
+    __param(4, (0, common_1.Param)('commentId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String, String]),
+    __metadata("design:returntype", void 0)
+], TasksController.prototype, "deleteTaskComment", null);
 __decorate([
     (0, common_1.Patch)('tasks/:taskId'),
     (0, workspace_roles_decorator_1.WorkspaceRoles)(...taskWriteRoles),

@@ -85,6 +85,8 @@ export declare class AiTeamReportActionItemService {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;

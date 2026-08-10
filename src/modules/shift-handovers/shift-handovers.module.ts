@@ -4,6 +4,7 @@ import { WorkspaceMemberGuard } from '../../common/guards/workspace-member.guard
 import { WorkspaceRolesGuard } from '../../common/guards/workspace-roles.guard';
 import { ProjectsModule } from '../projects/projects.module';
 import { TasksModule } from '../tasks/tasks.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { ShiftHandoversController } from './controllers/shift-handovers.controller';
 import { ShiftHandover } from './entities/shift-handover.entity';
@@ -18,6 +19,7 @@ import { ShiftHandoversService } from './services/shift-handovers.service';
     WorkspacesModule,
     ProjectsModule,
     TasksModule,
+    NotificationsModule,
   ],
   controllers: [ShiftHandoversController],
   providers: [

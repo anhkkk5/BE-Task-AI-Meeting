@@ -1,0 +1,1 @@
+{"version":3,"file":"create-task-dependency.dto.js","sourceRoot":"","sources":["../../../../src/modules/tasks/dto/create-task-dependency.dto.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,qDAAiD;AACjD,+FAAqF;AAErF,MAAa,uBAAuB;IACxB,YAAY,CAAS;IACH,IAAI,CAAqB;CACtD;AAHD,0DAGC;AAFW;IAAT,IAAA,wBAAM,GAAE;;6DAAsB;AACH;IAA3B,IAAA,wBAAM,EAAC,8CAAkB,CAAC;;qDAA0B"}

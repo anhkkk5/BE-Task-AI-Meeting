@@ -15,6 +15,8 @@ const class_validator_1 = require("class-validator");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 class UpdateTaskStatusDto {
     status;
+    overrideBlocked;
+    overrideReason;
 }
 exports.UpdateTaskStatusDto = UpdateTaskStatusDto;
 __decorate([
@@ -26,4 +28,16 @@ __decorate([
     (0, class_validator_1.IsEnum)(task_status_enum_1.TaskStatus),
     __metadata("design:type", String)
 ], UpdateTaskStatusDto.prototype, "status", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateTaskStatusDto.prototype, "overrideBlocked", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(5),
+    (0, class_validator_1.MaxLength)(500),
+    __metadata("design:type", String)
+], UpdateTaskStatusDto.prototype, "overrideReason", void 0);
 //# sourceMappingURL=update-task-status.dto.js.map

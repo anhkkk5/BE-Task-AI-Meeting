@@ -17,6 +17,8 @@ import { User } from '../../users/entities/user.entity';
 @Entity('tasks')
 @Index(['projectId', 'taskCode'], { unique: true })
 export class Task {
+  isBlocked?: boolean;
+  isBlocking?: boolean;
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

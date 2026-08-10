@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Not, Repository } from 'typeorm';
+import { IsNull, Repository, SelectQueryBuilder } from 'typeorm';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
-import { GetTasksQueryDto } from '../dto/get-tasks-query.dto';
+import { GetTasksQueryDto, TaskDependencyStateFilter } from '../dto/get-tasks-query.dto';
 import { Task } from '../entities/task.entity';
 
 @Injectable()
@@ -59,13 +59,13 @@ export class TasksRepository {
   async findByProject(projectId: string, query: GetTasksQueryDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
-    const builder = this.repository
+    const builder = this.withDependencyState(this.repository
       .createQueryBuilder('task')
       .leftJoinAndSelect('task.assignee', 'assignee')
       .leftJoinAndSelect('task.creator', 'creator')
       .leftJoinAndSelect('task.sprint', 'sprint')
       .where('task.projectId = :projectId', { projectId })
-      .andWhere('task.deletedAt IS NULL');
+      .andWhere('task.deletedAt IS NULL'));
 
     if (query.sprintId) {
       builder.andWhere('task.sprintId = :sprintId', {
@@ -91,48 +91,38 @@ export class TasksRepository {
       );
     }
 
-    const [items, total] = await builder
+    if (query.dependencyState === TaskDependencyStateFilter.Blocked) {
+      builder.andWhere(this.blockedExistsSql('task'));
+    } else if (query.dependencyState === TaskDependencyStateFilter.Blocking) {
+      builder.andWhere(this.blockingExistsSql('task'));
+    }
+
+    const total = await builder.getCount();
+    const result = await builder
       .orderBy('task.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit)
-      .getManyAndCount();
+      .getRawAndEntities();
+    const items = this.attachDependencyState(result.entities, result.raw);
 
     return { items, total, page, limit };
   }
 
   async findBacklogByProject(projectId: string) {
-    return this.repository.find({
-      where: {
-        projectId,
-        sprintId: IsNull(),
-        status: Not(TaskStatus.Cancelled),
-        deletedAt: IsNull(),
-      },
-      relations: {
-        assignee: true,
-        creator: true,
-      },
-      order: {
-        createdAt: 'DESC',
-      },
-    });
+    const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
+      .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator')
+      .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId IS NULL')
+      .andWhere('task.status != :cancelled', { cancelled: TaskStatus.Cancelled }).andWhere('task.deletedAt IS NULL')
+      .orderBy('task.createdAt', 'DESC').getRawAndEntities();
+    return this.attachDependencyState(result.entities, result.raw);
   }
 
   async findBySprint(projectId: string, sprintId: string) {
-    return this.repository.find({
-      where: {
-        projectId,
-        sprintId,
-        deletedAt: IsNull(),
-      },
-      relations: {
-        assignee: true,
-        creator: true,
-      },
-      order: {
-        createdAt: 'DESC',
-      },
-    });
+    const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
+      .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator')
+      .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId = :sprintId', { sprintId })
+      .andWhere('task.deletedAt IS NULL').orderBy('task.createdAt', 'DESC').getRawAndEntities();
+    return this.attachDependencyState(result.entities, result.raw);
   }
 
   async update(task: Task, data: Partial<Task>) {
@@ -140,7 +130,42 @@ export class TasksRepository {
     return this.repository.save(task);
   }
 
+  findDueNotificationCandidates(throughDate: string) {
+    return this.repository.createQueryBuilder('task')
+      .innerJoinAndSelect('task.project', 'project')
+      .where('task.deletedAt IS NULL')
+      .andWhere('task.assigneeId IS NOT NULL')
+      .andWhere('task.dueDate IS NOT NULL')
+      .andWhere('task.dueDate <= :throughDate', { throughDate })
+      .andWhere('task.status NOT IN (:...closedStatuses)', {
+        closedStatuses: [TaskStatus.Done, TaskStatus.Cancelled],
+      })
+      .getMany();
+  }
+
   softDelete(task: Task) {
     return this.repository.softRemove(task);
+  }
+
+  private withDependencyState(builder: SelectQueryBuilder<Task>) {
+    return builder
+      .addSelect(`CASE WHEN ${this.blockedExistsSql('task')} THEN 1 ELSE 0 END`, 'task_isBlocked')
+      .addSelect(`CASE WHEN ${this.blockingExistsSql('task')} THEN 1 ELSE 0 END`, 'task_isBlocking');
+  }
+
+  private blockedExistsSql(alias: string) {
+    return `EXISTS (SELECT 1 FROM task_dependencies dependency LEFT JOIN tasks source_task ON source_task.id = dependency.source_task_id LEFT JOIN tasks target_task ON target_task.id = dependency.target_task_id WHERE (dependency.type = 'DEPENDS_ON' AND dependency.source_task_id = ${alias}.id AND target_task.status != 'DONE') OR (dependency.type = 'BLOCKS' AND dependency.target_task_id = ${alias}.id AND source_task.status != 'DONE'))`;
+  }
+
+  private blockingExistsSql(alias: string) {
+    return `EXISTS (SELECT 1 FROM task_dependencies dependency LEFT JOIN tasks source_task ON source_task.id = dependency.source_task_id LEFT JOIN tasks target_task ON target_task.id = dependency.target_task_id WHERE (dependency.type = 'BLOCKS' AND dependency.source_task_id = ${alias}.id AND target_task.status != 'DONE') OR (dependency.type = 'DEPENDS_ON' AND dependency.target_task_id = ${alias}.id AND source_task.status != 'DONE'))`;
+  }
+
+  private attachDependencyState(items: Task[], raw: Array<Record<string, unknown>>) {
+    return items.map((task, index) => {
+      task.isBlocked = Number(raw[index]?.task_isBlocked ?? 0) === 1;
+      task.isBlocking = Number(raw[index]?.task_isBlocking ?? 0) === 1;
+      return task;
+    });
   }
 }

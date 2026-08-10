@@ -1,6 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { mailConfig } from '../../../config/mail.config';
 import { MailService } from '../../mail/services/mail.service';
+import { NotificationType } from '../../notifications/entities/notification.entity';
+import { NotificationsService } from '../../notifications/notifications.service';
 import {
   buildHandoverAcceptedMail,
   buildHandoverChangesRequestedMail,
@@ -27,6 +29,7 @@ export class HandoverNotificationListener implements OnModuleInit {
   constructor(
     private readonly handoverEvents: HandoverEventsService,
     private readonly mailService: MailService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   onModuleInit() {
@@ -34,6 +37,7 @@ export class HandoverNotificationListener implements OnModuleInit {
   }
 
   private async handleEvent(event: HandoverEvent) {
+    await this.createInAppNotification(event);
     switch (event.type) {
       case 'submitted':
         await this.notifySubmitted(event.handover);
@@ -47,6 +51,53 @@ export class HandoverNotificationListener implements OnModuleInit {
       case 'changes_requested':
         await this.notifyChangesRequested(event.handover, event.reason);
         break;
+    }
+  }
+
+  private createInAppNotification(event: HandoverEvent) {
+    const handover = event.handover;
+    const common = {
+      body: this.taskLabel(handover),
+      link: `/workspaces/${handover.workspaceId}/projects/${handover.projectId}/shift-handovers`,
+      metadata: {
+        handoverId: handover.id,
+        taskId: handover.taskId,
+        workspaceId: handover.workspaceId,
+        projectId: handover.projectId,
+      },
+    };
+
+    switch (event.type) {
+      case 'submitted':
+        return this.notificationsService.create({
+          ...common,
+          recipientId: handover.receiverId,
+          type: NotificationType.HandoverSubmitted,
+          title: 'Có yêu cầu bàn giao mới',
+        });
+      case 'accepted':
+        return this.notificationsService.create({
+          ...common,
+          recipientId: handover.senderId,
+          type: NotificationType.HandoverAccepted,
+          title: 'Yêu cầu bàn giao đã được chấp nhận',
+        });
+      case 'rejected':
+        return this.notificationsService.create({
+          ...common,
+          recipientId: handover.senderId,
+          type: NotificationType.HandoverRejected,
+          title: 'Yêu cầu bàn giao bị từ chối',
+          metadata: { ...common.metadata, reason: event.reason ?? null },
+        });
+      case 'changes_requested':
+        return this.notificationsService.create({
+          ...common,
+          recipientId: handover.senderId,
+          type: NotificationType.HandoverChangesRequested,
+          title: 'Yêu cầu bổ sung thông tin bàn giao',
+          metadata: { ...common.metadata, reason: event.reason ?? null },
+        });
     }
   }
 

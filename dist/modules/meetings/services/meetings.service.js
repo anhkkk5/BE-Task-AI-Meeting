@@ -20,6 +20,8 @@ const meeting_participant_role_enum_1 = require("../../../common/enums/meeting-p
 const meeting_status_enum_1 = require("../../../common/enums/meeting-status.enum");
 const meeting_type_enum_1 = require("../../../common/enums/meeting-type.enum");
 const project_access_service_1 = require("../../projects/services/project-access.service");
+const notification_entity_1 = require("../../notifications/entities/notification.entity");
+const notifications_service_1 = require("../../notifications/notifications.service");
 const sprint_access_service_1 = require("../../sprints/services/sprint-access.service");
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
 const meeting_participants_repository_1 = require("../repositories/meeting-participants.repository");
@@ -35,7 +37,8 @@ let MeetingsService = class MeetingsService {
     projectAccessService;
     sprintAccessService;
     meetingLifecycleService;
-    constructor(dataSource, meetingsRepository, meetingParticipantsRepository, meetingAccessService, workspaceAccessService, projectAccessService, sprintAccessService, meetingLifecycleService) {
+    notificationsService;
+    constructor(dataSource, meetingsRepository, meetingParticipantsRepository, meetingAccessService, workspaceAccessService, projectAccessService, sprintAccessService, meetingLifecycleService, notificationsService) {
         this.dataSource = dataSource;
         this.meetingsRepository = meetingsRepository;
         this.meetingParticipantsRepository = meetingParticipantsRepository;
@@ -44,6 +47,7 @@ let MeetingsService = class MeetingsService {
         this.projectAccessService = projectAccessService;
         this.sprintAccessService = sprintAccessService;
         this.meetingLifecycleService = meetingLifecycleService;
+        this.notificationsService = notificationsService;
     }
     async createMeeting(currentUserId, workspaceId, projectId, dto) {
         await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
@@ -80,6 +84,7 @@ let MeetingsService = class MeetingsService {
             return createdMeeting;
         });
         const meetingWithParticipants = await this.meetingsRepository.findByIdAndProject(meeting.id, projectId);
+        await this.notifyParticipants(participantIds.filter((userId) => userId !== currentUserId), notification_entity_1.NotificationType.MeetingInvited, 'Bạn được mời tham gia cuộc họp', `${meeting.title} - Ngày: ${meeting.meetingDate}`, meeting);
         return {
             success: true,
             message: 'Create meeting successfully',
@@ -145,6 +150,9 @@ let MeetingsService = class MeetingsService {
                 ? meeting.endTime
                 : this.toDateOrNull(dto.endTime),
         });
+        await this.notifyParticipants(meeting.participants
+            ?.map((participant) => participant.userId)
+            .filter((userId) => userId !== currentUserId) ?? [], notification_entity_1.NotificationType.MeetingUpdated, 'Thông tin cuộc họp đã thay đổi', `${updatedMeeting.title} - Ngày: ${updatedMeeting.meetingDate}`, updatedMeeting);
         return {
             success: true,
             message: 'Update meeting successfully',
@@ -154,7 +162,11 @@ let MeetingsService = class MeetingsService {
         };
     }
     async cancelMeeting(currentUserId, workspaceId, projectId, meetingId) {
+        const meeting = await this.meetingAccessService.assertMeetingInProject(meetingId, projectId);
         await this.changeMeetingStatus(currentUserId, workspaceId, projectId, meetingId, meeting_status_enum_1.MeetingStatus.Cancelled);
+        await this.notifyParticipants(meeting.participants
+            ?.map((participant) => participant.userId)
+            .filter((userId) => userId !== currentUserId) ?? [], notification_entity_1.NotificationType.MeetingCancelled, 'Cuộc họp đã bị hủy', meeting.title, meeting);
         return {
             success: true,
             message: 'Cancel meeting successfully',
@@ -234,6 +246,22 @@ let MeetingsService = class MeetingsService {
             }
         }
         await this.assertSprintFilter(projectId, query.sprintId);
+    }
+    async notifyParticipants(recipientIds, type, title, body, meeting) {
+        if (!this.notificationsService || recipientIds.length === 0)
+            return;
+        await Promise.all([...new Set(recipientIds)].map((recipientId) => this.notificationsService.create({
+            recipientId,
+            type,
+            title,
+            body,
+            link: `/workspaces/${meeting.workspaceId}/projects/${meeting.projectId}/meetings/${meeting.id}`,
+            metadata: {
+                meetingId: meeting.id,
+                workspaceId: meeting.workspaceId,
+                projectId: meeting.projectId,
+            },
+        })));
     }
     async assertSprintFilter(projectId, sprintId) {
         if (sprintId) {
@@ -328,6 +356,7 @@ exports.MeetingsService = MeetingsService;
 exports.MeetingsService = MeetingsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectDataSource)()),
+    __param(8, (0, common_1.Optional)()),
     __metadata("design:paramtypes", [typeorm_2.DataSource,
         meetings_repository_1.MeetingsRepository,
         meeting_participants_repository_1.MeetingParticipantsRepository,
@@ -335,6 +364,7 @@ exports.MeetingsService = MeetingsService = __decorate([
         workspace_access_service_1.WorkspaceAccessService,
         project_access_service_1.ProjectAccessService,
         sprint_access_service_1.SprintAccessService,
-        meeting_lifecycle_service_1.MeetingLifecycleService])
+        meeting_lifecycle_service_1.MeetingLifecycleService,
+        notifications_service_1.NotificationsService])
 ], MeetingsService);
 //# sourceMappingURL=meetings.service.js.map

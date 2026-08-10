@@ -1,5 +1,6 @@
 import { MeetingParticipantRole } from '../../../common/enums/meeting-participant-role.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { AddMeetingParticipantsDto } from '../dto/add-meeting-participants.dto';
 import { UpdateParticipantAttendanceDto } from '../dto/update-participant-attendance.dto';
@@ -10,7 +11,8 @@ export declare class MeetingParticipantsService {
     private readonly meetingAccessService;
     private readonly workspaceAccessService;
     private readonly projectAccessService;
-    constructor(meetingParticipantsRepository: MeetingParticipantsRepository, meetingAccessService: MeetingAccessService, workspaceAccessService: WorkspaceAccessService, projectAccessService: ProjectAccessService);
+    private readonly notificationsService?;
+    constructor(meetingParticipantsRepository: MeetingParticipantsRepository, meetingAccessService: MeetingAccessService, workspaceAccessService: WorkspaceAccessService, projectAccessService: ProjectAccessService, notificationsService?: NotificationsService | undefined);
     addParticipants(currentUserId: string, workspaceId: string, projectId: string, meetingId: string, dto: AddMeetingParticipantsDto): Promise<{
         success: boolean;
         message: string;

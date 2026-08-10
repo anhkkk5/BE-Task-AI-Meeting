@@ -6,6 +6,7 @@ import { WorkspaceMemberGuard } from '../../common/guards/workspace-member.guard
 import { WorkspaceRolesGuard } from '../../common/guards/workspace-roles.guard';
 import { mongodbConfig } from '../../config/mongodb.config';
 import { ProjectsModule } from '../projects/projects.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { SprintsModule } from '../sprints/sprints.module';
 import { UsersModule } from '../users/users.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
@@ -43,6 +44,7 @@ const mongoImports = mongodbConfig().enabled
     TypeOrmModule.forFeature([Meeting, MeetingParticipant]),
     ...mongoImports,
     ProjectsModule,
+    NotificationsModule,
     SprintsModule,
     UsersModule,
     WorkspacesModule,

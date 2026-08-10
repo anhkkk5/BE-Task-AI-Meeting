@@ -198,6 +198,8 @@ export declare class AiMeetingSummaryDetailController {
                 storyPoints: number | null;
                 createdAt: Date;
                 updatedAt: Date;
+                isBlocked: boolean;
+                isBlocking: boolean;
             };
         };
     }>;

@@ -36,6 +36,7 @@ const stats_module_1 = require("./modules/stats/stats.module");
 const tasks_module_1 = require("./modules/tasks/tasks.module");
 const users_module_1 = require("./modules/users/users.module");
 const workspaces_module_1 = require("./modules/workspaces/workspaces.module");
+const notifications_module_1 = require("./modules/notifications/notifications.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -67,6 +68,7 @@ exports.AppModule = AppModule = __decorate([
             projects_module_1.ProjectsModule,
             sprints_module_1.SprintsModule,
             tasks_module_1.TasksModule,
+            notifications_module_1.NotificationsModule,
             daily_updates_module_1.DailyUpdatesModule,
             meetings_module_1.MeetingsModule,
             shift_handovers_module_1.ShiftHandoversModule,

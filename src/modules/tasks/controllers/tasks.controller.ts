@@ -38,6 +38,10 @@ import { MoveTaskSprintDto } from '../dto/move-task-sprint.dto';
 import { UpdateTaskStatusDto } from '../dto/update-task-status.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { TasksService } from '../services/tasks.service';
+import {
+  CreateTaskCommentDto,
+  UpdateTaskCommentDto,
+} from '../dto/task-comment.dto';
 
 type UploadedExcelFile = {
   buffer: Buffer;
@@ -245,6 +249,71 @@ export class TasksController {
       projectId,
       taskId,
     );
+  }
+
+  @Get('tasks/:taskId/activities')
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({ summary: 'Get task activity timeline' })
+  getTaskActivities(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('taskId') taskId: string,
+  ) {
+    return this.tasksService.getTaskActivities(
+      user.id,
+      workspaceId,
+      projectId,
+      taskId,
+    );
+  }
+
+  @Get('tasks/:taskId/comments')
+  @UseGuards(WorkspaceMemberGuard)
+  getTaskComments(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('taskId') taskId: string,
+  ) {
+    return this.tasksService.getTaskComments(user.id, workspaceId, projectId, taskId);
+  }
+
+  @Post('tasks/:taskId/comments')
+  @UseGuards(WorkspaceMemberGuard)
+  createTaskComment(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('taskId') taskId: string,
+    @Body() dto: CreateTaskCommentDto,
+  ) {
+    return this.tasksService.createTaskComment(user.id, workspaceId, projectId, taskId, dto);
+  }
+
+  @Patch('tasks/:taskId/comments/:commentId')
+  @UseGuards(WorkspaceMemberGuard)
+  updateTaskComment(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('taskId') taskId: string,
+    @Param('commentId') commentId: string,
+    @Body() dto: UpdateTaskCommentDto,
+  ) {
+    return this.tasksService.updateTaskComment(user.id, workspaceId, projectId, taskId, commentId, dto);
+  }
+
+  @Delete('tasks/:taskId/comments/:commentId')
+  @UseGuards(WorkspaceMemberGuard)
+  deleteTaskComment(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('taskId') taskId: string,
+    @Param('commentId') commentId: string,
+  ) {
+    return this.tasksService.deleteTaskComment(user.id, workspaceId, projectId, taskId, commentId);
   }
 
   @Patch('tasks/:taskId')
