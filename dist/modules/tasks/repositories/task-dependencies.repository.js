@@ -18,7 +18,6 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const task_dependency_entity_1 = require("../entities/task-dependency.entity");
 const task_dependency_type_enum_1 = require("../../../common/enums/task-dependency-type.enum");
-const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 let TaskDependenciesRepository = class TaskDependenciesRepository {
     repository;
     constructor(repository) {
@@ -44,8 +43,10 @@ let TaskDependenciesRepository = class TaskDependenciesRepository {
         return this.repository.createQueryBuilder('dependency')
             .leftJoinAndSelect('dependency.sourceTask', 'sourceTask')
             .leftJoinAndSelect('dependency.targetTask', 'targetTask')
-            .where('(dependency.type = :dependsOn AND dependency.source_task_id = :taskId AND targetTask.status != :done)', { dependsOn: task_dependency_type_enum_1.TaskDependencyType.DependsOn, taskId, done: task_status_enum_1.TaskStatus.Done })
-            .orWhere('(dependency.type = :blocks AND dependency.target_task_id = :taskId AND sourceTask.status != :done)', { blocks: task_dependency_type_enum_1.TaskDependencyType.Blocks, taskId, done: task_status_enum_1.TaskStatus.Done })
+            .leftJoin('workflow_statuses', 'sourceStatus', 'sourceStatus.id = sourceTask.workflow_status_id')
+            .leftJoin('workflow_statuses', 'targetStatus', 'targetStatus.id = targetTask.workflow_status_id')
+            .where('(dependency.type = :dependsOn AND dependency.source_task_id = :taskId AND targetStatus.category != :doneCategory)', { dependsOn: task_dependency_type_enum_1.TaskDependencyType.DependsOn, taskId, doneCategory: 'DONE' })
+            .orWhere('(dependency.type = :blocks AND dependency.target_task_id = :taskId AND sourceStatus.category != :doneCategory)', { blocks: task_dependency_type_enum_1.TaskDependencyType.Blocks, taskId, doneCategory: 'DONE' })
             .getMany();
     }
     findTasksUnblockedBy(blockerTaskId) {

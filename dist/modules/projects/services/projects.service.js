@@ -94,7 +94,7 @@ let ProjectsService = class ProjectsService {
         const project = await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
         if (!this.dataSource)
             throw new common_1.BadRequestException('Workflow storage unavailable');
-        const statuses = await this.dataSource.query('SELECT `status_key` `key`,`label`,`color`,`category`,`sort_order` `order`,`enabled` FROM `workflow_statuses` WHERE `template_id`=? ORDER BY `sort_order`', [templateId]);
+        const statuses = await this.dataSource.query('SELECT `id` `workflowStatusId`,`status_key` `key`,`label`,`color`,`category`,`sort_order` `order`,`enabled` FROM `workflow_statuses` WHERE `template_id`=? ORDER BY `sort_order`', [templateId]);
         if (!statuses.length)
             throw new common_1.NotFoundException('Workflow template not found');
         const rawTransitions = await this.dataSource.query('SELECT `from_key` `from`,`to_key` `to`,`allowed_roles` `roles` FROM `workflow_transitions` WHERE `template_id`=?', [templateId]);
@@ -152,12 +152,14 @@ let ProjectsService = class ProjectsService {
     async getProjectDetail(currentUserId, workspaceId, projectId) {
         await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
         const project = await this.projectAccessService.assertProjectDetailInWorkspace(projectId, workspaceId);
+        const workflowStatuses = await this.getNormalizedWorkflowStatuses(project);
         return {
             success: true,
             message: 'Get project detail successfully',
             data: {
                 project: {
                     ...this.toProjectResponse(project),
+                    workflowStatuses,
                     createdByUser: project.creator
                         ? {
                             id: project.creator.id,
@@ -257,6 +259,12 @@ let ProjectsService = class ProjectsService {
             createdAt: project.createdAt,
             updatedAt: project.updatedAt,
         };
+    }
+    async getNormalizedWorkflowStatuses(project) {
+        if (!this.dataSource || !project.workflowTemplateId)
+            return project.workflowStatuses ?? default_workflow_1.DEFAULT_WORKFLOW_STATUSES;
+        const statuses = await this.dataSource.query('SELECT `id` `workflowStatusId`,`status_key` `key`,`label`,`color`,`category`,`sort_order` `order`,`enabled` FROM `workflow_statuses` WHERE `template_id`=? ORDER BY `sort_order`', [project.workflowTemplateId]);
+        return statuses.length ? statuses : project.workflowStatuses ?? default_workflow_1.DEFAULT_WORKFLOW_STATUSES;
     }
 };
 exports.ProjectsService = ProjectsService;

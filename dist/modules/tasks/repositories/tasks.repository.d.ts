@@ -20,6 +20,20 @@ export declare class TasksRepository {
     findIncompleteChildren(parentId: string): Promise<Task[]>;
     findChildren(parentId: string): Promise<Task[]>;
     findWorkflowStatusId(templateId: string | null, status: TaskStatus): Promise<string | null>;
+    findWorkflowStatus(templateId: string | null, workflowStatusId: string): Promise<{
+        id: string;
+        key: TaskStatus;
+        label: string;
+        category: "TO_DO" | "IN_PROGRESS" | "DONE";
+        enabled: boolean | number;
+    } | null>;
+    findWorkflowStatusById(workflowStatusId: string | null): Promise<{
+        id: string;
+        key: TaskStatus;
+        label: string;
+        category: "TO_DO" | "IN_PROGRESS" | "DONE";
+        enabled: boolean | number;
+    } | null>;
     findDueNotificationCandidates(throughDate: string): Promise<Task[]>;
     softDelete(task: Task): Promise<Task>;
     private withDependencyState;

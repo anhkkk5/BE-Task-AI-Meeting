@@ -110,6 +110,7 @@ export declare class ProjectsController {
         message: string;
         data: {
             project: {
+                workflowStatuses: any;
                 createdByUser: {
                     id: string;
                     fullName: string;
@@ -124,7 +125,6 @@ export declare class ProjectsController {
                 status: import("../../../common/enums/project-status.enum").ProjectStatus;
                 startDate: string | null;
                 endDate: string | null;
-                workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
                 workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
                 workflowTemplateId: string | null;
                 createdBy: string;

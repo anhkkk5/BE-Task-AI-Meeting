@@ -1,5 +1,4 @@
 import { HandoverStatus } from '../../../common/enums/handover-status.enum';
-import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
@@ -30,7 +29,7 @@ export declare class ShiftHandoversService {
                     id: string;
                     taskCode: string;
                     title: string;
-                    status: TaskStatus;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
                     assigneeId: string | null;
                     assignee: {
                         id: string;
@@ -84,7 +83,7 @@ export declare class ShiftHandoversService {
                     id: string;
                     taskCode: string;
                     title: string;
-                    status: TaskStatus;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
                     assigneeId: string | null;
                     assignee: {
                         id: string;
@@ -143,7 +142,7 @@ export declare class ShiftHandoversService {
                     id: string;
                     taskCode: string;
                     title: string;
-                    status: TaskStatus;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
                     assigneeId: string | null;
                     assignee: {
                         id: string;
@@ -197,7 +196,7 @@ export declare class ShiftHandoversService {
                     id: string;
                     taskCode: string;
                     title: string;
-                    status: TaskStatus;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
                     assigneeId: string | null;
                     assignee: {
                         id: string;
@@ -251,7 +250,7 @@ export declare class ShiftHandoversService {
                     id: string;
                     taskCode: string;
                     title: string;
-                    status: TaskStatus;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
                     assigneeId: string | null;
                     assignee: {
                         id: string;
@@ -305,7 +304,7 @@ export declare class ShiftHandoversService {
                     id: string;
                     taskCode: string;
                     title: string;
-                    status: TaskStatus;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
                     assigneeId: string | null;
                     assignee: {
                         id: string;
@@ -359,7 +358,7 @@ export declare class ShiftHandoversService {
                     id: string;
                     taskCode: string;
                     title: string;
-                    status: TaskStatus;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
                     assigneeId: string | null;
                     assignee: {
                         id: string;
@@ -413,7 +412,7 @@ export declare class ShiftHandoversService {
                     id: string;
                     taskCode: string;
                     title: string;
-                    status: TaskStatus;
+                    status: import("../../../common/enums/task-status.enum").TaskStatus;
                     assigneeId: string | null;
                     assignee: {
                         id: string;

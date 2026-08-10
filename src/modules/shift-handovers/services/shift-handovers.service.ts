@@ -6,7 +6,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { HandoverStatus } from '../../../common/enums/handover-status.enum';
-import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { Task } from '../../tasks/entities/task.entity';
@@ -25,8 +24,6 @@ const managerRoles = [
   WorkspaceRole.ScrumMaster,
   WorkspaceRole.ProjectManager,
 ];
-
-const transferableStatuses = [TaskStatus.InProgress, TaskStatus.Review];
 
 @Injectable()
 export class ShiftHandoversService {
@@ -47,7 +44,7 @@ export class ShiftHandoversService {
   ) {
     await this.assertContext(userId, workspaceId, projectId);
     const task = await this.getTask(dto.taskId, projectId);
-    this.assertTaskCanBeHandedOver(task, userId);
+    await this.assertTaskCanBeHandedOver(task, userId);
 
     if (dto.receiverId === userId) {
       throw new BadRequestException('Người nhận phải khác người đang phụ trách task');
@@ -164,7 +161,7 @@ export class ShiftHandoversService {
     const handover = await this.getHandoverEntity(handoverId, projectId);
     this.assertSenderCanEdit(userId, handover);
     const task = await this.getTask(handover.taskId!, projectId);
-    this.assertTaskCanBeHandedOver(task, userId);
+    await this.assertTaskCanBeHandedOver(task, userId);
 
     if (!handover.completedWork?.trim() || !handover.remainingWork?.trim()) {
       throw new BadRequestException('Cần nhập phần đã làm và phần còn lại trước khi gửi');
@@ -249,7 +246,7 @@ export class ShiftHandoversService {
     const handover = await this.getHandoverEntity(handoverId, projectId);
     this.assertReceiverPending(userId, handover);
     const task = await this.getTask(handover.taskId!, projectId);
-    this.assertTaskCanBeHandedOver(task, handover.senderId);
+    await this.assertTaskCanBeHandedOver(task, handover.senderId);
 
     if (!(await this.repository.acceptAndTransferTask(handover))) {
       throw new ConflictException(
@@ -299,11 +296,17 @@ export class ShiftHandoversService {
     }
   }
 
-  private assertTaskCanBeHandedOver(task: Task, senderId: string) {
+  private async assertTaskCanBeHandedOver(task: Task, senderId: string) {
     if (task.assigneeId !== senderId) {
       throw new ForbiddenException('Chỉ người đang phụ trách task mới được bàn giao');
     }
-    if (!transferableStatuses.includes(task.status)) {
+    const workflowStatus = this.tasksRepository.findWorkflowStatusById
+      ? await this.tasksRepository.findWorkflowStatusById(task.workflowStatusId)
+      : null;
+    const isTransferable = workflowStatus
+      ? workflowStatus.category === 'IN_PROGRESS'
+      : ['IN_PROGRESS', 'REVIEW'].includes(task.status);
+    if (!isTransferable) {
       throw new BadRequestException('Chỉ task đang thực hiện hoặc đang review mới được bàn giao');
     }
   }

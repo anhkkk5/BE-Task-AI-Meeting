@@ -15,6 +15,7 @@ const class_validator_1 = require("class-validator");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 class UpdateTaskStatusDto {
     status;
+    workflowStatusId;
     overrideBlocked;
     overrideReason;
 }
@@ -25,9 +26,16 @@ __decorate([
         example: task_status_enum_1.TaskStatus.InProgress,
         description: 'Trang thai moi cua task.',
     }),
+    (0, class_validator_1.ValidateIf)((value) => !value.workflowStatusId),
     (0, class_validator_1.IsEnum)(task_status_enum_1.TaskStatus),
     __metadata("design:type", String)
 ], UpdateTaskStatusDto.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ required: false, description: 'Workflow status UUID. Ưu tiên trường này cho workflow động.' }),
+    (0, class_validator_1.ValidateIf)((value) => !value.status),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], UpdateTaskStatusDto.prototype, "workflowStatusId", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),

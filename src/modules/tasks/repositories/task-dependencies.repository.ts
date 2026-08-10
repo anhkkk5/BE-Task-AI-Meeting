@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TaskDependency } from '../entities/task-dependency.entity';
 import { TaskDependencyType } from '../../../common/enums/task-dependency-type.enum';
-import { TaskStatus } from '../../../common/enums/task-status.enum';
 
 @Injectable()
 export class TaskDependenciesRepository {
@@ -28,8 +27,10 @@ export class TaskDependenciesRepository {
     return this.repository.createQueryBuilder('dependency')
       .leftJoinAndSelect('dependency.sourceTask', 'sourceTask')
       .leftJoinAndSelect('dependency.targetTask', 'targetTask')
-      .where('(dependency.type = :dependsOn AND dependency.source_task_id = :taskId AND targetTask.status != :done)', { dependsOn: TaskDependencyType.DependsOn, taskId, done: TaskStatus.Done })
-      .orWhere('(dependency.type = :blocks AND dependency.target_task_id = :taskId AND sourceTask.status != :done)', { blocks: TaskDependencyType.Blocks, taskId, done: TaskStatus.Done })
+      .leftJoin('workflow_statuses', 'sourceStatus', 'sourceStatus.id = sourceTask.workflow_status_id')
+      .leftJoin('workflow_statuses', 'targetStatus', 'targetStatus.id = targetTask.workflow_status_id')
+      .where('(dependency.type = :dependsOn AND dependency.source_task_id = :taskId AND targetStatus.category != :doneCategory)', { dependsOn: TaskDependencyType.DependsOn, taskId, doneCategory: 'DONE' })
+      .orWhere('(dependency.type = :blocks AND dependency.target_task_id = :taskId AND sourceStatus.category != :doneCategory)', { blocks: TaskDependencyType.Blocks, taskId, doneCategory: 'DONE' })
       .getMany();
   }
   findTasksUnblockedBy(blockerTaskId: string) {

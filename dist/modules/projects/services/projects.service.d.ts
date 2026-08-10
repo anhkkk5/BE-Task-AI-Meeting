@@ -128,6 +128,7 @@ export declare class ProjectsService {
         message: string;
         data: {
             project: {
+                workflowStatuses: any;
                 createdByUser: {
                     id: string;
                     fullName: string;
@@ -142,7 +143,6 @@ export declare class ProjectsService {
                 status: import("../../../common/enums/project-status.enum").ProjectStatus;
                 startDate: string | null;
                 endDate: string | null;
-                workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
                 workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
                 workflowTemplateId: string | null;
                 createdBy: string;
@@ -187,4 +187,5 @@ export declare class ProjectsService {
     private assertDateRange;
     private assertWorkflow;
     private toProjectResponse;
+    private getNormalizedWorkflowStatuses;
 }

@@ -1,6 +1,7 @@
 import { TaskStatus } from '../enums/task-status.enum';
 import { WorkspaceRole } from '../enums/workspace-role.enum';
 export type WorkflowStatusConfig = {
+    workflowStatusId?: string;
     key: TaskStatus;
     label: string;
     color: string;

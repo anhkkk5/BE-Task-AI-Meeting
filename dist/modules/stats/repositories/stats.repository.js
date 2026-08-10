@@ -17,7 +17,6 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const sprint_status_enum_1 = require("../../../common/enums/sprint-status.enum");
-const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 const workspace_member_status_enum_1 = require("../../../common/enums/workspace-member-status.enum");
 const meeting_entity_1 = require("../../meetings/entities/meeting.entity");
 const project_entity_1 = require("../../projects/entities/project.entity");
@@ -106,12 +105,13 @@ let StatsRepository = class StatsRepository {
         return this.tasksRepository
             .createQueryBuilder('task')
             .innerJoin('task.project', 'project')
-            .select('task.status', 'status')
+            .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
+            .select('workflowStatus.status_key', 'status')
             .addSelect('COUNT(task.id)', 'total')
             .where('project.workspaceId = :workspaceId', { workspaceId })
             .andWhere('task.deletedAt IS NULL')
             .andWhere('project.deletedAt IS NULL')
-            .groupBy('task.status')
+            .groupBy('workflowStatus.status_key')
             .getRawMany();
     }
     findActiveSprint(workspaceId) {
@@ -128,23 +128,23 @@ let StatsRepository = class StatsRepository {
     countSprintTasksByStatus(sprintId) {
         return this.tasksRepository
             .createQueryBuilder('task')
-            .select('task.status', 'status')
+            .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
+            .select('workflowStatus.status_key', 'status')
             .addSelect('COUNT(task.id)', 'total')
             .where('task.sprintId = :sprintId', { sprintId })
             .andWhere('task.deletedAt IS NULL')
-            .groupBy('task.status')
+            .groupBy('workflowStatus.status_key')
             .getRawMany();
     }
     findUpcomingTasks(workspaceId, limit) {
         return this.tasksRepository
             .createQueryBuilder('task')
             .innerJoinAndSelect('task.project', 'project')
+            .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
             .leftJoinAndSelect('task.assignee', 'assignee')
             .where('project.workspaceId = :workspaceId', { workspaceId })
             .andWhere('task.dueDate IS NOT NULL')
-            .andWhere('task.status NOT IN (:...closedStatuses)', {
-            closedStatuses: [task_status_enum_1.TaskStatus.Done, task_status_enum_1.TaskStatus.Cancelled],
-        })
+            .andWhere('workflowStatus.category != :doneCategory', { doneCategory: 'DONE' })
             .andWhere('task.deletedAt IS NULL')
             .andWhere('project.deletedAt IS NULL')
             .orderBy('task.dueDate', 'ASC')
@@ -155,10 +155,11 @@ let StatsRepository = class StatsRepository {
         return this.tasksRepository
             .createQueryBuilder('task')
             .innerJoin('task.project', 'project')
+            .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
             .select('DATE(task.updated_at)', 'day')
             .addSelect('COUNT(task.id)', 'total')
             .where('project.workspace_id = :workspaceId', { workspaceId })
-            .andWhere('task.status = :status', { status: task_status_enum_1.TaskStatus.Done })
+            .andWhere('workflowStatus.category = :doneCategory', { doneCategory: 'DONE' })
             .andWhere('task.updated_at >= :fromDate', { fromDate })
             .andWhere('task.deletedAt IS NULL')
             .andWhere('project.deletedAt IS NULL')

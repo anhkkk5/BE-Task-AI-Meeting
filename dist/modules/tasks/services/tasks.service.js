@@ -344,13 +344,18 @@ let TasksService = class TasksService {
         for (const row of checkedRows) {
             const item = row.data;
             const taskCode = await this.taskCodeService.generateTaskCode(project);
+            const initialStatus = item.status ?? (item.sprintId ? task_status_enum_1.TaskStatus.Todo : task_status_enum_1.TaskStatus.Backlog);
+            const workflowStatusId = this.tasksRepository.findWorkflowStatusId
+                ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, initialStatus)
+                : null;
             const task = await this.tasksRepository.create({
                 projectId,
                 sprintId: item.sprintId ?? null,
                 taskCode,
                 title: item.title.trim(),
                 description: item.description?.trim() || null,
-                status: item.status ?? (item.sprintId ? task_status_enum_1.TaskStatus.Todo : task_status_enum_1.TaskStatus.Backlog),
+                status: initialStatus,
+                workflowStatusId,
                 assigneeId: item.assigneeId ?? null,
                 createdBy: currentUserId,
                 dueDate: item.dueDate ?? null,
@@ -591,19 +596,31 @@ let TasksService = class TasksService {
         await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
         const task = await this.taskAccessService.assertTaskInProject(taskId, projectId);
         this.taskAccessService.assertTaskEditable(task);
-        const role = await this.taskAccessService.assertUserCanUpdateTaskStatus(currentUserId, workspaceId, task, dto.status);
-        if (task.status !== dto.status && project.workflowTransitions) {
-            const transition = project.workflowTransitions.find((item) => item.from === task.status && item.to === dto.status);
+        const selectedWorkflowStatus = dto.workflowStatusId && this.tasksRepository.findWorkflowStatus
+            ? await this.tasksRepository.findWorkflowStatus(project.workflowTemplateId, dto.workflowStatusId)
+            : null;
+        if (dto.workflowStatusId && !selectedWorkflowStatus) {
+            throw new common_1.BadRequestException('Workflow status does not belong to the project template');
+        }
+        if (selectedWorkflowStatus && !selectedWorkflowStatus.enabled) {
+            throw new common_1.BadRequestException('Workflow status is disabled');
+        }
+        const targetStatus = selectedWorkflowStatus?.key ?? dto.status;
+        if (!targetStatus)
+            throw new common_1.BadRequestException('A target workflow status is required');
+        const role = await this.taskAccessService.assertUserCanUpdateTaskStatus(currentUserId, workspaceId, task, targetStatus);
+        if (task.status !== targetStatus && project.workflowTransitions) {
+            const transition = project.workflowTransitions.find((item) => item.from === task.status && item.to === targetStatus);
             if (!transition)
-                throw new common_1.BadRequestException(`Transition ${task.status} -> ${dto.status} is not allowed by project workflow`);
+                throw new common_1.BadRequestException(`Transition ${task.status} -> ${targetStatus} is not allowed by project workflow`);
             if (transition.roles?.length && !transition.roles.includes(role))
                 throw new common_1.ForbiddenException('Your role is not allowed to perform this workflow transition');
         }
-        this.assertBacklogStatusMatchesTaskLocation(task, dto.status);
-        const incompleteBlockers = dto.status === task_status_enum_1.TaskStatus.Done && this.taskDependenciesRepository
+        this.assertBacklogStatusMatchesTaskLocation(task, targetStatus);
+        const incompleteBlockers = targetStatus === task_status_enum_1.TaskStatus.Done && this.taskDependenciesRepository
             ? await this.taskDependenciesRepository.findIncompleteBlockers(task.id)
             : [];
-        if (dto.status === task_status_enum_1.TaskStatus.Done) {
+        if (targetStatus === task_status_enum_1.TaskStatus.Done) {
             const incompleteChildren = await this.tasksRepository.findIncompleteChildren(task.id);
             if (incompleteChildren.length) {
                 throw new common_1.BadRequestException({
@@ -627,18 +644,18 @@ let TasksService = class TasksService {
             }
         }
         const previousStatus = task.status;
-        const workflowStatusId = this.tasksRepository.findWorkflowStatusId ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, dto.status) : null;
+        const workflowStatusId = selectedWorkflowStatus?.id ?? (this.tasksRepository.findWorkflowStatusId ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, targetStatus) : null);
         const updatedTask = await this.tasksRepository.update(task, {
-            status: dto.status,
+            status: targetStatus,
             workflowStatusId,
-            completedAt: dto.status === task_status_enum_1.TaskStatus.Done ? task.completedAt ?? new Date() : null,
-            startedAt: dto.status === task_status_enum_1.TaskStatus.InProgress ? task.startedAt ?? new Date() : task.startedAt,
+            completedAt: targetStatus === task_status_enum_1.TaskStatus.Done ? task.completedAt ?? new Date() : null,
+            startedAt: targetStatus === task_status_enum_1.TaskStatus.InProgress ? task.startedAt ?? new Date() : task.startedAt,
         });
         await this.recordActivity(updatedTask, currentUserId, task_activity_log_entity_1.TaskActivityAction.StatusChanged, {
             status: { from: previousStatus, to: updatedTask.status },
             ...(incompleteBlockers.length ? { dependencyOverrideReason: { from: null, to: dto.overrideReason.trim() } } : {}),
         });
-        if (dto.status === task_status_enum_1.TaskStatus.Done && previousStatus !== task_status_enum_1.TaskStatus.Done) {
+        if (targetStatus === task_status_enum_1.TaskStatus.Done && previousStatus !== task_status_enum_1.TaskStatus.Done) {
             await this.notifyNewlyUnblockedTasks(updatedTask, workspaceId, projectId);
         }
         return {

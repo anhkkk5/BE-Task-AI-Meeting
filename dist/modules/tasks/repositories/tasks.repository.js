@@ -70,6 +70,8 @@ let TasksRepository = class TasksRepository {
             .leftJoinAndSelect('task.creator', 'creator')
             .leftJoinAndSelect('task.sprint', 'sprint')
             .leftJoinAndSelect('task.parent', 'parent')
+            .leftJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
+            .addSelect('workflowStatus.status_key', 'task_workflowStatusKey')
             .where('task.projectId = :projectId', { projectId })
             .andWhere('task.deletedAt IS NULL'));
         if (query.sprintId) {
@@ -78,7 +80,7 @@ let TasksRepository = class TasksRepository {
             });
         }
         if (query.status) {
-            builder.andWhere('task.status = :status', { status: query.status });
+            builder.andWhere('workflowStatus.status_key = :status', { status: query.status });
         }
         if (query.assigneeId) {
             builder.andWhere('task.assigneeId = :assigneeId', {
@@ -114,8 +116,9 @@ let TasksRepository = class TasksRepository {
         const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
             .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator').leftJoinAndSelect('task.reporter', 'reporter')
             .leftJoinAndSelect('task.parent', 'parent')
+            .leftJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id').addSelect('workflowStatus.status_key', 'task_workflowStatusKey')
             .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId IS NULL')
-            .andWhere('task.status != :cancelled', { cancelled: task_status_enum_1.TaskStatus.Cancelled }).andWhere('task.deletedAt IS NULL')
+            .andWhere('workflowStatus.status_key != :cancelled', { cancelled: task_status_enum_1.TaskStatus.Cancelled }).andWhere('task.deletedAt IS NULL')
             .orderBy('task.createdAt', 'DESC').getRawAndEntities();
         return this.attachDependencyState(result.entities, result.raw);
     }
@@ -123,6 +126,7 @@ let TasksRepository = class TasksRepository {
         const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
             .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator').leftJoinAndSelect('task.reporter', 'reporter')
             .leftJoinAndSelect('task.parent', 'parent')
+            .leftJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id').addSelect('workflowStatus.status_key', 'task_workflowStatusKey')
             .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId = :sprintId', { sprintId })
             .andWhere('task.deletedAt IS NULL').orderBy('task.createdAt', 'DESC').getRawAndEntities();
         return this.attachDependencyState(result.entities, result.raw);
@@ -133,9 +137,10 @@ let TasksRepository = class TasksRepository {
     }
     findIncompleteChildren(parentId) {
         return this.repository.createQueryBuilder('task')
+            .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
             .where('task.parentId = :parentId', { parentId })
             .andWhere('task.deletedAt IS NULL')
-            .andWhere('task.status NOT IN (:...closed)', { closed: [task_status_enum_1.TaskStatus.Done, task_status_enum_1.TaskStatus.Cancelled] })
+            .andWhere('workflowStatus.category != :doneCategory', { doneCategory: 'DONE' })
             .getMany();
     }
     findChildren(parentId) {
@@ -144,19 +149,30 @@ let TasksRepository = class TasksRepository {
     async findWorkflowStatusId(templateId, status) {
         if (!templateId)
             return null;
-        const rows = await this.repository.manager.query('SELECT `id` FROM `workflow_statuses` WHERE `template_id` = ? AND `status_key` = ? LIMIT 1', [templateId, status]);
+        const rows = await this.repository.manager.query('SELECT `id` FROM `workflow_statuses` WHERE `template_id` = ? AND `status_key` = ? AND `enabled`=1 LIMIT 1', [templateId, status]);
         return rows[0]?.id ?? null;
+    }
+    async findWorkflowStatus(templateId, workflowStatusId) {
+        if (!templateId)
+            return null;
+        const rows = await this.repository.manager.query('SELECT `id`,`status_key` `key`,`label`,`category`,`enabled` FROM `workflow_statuses` WHERE `id`=? AND `template_id`=? LIMIT 1', [workflowStatusId, templateId]);
+        return rows[0] ?? null;
+    }
+    async findWorkflowStatusById(workflowStatusId) {
+        if (!workflowStatusId)
+            return null;
+        const rows = await this.repository.manager.query('SELECT `id`,`status_key` `key`,`label`,`category`,`enabled` FROM `workflow_statuses` WHERE `id`=? LIMIT 1', [workflowStatusId]);
+        return rows[0] ?? null;
     }
     findDueNotificationCandidates(throughDate) {
         return this.repository.createQueryBuilder('task')
             .innerJoinAndSelect('task.project', 'project')
+            .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
             .where('task.deletedAt IS NULL')
             .andWhere('task.assigneeId IS NOT NULL')
             .andWhere('task.dueDate IS NOT NULL')
             .andWhere('task.dueDate <= :throughDate', { throughDate })
-            .andWhere('task.status NOT IN (:...closedStatuses)', {
-            closedStatuses: [task_status_enum_1.TaskStatus.Done, task_status_enum_1.TaskStatus.Cancelled],
-        })
+            .andWhere('workflowStatus.category != :doneCategory', { doneCategory: 'DONE' })
             .getMany();
     }
     softDelete(task) {
@@ -168,15 +184,16 @@ let TasksRepository = class TasksRepository {
             .addSelect(`CASE WHEN ${this.blockingExistsSql('task')} THEN 1 ELSE 0 END`, 'task_isBlocking');
     }
     blockedExistsSql(alias) {
-        return `EXISTS (SELECT 1 FROM task_dependencies dependency LEFT JOIN tasks source_task ON source_task.id = dependency.source_task_id LEFT JOIN tasks target_task ON target_task.id = dependency.target_task_id WHERE (dependency.type = 'DEPENDS_ON' AND dependency.source_task_id = ${alias}.id AND target_task.status != 'DONE') OR (dependency.type = 'BLOCKS' AND dependency.target_task_id = ${alias}.id AND source_task.status != 'DONE'))`;
+        return `EXISTS (SELECT 1 FROM task_dependencies dependency LEFT JOIN tasks source_task ON source_task.id = dependency.source_task_id LEFT JOIN workflow_statuses source_status ON source_status.id = source_task.workflow_status_id LEFT JOIN tasks target_task ON target_task.id = dependency.target_task_id LEFT JOIN workflow_statuses target_status ON target_status.id = target_task.workflow_status_id WHERE (dependency.type = 'DEPENDS_ON' AND dependency.source_task_id = ${alias}.id AND target_status.category != 'DONE') OR (dependency.type = 'BLOCKS' AND dependency.target_task_id = ${alias}.id AND source_status.category != 'DONE'))`;
     }
     blockingExistsSql(alias) {
-        return `EXISTS (SELECT 1 FROM task_dependencies dependency LEFT JOIN tasks source_task ON source_task.id = dependency.source_task_id LEFT JOIN tasks target_task ON target_task.id = dependency.target_task_id WHERE (dependency.type = 'BLOCKS' AND dependency.source_task_id = ${alias}.id AND target_task.status != 'DONE') OR (dependency.type = 'DEPENDS_ON' AND dependency.target_task_id = ${alias}.id AND source_task.status != 'DONE'))`;
+        return `EXISTS (SELECT 1 FROM task_dependencies dependency LEFT JOIN tasks source_task ON source_task.id = dependency.source_task_id LEFT JOIN workflow_statuses source_status ON source_status.id = source_task.workflow_status_id LEFT JOIN tasks target_task ON target_task.id = dependency.target_task_id LEFT JOIN workflow_statuses target_status ON target_status.id = target_task.workflow_status_id WHERE (dependency.type = 'BLOCKS' AND dependency.source_task_id = ${alias}.id AND target_status.category != 'DONE') OR (dependency.type = 'DEPENDS_ON' AND dependency.target_task_id = ${alias}.id AND source_status.category != 'DONE'))`;
     }
     attachDependencyState(items, raw) {
         return items.map((task, index) => {
             task.isBlocked = Number(raw[index]?.task_isBlocked ?? 0) === 1;
             task.isBlocking = Number(raw[index]?.task_isBlocking ?? 0) === 1;
+            task.status = raw[index]?.task_workflowStatusKey ?? task.status;
             return task;
         });
     }

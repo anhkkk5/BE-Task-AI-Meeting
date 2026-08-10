@@ -72,7 +72,7 @@ export class ProjectsService {
     await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
     const project = await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
     if (!this.dataSource) throw new BadRequestException('Workflow storage unavailable');
-    const statuses = await this.dataSource.query('SELECT `status_key` `key`,`label`,`color`,`category`,`sort_order` `order`,`enabled` FROM `workflow_statuses` WHERE `template_id`=? ORDER BY `sort_order`', [templateId]);
+    const statuses = await this.dataSource.query('SELECT `id` `workflowStatusId`,`status_key` `key`,`label`,`color`,`category`,`sort_order` `order`,`enabled` FROM `workflow_statuses` WHERE `template_id`=? ORDER BY `sort_order`', [templateId]);
     if (!statuses.length) throw new NotFoundException('Workflow template not found');
     const rawTransitions = await this.dataSource.query('SELECT `from_key` `from`,`to_key` `to`,`allowed_roles` `roles` FROM `workflow_transitions` WHERE `template_id`=?', [templateId]);
     const transitions = rawTransitions.map((item: { from: string; to: string; roles: string | string[] | null }) => ({ ...item, roles: typeof item.roles === 'string' ? JSON.parse(item.roles) : item.roles ?? undefined }));
@@ -169,6 +169,7 @@ export class ProjectsService {
         projectId,
         workspaceId,
       );
+    const workflowStatuses = await this.getNormalizedWorkflowStatuses(project);
 
     return {
       success: true,
@@ -176,6 +177,7 @@ export class ProjectsService {
       data: {
         project: {
           ...this.toProjectResponse(project),
+          workflowStatuses,
           createdByUser: project.creator
             ? {
                 id: project.creator.id,
@@ -317,5 +319,14 @@ export class ProjectsService {
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
     };
+  }
+
+  private async getNormalizedWorkflowStatuses(project: Project) {
+    if (!this.dataSource || !project.workflowTemplateId) return project.workflowStatuses ?? DEFAULT_WORKFLOW_STATUSES;
+    const statuses = await this.dataSource.query(
+      'SELECT `id` `workflowStatusId`,`status_key` `key`,`label`,`color`,`category`,`sort_order` `order`,`enabled` FROM `workflow_statuses` WHERE `template_id`=? ORDER BY `sort_order`',
+      [project.workflowTemplateId],
+    );
+    return statuses.length ? statuses : project.workflowStatuses ?? DEFAULT_WORKFLOW_STATUSES;
   }
 }

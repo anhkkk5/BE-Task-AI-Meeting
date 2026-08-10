@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShiftHandoversService = void 0;
 const common_1 = require("@nestjs/common");
 const handover_status_enum_1 = require("../../../common/enums/handover-status.enum");
-const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 const workspace_role_enum_1 = require("../../../common/enums/workspace-role.enum");
 const project_access_service_1 = require("../../projects/services/project-access.service");
 const tasks_repository_1 = require("../../tasks/repositories/tasks.repository");
@@ -25,7 +24,6 @@ const managerRoles = [
     workspace_role_enum_1.WorkspaceRole.ScrumMaster,
     workspace_role_enum_1.WorkspaceRole.ProjectManager,
 ];
-const transferableStatuses = [task_status_enum_1.TaskStatus.InProgress, task_status_enum_1.TaskStatus.Review];
 let ShiftHandoversService = class ShiftHandoversService {
     repository;
     workspaceAccess;
@@ -44,7 +42,7 @@ let ShiftHandoversService = class ShiftHandoversService {
     async createHandover(userId, workspaceId, projectId, dto) {
         await this.assertContext(userId, workspaceId, projectId);
         const task = await this.getTask(dto.taskId, projectId);
-        this.assertTaskCanBeHandedOver(task, userId);
+        await this.assertTaskCanBeHandedOver(task, userId);
         if (dto.receiverId === userId) {
             throw new common_1.BadRequestException('Người nhận phải khác người đang phụ trách task');
         }
@@ -126,7 +124,7 @@ let ShiftHandoversService = class ShiftHandoversService {
         const handover = await this.getHandoverEntity(handoverId, projectId);
         this.assertSenderCanEdit(userId, handover);
         const task = await this.getTask(handover.taskId, projectId);
-        this.assertTaskCanBeHandedOver(task, userId);
+        await this.assertTaskCanBeHandedOver(task, userId);
         if (!handover.completedWork?.trim() || !handover.remainingWork?.trim()) {
             throw new common_1.BadRequestException('Cần nhập phần đã làm và phần còn lại trước khi gửi');
         }
@@ -184,7 +182,7 @@ let ShiftHandoversService = class ShiftHandoversService {
         const handover = await this.getHandoverEntity(handoverId, projectId);
         this.assertReceiverPending(userId, handover);
         const task = await this.getTask(handover.taskId, projectId);
-        this.assertTaskCanBeHandedOver(task, handover.senderId);
+        await this.assertTaskCanBeHandedOver(task, handover.senderId);
         if (!(await this.repository.acceptAndTransferTask(handover))) {
             throw new common_1.ConflictException('Người phụ trách task đã thay đổi. Hãy tải lại trước khi chấp nhận bàn giao');
         }
@@ -220,11 +218,17 @@ let ShiftHandoversService = class ShiftHandoversService {
             throw new common_1.ForbiddenException('Bạn không có quyền xóa bản bàn giao này');
         }
     }
-    assertTaskCanBeHandedOver(task, senderId) {
+    async assertTaskCanBeHandedOver(task, senderId) {
         if (task.assigneeId !== senderId) {
             throw new common_1.ForbiddenException('Chỉ người đang phụ trách task mới được bàn giao');
         }
-        if (!transferableStatuses.includes(task.status)) {
+        const workflowStatus = this.tasksRepository.findWorkflowStatusById
+            ? await this.tasksRepository.findWorkflowStatusById(task.workflowStatusId)
+            : null;
+        const isTransferable = workflowStatus
+            ? workflowStatus.category === 'IN_PROGRESS'
+            : ['IN_PROGRESS', 'REVIEW'].includes(task.status);
+        if (!isTransferable) {
             throw new common_1.BadRequestException('Chỉ task đang thực hiện hoặc đang review mới được bàn giao');
         }
     }

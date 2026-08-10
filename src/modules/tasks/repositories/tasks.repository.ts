@@ -76,6 +76,8 @@ export class TasksRepository {
       .leftJoinAndSelect('task.creator', 'creator')
       .leftJoinAndSelect('task.sprint', 'sprint')
       .leftJoinAndSelect('task.parent', 'parent')
+      .leftJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
+      .addSelect('workflowStatus.status_key', 'task_workflowStatusKey')
       .where('task.projectId = :projectId', { projectId })
       .andWhere('task.deletedAt IS NULL'));
 
@@ -86,7 +88,7 @@ export class TasksRepository {
     }
 
     if (query.status) {
-      builder.andWhere('task.status = :status', { status: query.status });
+      builder.andWhere('workflowStatus.status_key = :status', { status: query.status });
     }
 
     if (query.assigneeId) {
@@ -127,8 +129,9 @@ export class TasksRepository {
     const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
       .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator').leftJoinAndSelect('task.reporter', 'reporter')
       .leftJoinAndSelect('task.parent', 'parent')
+      .leftJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id').addSelect('workflowStatus.status_key', 'task_workflowStatusKey')
       .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId IS NULL')
-      .andWhere('task.status != :cancelled', { cancelled: TaskStatus.Cancelled }).andWhere('task.deletedAt IS NULL')
+      .andWhere('workflowStatus.status_key != :cancelled', { cancelled: TaskStatus.Cancelled }).andWhere('task.deletedAt IS NULL')
       .orderBy('task.createdAt', 'DESC').getRawAndEntities();
     return this.attachDependencyState(result.entities, result.raw);
   }
@@ -137,6 +140,7 @@ export class TasksRepository {
     const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
       .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator').leftJoinAndSelect('task.reporter', 'reporter')
       .leftJoinAndSelect('task.parent', 'parent')
+      .leftJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id').addSelect('workflowStatus.status_key', 'task_workflowStatusKey')
       .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId = :sprintId', { sprintId })
       .andWhere('task.deletedAt IS NULL').orderBy('task.createdAt', 'DESC').getRawAndEntities();
     return this.attachDependencyState(result.entities, result.raw);
@@ -149,9 +153,10 @@ export class TasksRepository {
 
   findIncompleteChildren(parentId: string) {
     return this.repository.createQueryBuilder('task')
+      .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
       .where('task.parentId = :parentId', { parentId })
       .andWhere('task.deletedAt IS NULL')
-      .andWhere('task.status NOT IN (:...closed)', { closed: [TaskStatus.Done, TaskStatus.Cancelled] })
+      .andWhere('workflowStatus.category != :doneCategory', { doneCategory: 'DONE' })
       .getMany();
   }
 
@@ -161,20 +166,37 @@ export class TasksRepository {
 
   async findWorkflowStatusId(templateId: string | null, status: TaskStatus) {
     if (!templateId) return null;
-    const rows = await this.repository.manager.query('SELECT `id` FROM `workflow_statuses` WHERE `template_id` = ? AND `status_key` = ? LIMIT 1', [templateId, status]) as Array<{ id: string }>;
+    const rows = await this.repository.manager.query('SELECT `id` FROM `workflow_statuses` WHERE `template_id` = ? AND `status_key` = ? AND `enabled`=1 LIMIT 1', [templateId, status]) as Array<{ id: string }>;
     return rows[0]?.id ?? null;
+  }
+
+  async findWorkflowStatus(templateId: string | null, workflowStatusId: string) {
+    if (!templateId) return null;
+    const rows = await this.repository.manager.query(
+      'SELECT `id`,`status_key` `key`,`label`,`category`,`enabled` FROM `workflow_statuses` WHERE `id`=? AND `template_id`=? LIMIT 1',
+      [workflowStatusId, templateId],
+    ) as Array<{ id: string; key: TaskStatus; label: string; category: 'TO_DO' | 'IN_PROGRESS' | 'DONE'; enabled: boolean | number }>;
+    return rows[0] ?? null;
+  }
+
+  async findWorkflowStatusById(workflowStatusId: string | null) {
+    if (!workflowStatusId) return null;
+    const rows = await this.repository.manager.query(
+      'SELECT `id`,`status_key` `key`,`label`,`category`,`enabled` FROM `workflow_statuses` WHERE `id`=? LIMIT 1',
+      [workflowStatusId],
+    ) as Array<{ id: string; key: TaskStatus; label: string; category: 'TO_DO' | 'IN_PROGRESS' | 'DONE'; enabled: boolean | number }>;
+    return rows[0] ?? null;
   }
 
   findDueNotificationCandidates(throughDate: string) {
     return this.repository.createQueryBuilder('task')
       .innerJoinAndSelect('task.project', 'project')
+      .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
       .where('task.deletedAt IS NULL')
       .andWhere('task.assigneeId IS NOT NULL')
       .andWhere('task.dueDate IS NOT NULL')
       .andWhere('task.dueDate <= :throughDate', { throughDate })
-      .andWhere('task.status NOT IN (:...closedStatuses)', {
-        closedStatuses: [TaskStatus.Done, TaskStatus.Cancelled],
-      })
+      .andWhere('workflowStatus.category != :doneCategory', { doneCategory: 'DONE' })
       .getMany();
   }
 
@@ -189,17 +211,18 @@ export class TasksRepository {
   }
 
   private blockedExistsSql(alias: string) {
-    return `EXISTS (SELECT 1 FROM task_dependencies dependency LEFT JOIN tasks source_task ON source_task.id = dependency.source_task_id LEFT JOIN tasks target_task ON target_task.id = dependency.target_task_id WHERE (dependency.type = 'DEPENDS_ON' AND dependency.source_task_id = ${alias}.id AND target_task.status != 'DONE') OR (dependency.type = 'BLOCKS' AND dependency.target_task_id = ${alias}.id AND source_task.status != 'DONE'))`;
+    return `EXISTS (SELECT 1 FROM task_dependencies dependency LEFT JOIN tasks source_task ON source_task.id = dependency.source_task_id LEFT JOIN workflow_statuses source_status ON source_status.id = source_task.workflow_status_id LEFT JOIN tasks target_task ON target_task.id = dependency.target_task_id LEFT JOIN workflow_statuses target_status ON target_status.id = target_task.workflow_status_id WHERE (dependency.type = 'DEPENDS_ON' AND dependency.source_task_id = ${alias}.id AND target_status.category != 'DONE') OR (dependency.type = 'BLOCKS' AND dependency.target_task_id = ${alias}.id AND source_status.category != 'DONE'))`;
   }
 
   private blockingExistsSql(alias: string) {
-    return `EXISTS (SELECT 1 FROM task_dependencies dependency LEFT JOIN tasks source_task ON source_task.id = dependency.source_task_id LEFT JOIN tasks target_task ON target_task.id = dependency.target_task_id WHERE (dependency.type = 'BLOCKS' AND dependency.source_task_id = ${alias}.id AND target_task.status != 'DONE') OR (dependency.type = 'DEPENDS_ON' AND dependency.target_task_id = ${alias}.id AND source_task.status != 'DONE'))`;
+    return `EXISTS (SELECT 1 FROM task_dependencies dependency LEFT JOIN tasks source_task ON source_task.id = dependency.source_task_id LEFT JOIN workflow_statuses source_status ON source_status.id = source_task.workflow_status_id LEFT JOIN tasks target_task ON target_task.id = dependency.target_task_id LEFT JOIN workflow_statuses target_status ON target_status.id = target_task.workflow_status_id WHERE (dependency.type = 'BLOCKS' AND dependency.source_task_id = ${alias}.id AND target_status.category != 'DONE') OR (dependency.type = 'DEPENDS_ON' AND dependency.target_task_id = ${alias}.id AND source_status.category != 'DONE'))`;
   }
 
   private attachDependencyState(items: Task[], raw: Array<Record<string, unknown>>) {
     return items.map((task, index) => {
       task.isBlocked = Number(raw[index]?.task_isBlocked ?? 0) === 1;
       task.isBlocking = Number(raw[index]?.task_isBlocking ?? 0) === 1;
+      task.status = (raw[index]?.task_workflowStatusKey as TaskStatus | undefined) ?? task.status;
       return task;
     });
   }
