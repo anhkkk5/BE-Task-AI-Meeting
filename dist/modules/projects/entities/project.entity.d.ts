@@ -13,6 +13,7 @@ export declare class Project {
     endDate: string | null;
     workflowStatuses: WorkflowStatusConfig[] | null;
     workflowTransitions: WorkflowTransitionConfig[] | null;
+    workflowTemplateId: string | null;
     createdBy: string;
     workspace: Workspace;
     creator: User;

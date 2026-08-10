@@ -200,13 +200,16 @@ export class TasksService {
     }
 
     const taskCode = await this.taskCodeService.generateTaskCode(project);
+    const initialStatus = dto.sprintId ? TaskStatus.Todo : TaskStatus.Backlog;
+    const workflowStatusId = this.tasksRepository.findWorkflowStatusId ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, initialStatus) : null;
     const task = await this.tasksRepository.create({
       projectId,
       sprintId: dto.sprintId ?? null,
       taskCode,
       title: dto.title.trim(),
       description: dto.description?.trim() || null,
-      status: dto.sprintId ? TaskStatus.Todo : TaskStatus.Backlog,
+      status: initialStatus,
+      workflowStatusId,
       assigneeId: dto.assigneeId ?? null,
       createdBy: currentUserId,
       dueDate: dto.dueDate ?? null,
@@ -913,8 +916,10 @@ export class TasksService {
 
     const previousStatus = task.status;
 
+    const workflowStatusId = this.tasksRepository.findWorkflowStatusId ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, dto.status) : null;
     const updatedTask = await this.tasksRepository.update(task, {
       status: dto.status,
+      workflowStatusId,
       completedAt: dto.status === TaskStatus.Done ? task.completedAt ?? new Date() : null,
       startedAt: dto.status === TaskStatus.InProgress ? task.startedAt ?? new Date() : task.startedAt,
     });
@@ -1732,6 +1737,7 @@ export class TasksService {
       labels: task.labels ?? [],
       acceptanceCriteria: task.acceptanceCriteria,
       status: task.status,
+      workflowStatusId: task.workflowStatusId,
       taskType: task.taskType ?? TaskType.Task,
       priority: task.priority ?? TaskPriority.Medium,
       parentId: task.parentId ?? null,

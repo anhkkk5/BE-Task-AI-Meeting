@@ -6,6 +6,56 @@ import { ProjectsService } from '../services/projects.service';
 export declare class ProjectsController {
     private readonly projectsService;
     constructor(projectsService: ProjectsService);
+    listWorkflowTemplates(user: AuthUser, workspaceId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            items: Record<string, unknown>[];
+        };
+    }>;
+    createWorkflowTemplate(user: AuthUser, workspaceId: string, dto: any): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: `${string}-${string}-${string}-${string}-${string}`;
+        };
+    }>;
+    updateWorkflowTemplate(user: AuthUser, workspaceId: string, templateId: string, dto: any): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: string;
+        };
+    }>;
+    deleteWorkflowTemplate(user: AuthUser, workspaceId: string, templateId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            affected: any;
+        };
+    }>;
+    applyWorkflowTemplate(user: AuthUser, workspaceId: string, projectId: string, templateId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            project: {
+                id: string;
+                workspaceId: string;
+                name: string;
+                keyCode: string;
+                description: string | null;
+                status: import("../../../common/enums/project-status.enum").ProjectStatus;
+                startDate: string | null;
+                endDate: string | null;
+                workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
+                workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
+                workflowTemplateId: string | null;
+                createdBy: string;
+                createdAt: Date;
+                updatedAt: Date;
+            };
+        };
+    }>;
     createProject(user: AuthUser, workspaceId: string, dto: CreateProjectDto): Promise<{
         success: boolean;
         message: string;
@@ -21,6 +71,7 @@ export declare class ProjectsController {
                 endDate: string | null;
                 workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
                 workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
+                workflowTemplateId: string | null;
                 createdBy: string;
                 createdAt: Date;
                 updatedAt: Date;
@@ -42,6 +93,7 @@ export declare class ProjectsController {
                 endDate: string | null;
                 workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
                 workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
+                workflowTemplateId: string | null;
                 createdBy: string;
                 createdAt: Date;
                 updatedAt: Date;
@@ -74,6 +126,7 @@ export declare class ProjectsController {
                 endDate: string | null;
                 workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
                 workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
+                workflowTemplateId: string | null;
                 createdBy: string;
                 createdAt: Date;
                 updatedAt: Date;
@@ -95,6 +148,7 @@ export declare class ProjectsController {
                 endDate: string | null;
                 workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
                 workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
+                workflowTemplateId: string | null;
                 createdBy: string;
                 createdAt: Date;
                 updatedAt: Date;

@@ -25,6 +25,7 @@ let Project = class Project {
     endDate;
     workflowStatuses;
     workflowTransitions;
+    workflowTemplateId;
     createdBy;
     workspace;
     creator;
@@ -79,6 +80,10 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'workflow_transitions', type: 'json', nullable: true }),
     __metadata("design:type", Object)
 ], Project.prototype, "workflowTransitions", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'workflow_template_id', type: 'varchar', length: 36, nullable: true }),
+    __metadata("design:type", Object)
+], Project.prototype, "workflowTemplateId", void 0);
 __decorate([
     (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({ name: 'created_by', type: 'varchar', length: 36 }),

@@ -173,6 +173,7 @@ describe('TasksService', () => {
       title: 'Code task API',
       description: 'Task module',
       status: TaskStatus.Backlog,
+      workflowStatusId: null,
       assigneeId: 'member-id',
       createdBy: 'owner-id',
       dueDate: '2026-06-25',

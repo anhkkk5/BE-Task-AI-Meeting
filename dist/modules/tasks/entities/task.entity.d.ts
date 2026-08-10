@@ -16,6 +16,7 @@ export declare class Task {
     labels: string[] | null;
     acceptanceCriteria: string | null;
     status: TaskStatus;
+    workflowStatusId: string | null;
     taskType: TaskType;
     priority: TaskPriority;
     parentId: string | null;

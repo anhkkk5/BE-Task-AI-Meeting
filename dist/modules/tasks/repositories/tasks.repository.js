@@ -141,6 +141,12 @@ let TasksRepository = class TasksRepository {
     findChildren(parentId) {
         return this.repository.find({ where: { parentId, deletedAt: (0, typeorm_2.IsNull)() } });
     }
+    async findWorkflowStatusId(templateId, status) {
+        if (!templateId)
+            return null;
+        const rows = await this.repository.manager.query('SELECT `id` FROM `workflow_statuses` WHERE `template_id` = ? AND `status_key` = ? LIMIT 1', [templateId, status]);
+        return rows[0]?.id ?? null;
+    }
     findDueNotificationCandidates(throughDate) {
         return this.repository.createQueryBuilder('task')
             .innerJoinAndSelect('task.project', 'project')

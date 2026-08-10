@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -39,6 +40,21 @@ const projectWriteRoles = [
 @UseGuards(AccessTokenGuard)
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
+
+  @Get('workflow-templates') @UseGuards(WorkspaceMemberGuard)
+  listWorkflowTemplates(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string) { return this.projectsService.listWorkflowTemplates(user.id, workspaceId); }
+
+  @Post('workflow-templates') @WorkspaceRoles(...projectWriteRoles) @UseGuards(WorkspaceRolesGuard)
+  createWorkflowTemplate(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Body() dto: any) { return this.projectsService.createWorkflowTemplate(user.id, workspaceId, dto); }
+
+  @Patch('workflow-templates/:templateId') @WorkspaceRoles(...projectWriteRoles) @UseGuards(WorkspaceRolesGuard)
+  updateWorkflowTemplate(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('templateId') templateId: string, @Body() dto: any) { return this.projectsService.updateWorkflowTemplate(user.id, workspaceId, templateId, dto); }
+
+  @Delete('workflow-templates/:templateId') @WorkspaceRoles(...projectWriteRoles) @UseGuards(WorkspaceRolesGuard)
+  deleteWorkflowTemplate(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('templateId') templateId: string) { return this.projectsService.deleteWorkflowTemplate(user.id, workspaceId, templateId); }
+
+  @Patch(':projectId/workflow-template/:templateId') @WorkspaceRoles(...projectWriteRoles) @UseGuards(WorkspaceRolesGuard)
+  applyWorkflowTemplate(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('projectId') projectId: string, @Param('templateId') templateId: string) { return this.projectsService.applyWorkflowTemplate(user.id, workspaceId, projectId, templateId); }
 
   @Post()
   @WorkspaceRoles(...projectWriteRoles)

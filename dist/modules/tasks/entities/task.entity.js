@@ -29,6 +29,7 @@ let Task = class Task {
     labels;
     acceptanceCriteria;
     status;
+    workflowStatusId;
     taskType;
     priority;
     parentId;
@@ -95,6 +96,10 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], Task.prototype, "status", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'workflow_status_id', type: 'varchar', length: 36, nullable: true }),
+    __metadata("design:type", Object)
+], Task.prototype, "workflowStatusId", void 0);
 __decorate([
     (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({ name: 'task_type', type: 'enum', enum: task_type_enum_1.TaskType, default: task_type_enum_1.TaskType.Task }),

@@ -35,6 +35,11 @@ let ProjectsController = class ProjectsController {
     constructor(projectsService) {
         this.projectsService = projectsService;
     }
+    listWorkflowTemplates(user, workspaceId) { return this.projectsService.listWorkflowTemplates(user.id, workspaceId); }
+    createWorkflowTemplate(user, workspaceId, dto) { return this.projectsService.createWorkflowTemplate(user.id, workspaceId, dto); }
+    updateWorkflowTemplate(user, workspaceId, templateId, dto) { return this.projectsService.updateWorkflowTemplate(user.id, workspaceId, templateId, dto); }
+    deleteWorkflowTemplate(user, workspaceId, templateId) { return this.projectsService.deleteWorkflowTemplate(user.id, workspaceId, templateId); }
+    applyWorkflowTemplate(user, workspaceId, projectId, templateId) { return this.projectsService.applyWorkflowTemplate(user.id, workspaceId, projectId, templateId); }
     createProject(user, workspaceId, dto) {
         return this.projectsService.createProject(user.id, workspaceId, dto);
     }
@@ -55,6 +60,61 @@ let ProjectsController = class ProjectsController {
     }
 };
 exports.ProjectsController = ProjectsController;
+__decorate([
+    (0, common_1.Get)('workflow-templates'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "listWorkflowTemplates", null);
+__decorate([
+    (0, common_1.Post)('workflow-templates'),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...projectWriteRoles),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "createWorkflowTemplate", null);
+__decorate([
+    (0, common_1.Patch)('workflow-templates/:templateId'),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...projectWriteRoles),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('templateId')),
+    __param(3, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, Object]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "updateWorkflowTemplate", null);
+__decorate([
+    (0, common_1.Delete)('workflow-templates/:templateId'),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...projectWriteRoles),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('templateId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "deleteWorkflowTemplate", null);
+__decorate([
+    (0, common_1.Patch)(':projectId/workflow-template/:templateId'),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...projectWriteRoles),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('templateId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String]),
+    __metadata("design:returntype", void 0)
+], ProjectsController.prototype, "applyWorkflowTemplate", null);
 __decorate([
     (0, common_1.Post)(),
     (0, workspace_roles_decorator_1.WorkspaceRoles)(...projectWriteRoles),

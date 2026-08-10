@@ -56,6 +56,9 @@ export class Task {
   })
   status: TaskStatus;
 
+  @Column({ name: 'workflow_status_id', type: 'varchar', length: 36, nullable: true })
+  workflowStatusId: string | null;
+
   @Index()
   @Column({ name: 'task_type', type: 'enum', enum: TaskType, default: TaskType.Task })
   taskType: TaskType;

@@ -137,13 +137,16 @@ let TasksService = class TasksService {
             throw new common_1.BadRequestException('SUBTASK must have a parent task');
         }
         const taskCode = await this.taskCodeService.generateTaskCode(project);
+        const initialStatus = dto.sprintId ? task_status_enum_1.TaskStatus.Todo : task_status_enum_1.TaskStatus.Backlog;
+        const workflowStatusId = this.tasksRepository.findWorkflowStatusId ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, initialStatus) : null;
         const task = await this.tasksRepository.create({
             projectId,
             sprintId: dto.sprintId ?? null,
             taskCode,
             title: dto.title.trim(),
             description: dto.description?.trim() || null,
-            status: dto.sprintId ? task_status_enum_1.TaskStatus.Todo : task_status_enum_1.TaskStatus.Backlog,
+            status: initialStatus,
+            workflowStatusId,
             assigneeId: dto.assigneeId ?? null,
             createdBy: currentUserId,
             dueDate: dto.dueDate ?? null,
@@ -624,8 +627,10 @@ let TasksService = class TasksService {
             }
         }
         const previousStatus = task.status;
+        const workflowStatusId = this.tasksRepository.findWorkflowStatusId ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, dto.status) : null;
         const updatedTask = await this.tasksRepository.update(task, {
             status: dto.status,
+            workflowStatusId,
             completedAt: dto.status === task_status_enum_1.TaskStatus.Done ? task.completedAt ?? new Date() : null,
             startedAt: dto.status === task_status_enum_1.TaskStatus.InProgress ? task.startedAt ?? new Date() : task.startedAt,
         });
@@ -1160,6 +1165,7 @@ let TasksService = class TasksService {
             labels: task.labels ?? [],
             acceptanceCriteria: task.acceptanceCriteria,
             status: task.status,
+            workflowStatusId: task.workflowStatusId,
             taskType: task.taskType ?? task_type_enum_1.TaskType.Task,
             priority: task.priority ?? task_priority_enum_1.TaskPriority.Medium,
             parentId: task.parentId ?? null,

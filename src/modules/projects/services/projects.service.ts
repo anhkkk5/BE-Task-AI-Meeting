@@ -1,4 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { DataSource } from 'typeorm';
+import { randomUUID } from 'crypto';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { CreateProjectDto } from '../dto/create-project.dto';
@@ -24,7 +26,67 @@ export class ProjectsService {
     private readonly projectAccessService: ProjectAccessService,
     private readonly projectKeyCodeService: ProjectKeyCodeService,
     private readonly workspaceAccessService: WorkspaceAccessService,
+    @Optional() private readonly dataSource?: DataSource,
   ) {}
+
+  async listWorkflowTemplates(currentUserId: string, workspaceId: string) {
+    await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
+    if (!this.dataSource) return { success: true, message: 'Get workflow templates successfully', data: { items: [] } };
+    const templates = await this.dataSource.query('SELECT * FROM `workflow_templates` ORDER BY `is_system` DESC, `name` ASC') as Array<Record<string, unknown>>;
+    return { success: true, message: 'Get workflow templates successfully', data: { items: templates } };
+  }
+
+  async createWorkflowTemplate(currentUserId: string, workspaceId: string, dto: { name: string; description?: string; statuses: UpdateProjectDto['workflowStatuses']; transitions: UpdateProjectDto['workflowTransitions'] }) {
+    await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId); this.assertWorkflow(dto.statuses, dto.transitions);
+    if (!this.dataSource) throw new BadRequestException('Workflow storage unavailable');
+    const id = randomUUID();
+    await this.dataSource.transaction(async (manager) => {
+      await manager.query('INSERT INTO `workflow_templates` (`id`,`name`,`description`,`is_system`) VALUES (?,?,?,0)', [id, dto.name.trim(), dto.description?.trim() || null]);
+      for (const status of dto.statuses ?? []) await manager.query('INSERT INTO `workflow_statuses` (`id`,`template_id`,`status_key`,`label`,`color`,`category`,`sort_order`,`enabled`) VALUES (?,?,?,?,?,?,?,?)', [randomUUID(), id, status.key, status.label, status.color, status.category, status.order, status.enabled]);
+      for (const transition of dto.transitions ?? []) await manager.query('INSERT INTO `workflow_transitions` (`id`,`template_id`,`from_key`,`to_key`,`allowed_roles`) VALUES (?,?,?,?,?)', [randomUUID(), id, transition.from, transition.to, transition.roles?.length ? JSON.stringify(transition.roles) : null]);
+    });
+    return { success: true, message: 'Create workflow template successfully', data: { id } };
+  }
+
+  async updateWorkflowTemplate(currentUserId: string, workspaceId: string, templateId: string, dto: { name: string; description?: string; statuses: UpdateProjectDto['workflowStatuses']; transitions: UpdateProjectDto['workflowTransitions'] }) {
+    await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId); this.assertWorkflow(dto.statuses, dto.transitions);
+    if (!this.dataSource) throw new BadRequestException('Workflow storage unavailable');
+    const templates = await this.dataSource.query('SELECT `is_system` FROM `workflow_templates` WHERE `id`=? LIMIT 1', [templateId]) as Array<{ is_system: boolean | number }>;
+    if (!templates.length) throw new NotFoundException('Workflow template not found');
+    if (templates[0].is_system) throw new BadRequestException('System workflow template cannot be edited');
+    await this.dataSource.transaction(async (manager) => {
+      await manager.query('UPDATE `workflow_templates` SET `name`=?,`description`=? WHERE `id`=?', [dto.name.trim(), dto.description?.trim() || null, templateId]);
+      await manager.query('UPDATE `workflow_statuses` SET `enabled`=0 WHERE `template_id`=?', [templateId]);
+      for (const status of dto.statuses ?? []) {
+        const existing = await manager.query('SELECT `id` FROM `workflow_statuses` WHERE `template_id`=? AND `status_key`=? LIMIT 1', [templateId, status.key]) as Array<{ id: string }>;
+        if (existing.length) await manager.query('UPDATE `workflow_statuses` SET `label`=?,`color`=?,`category`=?,`sort_order`=?,`enabled`=? WHERE `id`=?', [status.label, status.color, status.category, status.order, status.enabled, existing[0].id]);
+        else await manager.query('INSERT INTO `workflow_statuses` (`id`,`template_id`,`status_key`,`label`,`color`,`category`,`sort_order`,`enabled`) VALUES (?,?,?,?,?,?,?,?)', [randomUUID(), templateId, status.key, status.label, status.color, status.category, status.order, status.enabled]);
+      }
+      await manager.query('DELETE FROM `workflow_transitions` WHERE `template_id`=?', [templateId]);
+      for (const transition of dto.transitions ?? []) await manager.query('INSERT INTO `workflow_transitions` (`id`,`template_id`,`from_key`,`to_key`,`allowed_roles`) VALUES (?,?,?,?,?)', [randomUUID(), templateId, transition.from, transition.to, transition.roles?.length ? JSON.stringify(transition.roles) : null]);
+    });
+    return { success: true, message: 'Update workflow template successfully', data: { id: templateId } };
+  }
+
+  async applyWorkflowTemplate(currentUserId: string, workspaceId: string, projectId: string, templateId: string) {
+    await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
+    const project = await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
+    if (!this.dataSource) throw new BadRequestException('Workflow storage unavailable');
+    const statuses = await this.dataSource.query('SELECT `status_key` `key`,`label`,`color`,`category`,`sort_order` `order`,`enabled` FROM `workflow_statuses` WHERE `template_id`=? ORDER BY `sort_order`', [templateId]);
+    if (!statuses.length) throw new NotFoundException('Workflow template not found');
+    const rawTransitions = await this.dataSource.query('SELECT `from_key` `from`,`to_key` `to`,`allowed_roles` `roles` FROM `workflow_transitions` WHERE `template_id`=?', [templateId]);
+    const transitions = rawTransitions.map((item: { from: string; to: string; roles: string | string[] | null }) => ({ ...item, roles: typeof item.roles === 'string' ? JSON.parse(item.roles) : item.roles ?? undefined }));
+    const updated = await this.projectsRepository.update(project, { workflowTemplateId: templateId, workflowStatuses: statuses, workflowTransitions: transitions });
+    await this.dataSource.query('UPDATE `tasks` t JOIN `workflow_statuses` s ON s.template_id=? AND s.status_key=t.status SET t.workflow_status_id=s.id WHERE t.project_id=?', [templateId, projectId]);
+    return { success: true, message: 'Apply workflow template successfully', data: { project: this.toProjectResponse(updated) } };
+  }
+
+  async deleteWorkflowTemplate(currentUserId: string, workspaceId: string, templateId: string) {
+    await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
+    if (!this.dataSource) throw new BadRequestException('Workflow storage unavailable');
+    const result = await this.dataSource.query('DELETE FROM `workflow_templates` WHERE `id`=? AND `is_system`=0', [templateId]);
+    return { success: true, message: 'Delete workflow template successfully', data: { affected: result.affectedRows ?? 0 } };
+  }
 
   async createProject(
     currentUserId: string,
@@ -250,6 +312,7 @@ export class ProjectsService {
       endDate: project.endDate,
       workflowStatuses: project.workflowStatuses ?? DEFAULT_WORKFLOW_STATUSES,
       workflowTransitions: project.workflowTransitions ?? DEFAULT_WORKFLOW_TRANSITIONS,
+      workflowTemplateId: project.workflowTemplateId,
       createdBy: project.createdBy,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,

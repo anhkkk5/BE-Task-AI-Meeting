@@ -28,7 +28,7 @@ export class TasksRepository {
       | 'storyPoints'
       | 'taskCode'
       | 'title'
-    > & Partial<Pick<Task, 'taskType' | 'priority' | 'parentId' | 'labels' | 'acceptanceCriteria' | 'reporterId' | 'completedAt' | 'startedAt'>>,
+    > & Partial<Pick<Task, 'taskType' | 'priority' | 'parentId' | 'labels' | 'acceptanceCriteria' | 'reporterId' | 'completedAt' | 'startedAt' | 'workflowStatusId'>>,
   ) {
     const task = this.repository.create({
       taskType: data.taskType ?? TaskType.Task,
@@ -157,6 +157,12 @@ export class TasksRepository {
 
   findChildren(parentId: string) {
     return this.repository.find({ where: { parentId, deletedAt: IsNull() } });
+  }
+
+  async findWorkflowStatusId(templateId: string | null, status: TaskStatus) {
+    if (!templateId) return null;
+    const rows = await this.repository.manager.query('SELECT `id` FROM `workflow_statuses` WHERE `template_id` = ? AND `status_key` = ? LIMIT 1', [templateId, status]) as Array<{ id: string }>;
+    return rows[0]?.id ?? null;
   }
 
   findDueNotificationCandidates(throughDate: string) {

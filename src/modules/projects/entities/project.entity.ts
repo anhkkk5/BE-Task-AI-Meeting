@@ -53,6 +53,9 @@ export class Project {
   @Column({ name: 'workflow_transitions', type: 'json', nullable: true })
   workflowTransitions: WorkflowTransitionConfig[] | null;
 
+  @Column({ name: 'workflow_template_id', type: 'varchar', length: 36, nullable: true })
+  workflowTemplateId: string | null;
+
   @Index()
   @Column({ name: 'created_by', type: 'varchar', length: 36 })
   createdBy: string;

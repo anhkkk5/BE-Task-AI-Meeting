@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { CreateProjectDto } from '../dto/create-project.dto';
@@ -11,7 +12,68 @@ export declare class ProjectsService {
     private readonly projectAccessService;
     private readonly projectKeyCodeService;
     private readonly workspaceAccessService;
-    constructor(projectsRepository: ProjectsRepository, projectAccessService: ProjectAccessService, projectKeyCodeService: ProjectKeyCodeService, workspaceAccessService: WorkspaceAccessService);
+    private readonly dataSource?;
+    constructor(projectsRepository: ProjectsRepository, projectAccessService: ProjectAccessService, projectKeyCodeService: ProjectKeyCodeService, workspaceAccessService: WorkspaceAccessService, dataSource?: DataSource | undefined);
+    listWorkflowTemplates(currentUserId: string, workspaceId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            items: Record<string, unknown>[];
+        };
+    }>;
+    createWorkflowTemplate(currentUserId: string, workspaceId: string, dto: {
+        name: string;
+        description?: string;
+        statuses: UpdateProjectDto['workflowStatuses'];
+        transitions: UpdateProjectDto['workflowTransitions'];
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: `${string}-${string}-${string}-${string}-${string}`;
+        };
+    }>;
+    updateWorkflowTemplate(currentUserId: string, workspaceId: string, templateId: string, dto: {
+        name: string;
+        description?: string;
+        statuses: UpdateProjectDto['workflowStatuses'];
+        transitions: UpdateProjectDto['workflowTransitions'];
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: string;
+        };
+    }>;
+    applyWorkflowTemplate(currentUserId: string, workspaceId: string, projectId: string, templateId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            project: {
+                id: string;
+                workspaceId: string;
+                name: string;
+                keyCode: string;
+                description: string | null;
+                status: import("../../../common/enums/project-status.enum").ProjectStatus;
+                startDate: string | null;
+                endDate: string | null;
+                workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
+                workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
+                workflowTemplateId: string | null;
+                createdBy: string;
+                createdAt: Date;
+                updatedAt: Date;
+            };
+        };
+    }>;
+    deleteWorkflowTemplate(currentUserId: string, workspaceId: string, templateId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            affected: any;
+        };
+    }>;
     createProject(currentUserId: string, workspaceId: string, dto: CreateProjectDto): Promise<{
         success: boolean;
         message: string;
@@ -27,6 +89,7 @@ export declare class ProjectsService {
                 endDate: string | null;
                 workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
                 workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
+                workflowTemplateId: string | null;
                 createdBy: string;
                 createdAt: Date;
                 updatedAt: Date;
@@ -48,6 +111,7 @@ export declare class ProjectsService {
                 endDate: string | null;
                 workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
                 workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
+                workflowTemplateId: string | null;
                 createdBy: string;
                 createdAt: Date;
                 updatedAt: Date;
@@ -80,6 +144,7 @@ export declare class ProjectsService {
                 endDate: string | null;
                 workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
                 workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
+                workflowTemplateId: string | null;
                 createdBy: string;
                 createdAt: Date;
                 updatedAt: Date;
@@ -101,6 +166,7 @@ export declare class ProjectsService {
                 endDate: string | null;
                 workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
                 workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
+                workflowTemplateId: string | null;
                 createdBy: string;
                 createdAt: Date;
                 updatedAt: Date;
