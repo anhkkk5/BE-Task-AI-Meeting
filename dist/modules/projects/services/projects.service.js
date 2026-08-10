@@ -13,6 +13,8 @@ exports.ProjectsService = void 0;
 const common_1 = require("@nestjs/common");
 const workspace_role_enum_1 = require("../../../common/enums/workspace-role.enum");
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
+const default_workflow_1 = require("../../../common/workflow/default-workflow");
+const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 const projects_repository_1 = require("../repositories/projects.repository");
 const project_access_service_1 = require("./project-access.service");
 const project_key_code_service_1 = require("./project-key-code.service");
@@ -97,6 +99,7 @@ let ProjectsService = class ProjectsService {
         await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
         this.assertDateRange(dto.startDate, dto.endDate);
         const project = await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
+        this.assertWorkflow(dto.workflowStatuses, dto.workflowTransitions);
         const updatedProject = await this.projectsRepository.update(project, {
             name: dto.name?.trim() ?? project.name,
             description: dto.description === undefined
@@ -104,6 +107,8 @@ let ProjectsService = class ProjectsService {
                 : dto.description.trim() || null,
             startDate: dto.startDate ?? project.startDate,
             endDate: dto.endDate ?? project.endDate,
+            workflowStatuses: dto.workflowStatuses ?? project.workflowStatuses,
+            workflowTransitions: dto.workflowTransitions ?? project.workflowTransitions,
         });
         return {
             success: true,
@@ -144,6 +149,20 @@ let ProjectsService = class ProjectsService {
             throw new common_1.BadRequestException('endDate must not be earlier than startDate');
         }
     }
+    assertWorkflow(statuses, transitions) {
+        if (!statuses && !transitions)
+            return;
+        const valid = new Set(Object.values(task_status_enum_1.TaskStatus));
+        if (statuses) {
+            const keys = statuses.map((status) => status.key);
+            if (new Set(keys).size !== keys.length || keys.some((key) => !valid.has(key)))
+                throw new common_1.BadRequestException('Workflow statuses contain duplicate or invalid keys');
+            if (!statuses.some((status) => status.key === task_status_enum_1.TaskStatus.Done && status.enabled))
+                throw new common_1.BadRequestException('Workflow must keep DONE enabled');
+        }
+        if (transitions?.some((transition) => !valid.has(transition.from) || !valid.has(transition.to) || transition.from === transition.to))
+            throw new common_1.BadRequestException('Workflow contains invalid transitions');
+    }
     toProjectResponse(project) {
         return {
             id: project.id,
@@ -154,6 +173,8 @@ let ProjectsService = class ProjectsService {
             status: project.status,
             startDate: project.startDate,
             endDate: project.endDate,
+            workflowStatuses: project.workflowStatuses ?? default_workflow_1.DEFAULT_WORKFLOW_STATUSES,
+            workflowTransitions: project.workflowTransitions ?? default_workflow_1.DEFAULT_WORKFLOW_TRANSITIONS,
             createdBy: project.createdBy,
             createdAt: project.createdAt,
             updatedAt: project.updatedAt,

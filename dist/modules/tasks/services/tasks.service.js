@@ -283,7 +283,7 @@ let TasksService = class TasksService {
         return Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
     }
     async previewTaskImport(currentUserId, workspaceId, projectId, file) {
-        await this.assertWritableProject(workspaceId, projectId);
+        const project = await this.assertWritableProject(workspaceId, projectId);
         await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
         if (!file?.buffer) {
             throw new common_1.BadRequestException('Vui lòng chọn file Excel.');
@@ -584,11 +584,14 @@ let TasksService = class TasksService {
         };
     }
     async updateTaskStatus(currentUserId, workspaceId, projectId, taskId, dto) {
-        await this.assertWritableProject(workspaceId, projectId);
+        const project = await this.assertWritableProject(workspaceId, projectId);
         await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
         const task = await this.taskAccessService.assertTaskInProject(taskId, projectId);
         this.taskAccessService.assertTaskEditable(task);
         const role = await this.taskAccessService.assertUserCanUpdateTaskStatus(currentUserId, workspaceId, task, dto.status);
+        if (task.status !== dto.status && project.workflowTransitions && !project.workflowTransitions.some((transition) => transition.from === task.status && transition.to === dto.status)) {
+            throw new common_1.BadRequestException(`Transition ${task.status} -> ${dto.status} is not allowed by project workflow`);
+        }
         this.assertBacklogStatusMatchesTaskLocation(task, dto.status);
         const incompleteBlockers = dto.status === task_status_enum_1.TaskStatus.Done && this.taskDependenciesRepository
             ? await this.taskDependenciesRepository.findIncompleteBlockers(task.id)

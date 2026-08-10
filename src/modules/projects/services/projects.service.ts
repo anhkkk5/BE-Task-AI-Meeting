@@ -4,6 +4,8 @@ import { WorkspaceAccessService } from '../../workspaces/services/workspace-acce
 import { CreateProjectDto } from '../dto/create-project.dto';
 import { GetProjectsQueryDto } from '../dto/get-projects-query.dto';
 import { UpdateProjectDto } from '../dto/update-project.dto';
+import { DEFAULT_WORKFLOW_STATUSES, DEFAULT_WORKFLOW_TRANSITIONS } from '../../../common/workflow/default-workflow';
+import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { Project } from '../entities/project.entity';
 import { ProjectsRepository } from '../repositories/projects.repository';
 import { ProjectAccessService } from './project-access.service';
@@ -141,6 +143,7 @@ export class ProjectsService {
       projectId,
       workspaceId,
     );
+    this.assertWorkflow(dto.workflowStatuses, dto.workflowTransitions);
 
     const updatedProject = await this.projectsRepository.update(project, {
       name: dto.name?.trim() ?? project.name,
@@ -150,6 +153,8 @@ export class ProjectsService {
           : dto.description.trim() || null,
       startDate: dto.startDate ?? project.startDate,
       endDate: dto.endDate ?? project.endDate,
+      workflowStatuses: (dto.workflowStatuses as typeof project.workflowStatuses | undefined) ?? project.workflowStatuses,
+      workflowTransitions: (dto.workflowTransitions as typeof project.workflowTransitions | undefined) ?? project.workflowTransitions,
     });
 
     return {
@@ -221,6 +226,17 @@ export class ProjectsService {
     }
   }
 
+  private assertWorkflow(statuses?: UpdateProjectDto['workflowStatuses'], transitions?: UpdateProjectDto['workflowTransitions']) {
+    if (!statuses && !transitions) return;
+    const valid = new Set(Object.values(TaskStatus));
+    if (statuses) {
+      const keys = statuses.map((status) => status.key);
+      if (new Set(keys).size !== keys.length || keys.some((key) => !valid.has(key as TaskStatus))) throw new BadRequestException('Workflow statuses contain duplicate or invalid keys');
+      if (!statuses.some((status) => status.key === TaskStatus.Done && status.enabled)) throw new BadRequestException('Workflow must keep DONE enabled');
+    }
+    if (transitions?.some((transition) => !valid.has(transition.from as TaskStatus) || !valid.has(transition.to as TaskStatus) || transition.from === transition.to)) throw new BadRequestException('Workflow contains invalid transitions');
+  }
+
   private toProjectResponse(project: Project) {
     return {
       id: project.id,
@@ -231,6 +247,8 @@ export class ProjectsService {
       status: project.status,
       startDate: project.startDate,
       endDate: project.endDate,
+      workflowStatuses: project.workflowStatuses ?? DEFAULT_WORKFLOW_STATUSES,
+      workflowTransitions: project.workflowTransitions ?? DEFAULT_WORKFLOW_TRANSITIONS,
       createdBy: project.createdBy,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,

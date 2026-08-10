@@ -13,12 +13,26 @@ exports.UpdateProjectDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class UpdateProjectDto {
+    workflowStatuses;
+    workflowTransitions;
     name;
     description;
     startDate;
     endDate;
 }
 exports.UpdateProjectDto = UpdateProjectDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ type: 'array' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    __metadata("design:type", Array)
+], UpdateProjectDto.prototype, "workflowStatuses", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ type: 'array' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    __metadata("design:type", Array)
+], UpdateProjectDto.prototype, "workflowTransitions", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         example: 'Agile/Scrum AI Project Updated',

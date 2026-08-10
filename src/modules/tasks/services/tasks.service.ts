@@ -371,7 +371,7 @@ export class TasksService {
     projectId: string,
     file: UploadedExcelFile | undefined,
   ) {
-    await this.assertWritableProject(workspaceId, projectId);
+    const project = await this.assertWritableProject(workspaceId, projectId);
     await this.workspaceAccessService.assertWorkspaceMember(
       currentUserId,
       workspaceId,
@@ -795,7 +795,6 @@ export class TasksService {
       projectId,
     );
     this.taskAccessService.assertTaskEditable(task);
-
     const previous = this.pickTaskFields(task, [
       'title',
       'description',
@@ -861,7 +860,7 @@ export class TasksService {
     taskId: string,
     dto: UpdateTaskStatusDto,
   ) {
-    await this.assertWritableProject(workspaceId, projectId);
+    const project = await this.assertWritableProject(workspaceId, projectId);
     await this.workspaceAccessService.assertWorkspaceMember(
       currentUserId,
       workspaceId,
@@ -877,6 +876,9 @@ export class TasksService {
       task,
       dto.status,
     );
+    if (task.status !== dto.status && project.workflowTransitions && !project.workflowTransitions.some((transition) => transition.from === task.status && transition.to === dto.status)) {
+      throw new BadRequestException(`Transition ${task.status} -> ${dto.status} is not allowed by project workflow`);
+    }
     this.assertBacklogStatusMatchesTaskLocation(task, dto.status);
 
     const incompleteBlockers =

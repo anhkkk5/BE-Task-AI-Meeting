@@ -25,6 +25,8 @@ export declare class ProjectsService {
                 status: import("../../../common/enums/project-status.enum").ProjectStatus;
                 startDate: string | null;
                 endDate: string | null;
+                workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
+                workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
                 createdBy: string;
                 createdAt: Date;
                 updatedAt: Date;
@@ -44,6 +46,8 @@ export declare class ProjectsService {
                 status: import("../../../common/enums/project-status.enum").ProjectStatus;
                 startDate: string | null;
                 endDate: string | null;
+                workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
+                workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
                 createdBy: string;
                 createdAt: Date;
                 updatedAt: Date;
@@ -74,6 +78,8 @@ export declare class ProjectsService {
                 status: import("../../../common/enums/project-status.enum").ProjectStatus;
                 startDate: string | null;
                 endDate: string | null;
+                workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
+                workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
                 createdBy: string;
                 createdAt: Date;
                 updatedAt: Date;
@@ -93,6 +99,8 @@ export declare class ProjectsService {
                 status: import("../../../common/enums/project-status.enum").ProjectStatus;
                 startDate: string | null;
                 endDate: string | null;
+                workflowStatuses: import("../../../common/workflow/default-workflow").WorkflowStatusConfig[];
+                workflowTransitions: import("../../../common/workflow/default-workflow").WorkflowTransitionConfig[];
                 createdBy: string;
                 createdAt: Date;
                 updatedAt: Date;
@@ -111,5 +119,6 @@ export declare class ProjectsService {
     }>;
     getProjectWriteRoles(): WorkspaceRole[];
     private assertDateRange;
+    private assertWorkflow;
     private toProjectResponse;
 }

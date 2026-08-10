@@ -12,6 +12,7 @@ import {
 import { ProjectStatus } from '../../../common/enums/project-status.enum';
 import { User } from '../../users/entities/user.entity';
 import { Workspace } from '../../workspaces/entities/workspace.entity';
+import type { WorkflowStatusConfig, WorkflowTransitionConfig } from '../../../common/workflow/default-workflow';
 
 @Entity('projects')
 @Index(['workspaceId', 'keyCode'], { unique: true })
@@ -45,6 +46,12 @@ export class Project {
 
   @Column({ name: 'end_date', type: 'date', nullable: true })
   endDate: string | null;
+
+  @Column({ name: 'workflow_statuses', type: 'json', nullable: true })
+  workflowStatuses: WorkflowStatusConfig[] | null;
+
+  @Column({ name: 'workflow_transitions', type: 'json', nullable: true })
+  workflowTransitions: WorkflowTransitionConfig[] | null;
 
   @Index()
   @Column({ name: 'created_by', type: 'varchar', length: 36 })
