@@ -876,8 +876,10 @@ export class TasksService {
       task,
       dto.status,
     );
-    if (task.status !== dto.status && project.workflowTransitions && !project.workflowTransitions.some((transition) => transition.from === task.status && transition.to === dto.status)) {
-      throw new BadRequestException(`Transition ${task.status} -> ${dto.status} is not allowed by project workflow`);
+    if (task.status !== dto.status && project.workflowTransitions) {
+      const transition = project.workflowTransitions.find((item) => item.from === task.status && item.to === dto.status);
+      if (!transition) throw new BadRequestException(`Transition ${task.status} -> ${dto.status} is not allowed by project workflow`);
+      if (transition.roles?.length && !transition.roles.includes(role)) throw new ForbiddenException('Your role is not allowed to perform this workflow transition');
     }
     this.assertBacklogStatusMatchesTaskLocation(task, dto.status);
 

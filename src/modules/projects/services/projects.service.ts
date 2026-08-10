@@ -234,7 +234,8 @@ export class ProjectsService {
       if (new Set(keys).size !== keys.length || keys.some((key) => !valid.has(key as TaskStatus))) throw new BadRequestException('Workflow statuses contain duplicate or invalid keys');
       if (!statuses.some((status) => status.key === TaskStatus.Done && status.enabled)) throw new BadRequestException('Workflow must keep DONE enabled');
     }
-    if (transitions?.some((transition) => !valid.has(transition.from as TaskStatus) || !valid.has(transition.to as TaskStatus) || transition.from === transition.to)) throw new BadRequestException('Workflow contains invalid transitions');
+    const validRoles = new Set(Object.values(WorkspaceRole));
+    if (transitions?.some((transition) => !valid.has(transition.from as TaskStatus) || !valid.has(transition.to as TaskStatus) || transition.from === transition.to || transition.roles?.some((role) => !validRoles.has(role as WorkspaceRole)))) throw new BadRequestException('Workflow contains invalid transitions or roles');
   }
 
   private toProjectResponse(project: Project) {

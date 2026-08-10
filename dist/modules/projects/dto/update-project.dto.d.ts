@@ -10,6 +10,7 @@ export declare class UpdateProjectDto {
     workflowTransitions?: Array<{
         from: string;
         to: string;
+        roles?: string[];
     }>;
     name?: string;
     description?: string;

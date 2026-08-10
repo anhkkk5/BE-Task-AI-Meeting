@@ -13,7 +13,7 @@ export class UpdateProjectDto {
   @IsOptional() @IsArray() workflowStatuses?: Array<{ key: string; label: string; color: string; category: string; order: number; enabled: boolean }>;
 
   @ApiPropertyOptional({ type: 'array' })
-  @IsOptional() @IsArray() workflowTransitions?: Array<{ from: string; to: string }>;
+  @IsOptional() @IsArray() workflowTransitions?: Array<{ from: string; to: string; roles?: string[] }>;
   @ApiPropertyOptional({
     example: 'Agile/Scrum AI Project Updated',
     description: 'Ten project moi, tu 2 den 150 ky tu.',

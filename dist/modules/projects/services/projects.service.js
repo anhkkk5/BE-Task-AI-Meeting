@@ -160,8 +160,9 @@ let ProjectsService = class ProjectsService {
             if (!statuses.some((status) => status.key === task_status_enum_1.TaskStatus.Done && status.enabled))
                 throw new common_1.BadRequestException('Workflow must keep DONE enabled');
         }
-        if (transitions?.some((transition) => !valid.has(transition.from) || !valid.has(transition.to) || transition.from === transition.to))
-            throw new common_1.BadRequestException('Workflow contains invalid transitions');
+        const validRoles = new Set(Object.values(workspace_role_enum_1.WorkspaceRole));
+        if (transitions?.some((transition) => !valid.has(transition.from) || !valid.has(transition.to) || transition.from === transition.to || transition.roles?.some((role) => !validRoles.has(role))))
+            throw new common_1.BadRequestException('Workflow contains invalid transitions or roles');
     }
     toProjectResponse(project) {
         return {

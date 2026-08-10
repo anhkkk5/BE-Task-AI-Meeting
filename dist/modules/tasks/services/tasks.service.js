@@ -589,8 +589,12 @@ let TasksService = class TasksService {
         const task = await this.taskAccessService.assertTaskInProject(taskId, projectId);
         this.taskAccessService.assertTaskEditable(task);
         const role = await this.taskAccessService.assertUserCanUpdateTaskStatus(currentUserId, workspaceId, task, dto.status);
-        if (task.status !== dto.status && project.workflowTransitions && !project.workflowTransitions.some((transition) => transition.from === task.status && transition.to === dto.status)) {
-            throw new common_1.BadRequestException(`Transition ${task.status} -> ${dto.status} is not allowed by project workflow`);
+        if (task.status !== dto.status && project.workflowTransitions) {
+            const transition = project.workflowTransitions.find((item) => item.from === task.status && item.to === dto.status);
+            if (!transition)
+                throw new common_1.BadRequestException(`Transition ${task.status} -> ${dto.status} is not allowed by project workflow`);
+            if (transition.roles?.length && !transition.roles.includes(role))
+                throw new common_1.ForbiddenException('Your role is not allowed to perform this workflow transition');
         }
         this.assertBacklogStatusMatchesTaskLocation(task, dto.status);
         const incompleteBlockers = dto.status === task_status_enum_1.TaskStatus.Done && this.taskDependenciesRepository
