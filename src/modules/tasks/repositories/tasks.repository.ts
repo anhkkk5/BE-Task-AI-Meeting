@@ -28,7 +28,7 @@ export class TasksRepository {
       | 'storyPoints'
       | 'taskCode'
       | 'title'
-    > & Partial<Pick<Task, 'taskType' | 'priority' | 'parentId' | 'labels' | 'acceptanceCriteria' | 'reporterId' | 'completedAt'>>,
+    > & Partial<Pick<Task, 'taskType' | 'priority' | 'parentId' | 'labels' | 'acceptanceCriteria' | 'reporterId' | 'completedAt' | 'startedAt'>>,
   ) {
     const task = this.repository.create({
       taskType: data.taskType ?? TaskType.Task,

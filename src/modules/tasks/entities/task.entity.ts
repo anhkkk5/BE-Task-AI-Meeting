@@ -92,6 +92,9 @@ export class Task {
   @Column({ name: 'completed_at', type: 'datetime', nullable: true })
   completedAt: Date | null;
 
+  @Column({ name: 'started_at', type: 'datetime', nullable: true })
+  startedAt: Date | null;
+
   @ManyToOne(() => Project, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })
   project: Project;

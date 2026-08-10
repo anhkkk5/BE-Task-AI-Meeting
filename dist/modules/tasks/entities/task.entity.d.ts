@@ -26,6 +26,7 @@ export declare class Task {
     estimatedHours: number | null;
     storyPoints: number | null;
     completedAt: Date | null;
+    startedAt: Date | null;
     project: Project;
     sprint: Sprint | null;
     assignee: User | null;

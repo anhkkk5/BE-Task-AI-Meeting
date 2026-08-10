@@ -156,6 +156,7 @@ let TasksService = class TasksService {
             acceptanceCriteria: dto.acceptanceCriteria?.trim() || null,
             reporterId: dto.reporterId ?? currentUserId,
             completedAt: null,
+            startedAt: null,
         });
         await this.recordActivity(task, currentUserId, task_activity_log_entity_1.TaskActivityAction.Created);
         return {
@@ -619,6 +620,7 @@ let TasksService = class TasksService {
         const updatedTask = await this.tasksRepository.update(task, {
             status: dto.status,
             completedAt: dto.status === task_status_enum_1.TaskStatus.Done ? task.completedAt ?? new Date() : null,
+            startedAt: dto.status === task_status_enum_1.TaskStatus.InProgress ? task.startedAt ?? new Date() : task.startedAt,
         });
         await this.recordActivity(updatedTask, currentUserId, task_activity_log_entity_1.TaskActivityAction.StatusChanged, {
             status: { from: previousStatus, to: updatedTask.status },
@@ -1191,6 +1193,7 @@ let TasksService = class TasksService {
             estimatedHours: task.estimatedHours,
             storyPoints: task.storyPoints,
             completedAt: task.completedAt,
+            startedAt: task.startedAt,
             createdAt: task.createdAt,
             updatedAt: task.updatedAt,
             isBlocked: task.isBlocked ?? false,

@@ -185,6 +185,7 @@ describe('TasksService', () => {
       acceptanceCriteria: null,
       reporterId: 'owner-id',
       completedAt: null,
+      startedAt: null,
     });
     expect(response.data.task.status).toBe(TaskStatus.Backlog);
   });

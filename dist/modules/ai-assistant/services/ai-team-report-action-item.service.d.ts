@@ -114,6 +114,7 @@ export declare class AiTeamReportActionItemService {
                 estimatedHours: number | null;
                 storyPoints: number | null;
                 completedAt: Date | null;
+                startedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
                 isBlocked: boolean;

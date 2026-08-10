@@ -4,7 +4,7 @@ import { Task } from '../entities/task.entity';
 export declare class TasksRepository {
     private readonly repository;
     constructor(repository: Repository<Task>);
-    create(data: Pick<Task, 'assigneeId' | 'createdBy' | 'description' | 'dueDate' | 'estimatedHours' | 'projectId' | 'sprintId' | 'status' | 'storyPoints' | 'taskCode' | 'title'> & Partial<Pick<Task, 'taskType' | 'priority' | 'parentId' | 'labels' | 'acceptanceCriteria' | 'reporterId' | 'completedAt'>>): Promise<Task>;
+    create(data: Pick<Task, 'assigneeId' | 'createdBy' | 'description' | 'dueDate' | 'estimatedHours' | 'projectId' | 'sprintId' | 'status' | 'storyPoints' | 'taskCode' | 'title'> & Partial<Pick<Task, 'taskType' | 'priority' | 'parentId' | 'labels' | 'acceptanceCriteria' | 'reporterId' | 'completedAt' | 'startedAt'>>): Promise<Task>;
     countByProject(projectId: string): Promise<number>;
     findByIdAndProject(taskId: string, projectId: string): Promise<Task | null>;
     findByProject(projectId: string, query: GetTasksQueryDto): Promise<{

@@ -39,6 +39,7 @@ let Task = class Task {
     estimatedHours;
     storyPoints;
     completedAt;
+    startedAt;
     project;
     sprint;
     assignee;
@@ -140,6 +141,10 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'completed_at', type: 'datetime', nullable: true }),
     __metadata("design:type", Object)
 ], Task.prototype, "completedAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'started_at', type: 'datetime', nullable: true }),
+    __metadata("design:type", Object)
+], Task.prototype, "startedAt", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => project_entity_1.Project, { onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'project_id' }),
