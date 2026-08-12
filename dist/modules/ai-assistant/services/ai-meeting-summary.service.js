@@ -26,6 +26,7 @@ const ai_meeting_summary_access_service_1 = require("./ai-meeting-summary-access
 const ai_meeting_summary_data_builder_service_1 = require("./ai-meeting-summary-data-builder.service");
 const ai_provider_service_1 = require("./ai-provider.service");
 const prompt_builder_service_1 = require("./prompt-builder.service");
+const ai_meeting_action_item_review_service_1 = require("./ai-meeting-action-item-review.service");
 let AiMeetingSummaryService = class AiMeetingSummaryService {
     meetingSummaryModel;
     aiPromptLogModel;
@@ -36,10 +37,11 @@ let AiMeetingSummaryService = class AiMeetingSummaryService {
     meetingsRepository;
     projectAccessService;
     promptBuilderService;
+    actionItemReviewService;
     rateLimitWindowMs = 10 * 60 * 1000;
     rateLimitMax = 3;
     generateHits = new Map();
-    constructor(meetingSummaryModel, aiPromptLogModel, accessService, dataBuilderService, aiProviderService, meetingAccessService, meetingsRepository, projectAccessService, promptBuilderService) {
+    constructor(meetingSummaryModel, aiPromptLogModel, accessService, dataBuilderService, aiProviderService, meetingAccessService, meetingsRepository, projectAccessService, promptBuilderService, actionItemReviewService) {
         this.meetingSummaryModel = meetingSummaryModel;
         this.aiPromptLogModel = aiPromptLogModel;
         this.accessService = accessService;
@@ -49,6 +51,7 @@ let AiMeetingSummaryService = class AiMeetingSummaryService {
         this.meetingsRepository = meetingsRepository;
         this.projectAccessService = projectAccessService;
         this.promptBuilderService = promptBuilderService;
+        this.actionItemReviewService = actionItemReviewService;
     }
     async generateMeetingSummary(currentUserId, workspaceId, projectId, meetingId, dto = {}) {
         const summaryModel = this.getSummaryModel();
@@ -143,9 +146,25 @@ let AiMeetingSummaryService = class AiMeetingSummaryService {
             success: true,
             message: 'Get meeting summary successfully',
             data: {
-                summary: this.toSummaryResponse(summary),
+                summary: { ...this.toSummaryResponse(summary), claims: await this.buildMeetingClaims(summary) },
             },
         };
+    }
+    async buildMeetingClaims(summary) {
+        const groups = [
+            { items: summary.keyPoints ?? [], kind: 'FACT', category: 'KEY_POINT' },
+            { items: summary.decisions ?? [], kind: 'FACT', category: 'DECISION' },
+            { items: summary.risks ?? [], kind: 'INFERENCE', category: 'BLOCKER' },
+            { items: summary.openQuestions ?? [], kind: 'FACT', category: 'OPEN_QUESTION' },
+            { items: summary.nextSteps ?? [], kind: 'RECOMMENDATION', category: 'RECOMMENDATION' },
+        ];
+        const claims = [];
+        for (const group of groups)
+            for (const text of group.items) {
+                const citation = await this.actionItemReviewService?.findCitation(summary.meetingId, text) ?? null;
+                claims.push({ id: `${group.category}-${claims.length}`, text, kind: group.kind, category: group.category, citation: citation ? { ...citation, startedAt: citation.startedAt.toISOString(), endedAt: citation.endedAt?.toISOString() ?? null } : null });
+            }
+        return claims;
     }
     async getMeetingSummaries(currentUserId, workspaceId, projectId, meetingId, query) {
         const summaryModel = this.getSummaryModel();
@@ -291,12 +310,14 @@ exports.AiMeetingSummaryService = AiMeetingSummaryService = __decorate([
     __param(0, (0, mongoose_1.InjectModel)(meeting_summary_schema_1.MeetingSummary.name)),
     __param(1, (0, common_1.Optional)()),
     __param(1, (0, mongoose_1.InjectModel)(ai_prompt_log_schema_1.AiPromptLog.name)),
+    __param(9, (0, common_1.Optional)()),
     __metadata("design:paramtypes", [Object, Object, ai_meeting_summary_access_service_1.AiMeetingSummaryAccessService,
         ai_meeting_summary_data_builder_service_1.AiMeetingSummaryDataBuilderService,
         ai_provider_service_1.AiProviderService,
         meeting_access_service_1.MeetingAccessService,
         meetings_repository_1.MeetingsRepository,
         project_access_service_1.ProjectAccessService,
-        prompt_builder_service_1.PromptBuilderService])
+        prompt_builder_service_1.PromptBuilderService,
+        ai_meeting_action_item_review_service_1.AiMeetingActionItemReviewService])
 ], AiMeetingSummaryService);
 //# sourceMappingURL=ai-meeting-summary.service.js.map

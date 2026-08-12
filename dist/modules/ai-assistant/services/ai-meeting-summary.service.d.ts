@@ -11,6 +11,7 @@ import { AiMeetingSummaryAccessService } from './ai-meeting-summary-access.servi
 import { AiMeetingSummaryDataBuilderService } from './ai-meeting-summary-data-builder.service';
 import { AiProviderService } from './ai-provider.service';
 import { PromptBuilderService } from './prompt-builder.service';
+import { AiMeetingActionItemReviewService } from './ai-meeting-action-item-review.service';
 export declare class AiMeetingSummaryService {
     private readonly meetingSummaryModel;
     private readonly aiPromptLogModel;
@@ -21,10 +22,11 @@ export declare class AiMeetingSummaryService {
     private readonly meetingsRepository;
     private readonly projectAccessService;
     private readonly promptBuilderService;
+    private readonly actionItemReviewService?;
     private readonly rateLimitWindowMs;
     private readonly rateLimitMax;
     private readonly generateHits;
-    constructor(meetingSummaryModel: Model<MeetingSummaryDocument> | null, aiPromptLogModel: Model<AiPromptLogDocument> | null, accessService: AiMeetingSummaryAccessService, dataBuilderService: AiMeetingSummaryDataBuilderService, aiProviderService: AiProviderService, meetingAccessService: MeetingAccessService, meetingsRepository: MeetingsRepository, projectAccessService: ProjectAccessService, promptBuilderService: PromptBuilderService);
+    constructor(meetingSummaryModel: Model<MeetingSummaryDocument> | null, aiPromptLogModel: Model<AiPromptLogDocument> | null, accessService: AiMeetingSummaryAccessService, dataBuilderService: AiMeetingSummaryDataBuilderService, aiProviderService: AiProviderService, meetingAccessService: MeetingAccessService, meetingsRepository: MeetingsRepository, projectAccessService: ProjectAccessService, promptBuilderService: PromptBuilderService, actionItemReviewService?: AiMeetingActionItemReviewService | undefined);
     generateMeetingSummary(currentUserId: string, workspaceId: string, projectId: string, meetingId: string, dto?: GenerateMeetingSummaryDto): Promise<{
         success: boolean;
         message: string;
@@ -58,6 +60,20 @@ export declare class AiMeetingSummaryService {
         message: string;
         data: {
             summary: {
+                claims: {
+                    id: string;
+                    text: string;
+                    kind: "FACT" | "INFERENCE" | "RECOMMENDATION";
+                    category: "KEY_POINT" | "DECISION" | "BLOCKER" | "OPEN_QUESTION" | "RECOMMENDATION";
+                    citation: {
+                        startedAt: string;
+                        endedAt: string | null;
+                        segmentId: string | null;
+                        speakerName: string | null;
+                        text: string;
+                        confidence: number | null;
+                    } | null;
+                }[];
                 id: string;
                 workspaceId: string;
                 projectId: string;
@@ -81,6 +97,7 @@ export declare class AiMeetingSummaryService {
             };
         };
     }>;
+    private buildMeetingClaims;
     getMeetingSummaries(currentUserId: string, workspaceId: string, projectId: string, meetingId: string, query: GetMeetingSummariesQueryDto): Promise<{
         success: boolean;
         message: string;

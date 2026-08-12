@@ -312,7 +312,7 @@ let AiPersonalReportService = class AiPersonalReportService {
             model: report.aiModel ?? null,
             status: report.status,
             createdBy: report.createdBy,
-            ...(includeInputData ? { inputData: report.inputData, citations: (0, report_citations_1.buildReportCitations)(report.inputData) } : {}),
+            ...(includeInputData ? { inputData: report.inputData, citations: (0, report_citations_1.buildReportCitations)(report.inputData), claims: (0, report_citations_1.buildReportClaims)(report.aiOutput, report.inputData) } : {}),
             createdAt: stampedReport.createdAt,
             updatedAt: stampedReport.updatedAt,
         };

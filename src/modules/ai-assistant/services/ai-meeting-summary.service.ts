@@ -28,6 +28,7 @@ import { AiMeetingSummaryAccessService } from './ai-meeting-summary-access.servi
 import { AiMeetingSummaryDataBuilderService } from './ai-meeting-summary-data-builder.service';
 import { AiProviderService } from './ai-provider.service';
 import { PromptBuilderService } from './prompt-builder.service';
+import { AiMeetingActionItemReviewService } from './ai-meeting-action-item-review.service';
 
 type MeetingSummaryWithTimestamps = MeetingSummaryDocument & {
   createdAt?: Date;
@@ -54,6 +55,7 @@ export class AiMeetingSummaryService {
     private readonly meetingsRepository: MeetingsRepository,
     private readonly projectAccessService: ProjectAccessService,
     private readonly promptBuilderService: PromptBuilderService,
+    @Optional() private readonly actionItemReviewService?: AiMeetingActionItemReviewService,
   ) {}
 
   async generateMeetingSummary(
@@ -203,9 +205,25 @@ export class AiMeetingSummaryService {
       success: true,
       message: 'Get meeting summary successfully',
       data: {
-        summary: this.toSummaryResponse(summary),
+        summary: { ...this.toSummaryResponse(summary), claims: await this.buildMeetingClaims(summary) },
       },
     };
+  }
+
+  private async buildMeetingClaims(summary: MeetingSummaryDocument) {
+    const groups = [
+      { items: summary.keyPoints ?? [], kind: 'FACT', category: 'KEY_POINT' },
+      { items: summary.decisions ?? [], kind: 'FACT', category: 'DECISION' },
+      { items: summary.risks ?? [], kind: 'INFERENCE', category: 'BLOCKER' },
+      { items: summary.openQuestions ?? [], kind: 'FACT', category: 'OPEN_QUESTION' },
+      { items: summary.nextSteps ?? [], kind: 'RECOMMENDATION', category: 'RECOMMENDATION' },
+    ] as const;
+    const claims = [];
+    for (const group of groups) for (const text of group.items) {
+      const citation = await this.actionItemReviewService?.findCitation(summary.meetingId, text) ?? null;
+      claims.push({ id: `${group.category}-${claims.length}`, text, kind: group.kind, category: group.category, citation: citation ? { ...citation, startedAt: citation.startedAt.toISOString(), endedAt: citation.endedAt?.toISOString() ?? null } : null });
+    }
+    return claims;
   }
 
   async getMeetingSummaries(

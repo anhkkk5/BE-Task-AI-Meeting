@@ -41,6 +41,20 @@ export declare class AiMeetingSummaryController {
         message: string;
         data: {
             summary: {
+                claims: {
+                    id: string;
+                    text: string;
+                    kind: "FACT" | "INFERENCE" | "RECOMMENDATION";
+                    category: "KEY_POINT" | "DECISION" | "BLOCKER" | "OPEN_QUESTION" | "RECOMMENDATION";
+                    citation: {
+                        startedAt: string;
+                        endedAt: string | null;
+                        segmentId: string | null;
+                        speakerName: string | null;
+                        text: string;
+                        confidence: number | null;
+                    } | null;
+                }[];
                 id: string;
                 workspaceId: string;
                 projectId: string;

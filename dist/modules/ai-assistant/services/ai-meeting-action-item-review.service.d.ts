@@ -196,6 +196,13 @@ export declare class AiMeetingActionItemReviewService {
     private toActionItemResponse;
     private findDuplicates;
     private normalizeText;
-    private findCitation;
+    findCitation(meetingId: string, actionText: string): Promise<{
+        segmentId: string | null;
+        speakerName: string | null;
+        text: string;
+        startedAt: Date;
+        endedAt: Date | null;
+        confidence: number | null;
+    } | null>;
     private getSummaryModel;
 }

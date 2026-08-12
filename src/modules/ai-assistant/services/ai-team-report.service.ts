@@ -36,7 +36,7 @@ import { AiProviderService } from './ai-provider.service';
 import { AiReportAccessService } from './ai-report-access.service';
 import { AiReportEventsService } from './ai-report-events.service';
 import { AiTeamReportDataBuilderService } from './ai-team-report-data-builder.service';
-import { buildReportCitations } from '../utils/report-citations';
+import { buildReportCitations, buildReportClaims } from '../utils/report-citations';
 import { PromptBuilderService } from './prompt-builder.service';
 
 type AiReportWithTimestamps = AiReportDocument & {
@@ -721,7 +721,7 @@ export class AiTeamReportService {
       approvedBy: report.approvedBy ?? null,
       approvedAt: report.approvedAt ?? null,
       createdBy: report.createdBy,
-      ...(includeInputData ? { inputData: report.inputData, citations: buildReportCitations(report.inputData) } : {}),
+      ...(includeInputData ? { inputData: report.inputData, citations: buildReportCitations(report.inputData), claims: buildReportClaims(report.aiOutput, report.inputData) } : {}),
       createdAt: stampedReport.createdAt,
       updatedAt: stampedReport.updatedAt,
     };

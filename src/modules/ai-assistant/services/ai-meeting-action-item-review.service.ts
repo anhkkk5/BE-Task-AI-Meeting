@@ -355,7 +355,7 @@ export class AiMeetingActionItemReviewService {
     return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
   }
 
-  private async findCitation(meetingId: string, actionText: string) {
+  async findCitation(meetingId: string, actionText: string) {
     if (!this.meetingTranscriptModel) return null;
     const transcript = await this.meetingTranscriptModel.findOne({ meetingId }).lean().exec();
     const actionTokens = new Set(this.normalizeText(actionText).split(' ').filter((token) => token.length >= 4));
@@ -365,7 +365,7 @@ export class AiMeetingActionItemReviewService {
       return { segment, score: overlap / Math.max(1, actionTokens.size) };
     }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
     const best = ranked[0]?.segment;
-    return best ? { speakerName: best.speakerName ?? null, text: best.text, startedAt: new Date(best.startedAt), endedAt: best.endedAt ? new Date(best.endedAt) : null, confidence: best.confidence ?? null } : null;
+    return best ? { segmentId: best.chunkId ?? null, speakerName: best.speakerName ?? null, text: best.text, startedAt: new Date(best.startedAt), endedAt: best.endedAt ? new Date(best.endedAt) : null, confidence: best.confidence ?? null } : null;
   }
 
   private getSummaryModel() {

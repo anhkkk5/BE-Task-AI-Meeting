@@ -256,7 +256,7 @@ let AiMeetingActionItemReviewService = class AiMeetingActionItemReviewService {
             return { segment, score: overlap / Math.max(1, actionTokens.size) };
         }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
         const best = ranked[0]?.segment;
-        return best ? { speakerName: best.speakerName ?? null, text: best.text, startedAt: new Date(best.startedAt), endedAt: best.endedAt ? new Date(best.endedAt) : null, confidence: best.confidence ?? null } : null;
+        return best ? { segmentId: best.chunkId ?? null, speakerName: best.speakerName ?? null, text: best.text, startedAt: new Date(best.startedAt), endedAt: best.endedAt ? new Date(best.endedAt) : null, confidence: best.confidence ?? null } : null;
     }
     getSummaryModel() {
         if (!this.meetingSummaryModel) {

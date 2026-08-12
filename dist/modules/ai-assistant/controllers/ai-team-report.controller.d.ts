@@ -15,6 +15,7 @@ export declare class AiTeamReportController {
                 updatedAt: Date | undefined;
                 inputData?: Record<string, unknown> | undefined;
                 citations?: import("../utils/report-citations").ReportCitation[] | undefined;
+                claims?: import("../utils/report-citations").ReportClaim[] | undefined;
                 id: string;
                 workspaceId: string;
                 projectId: string;
@@ -47,6 +48,7 @@ export declare class AiTeamReportController {
                 updatedAt: Date | undefined;
                 inputData?: Record<string, unknown> | undefined;
                 citations?: import("../utils/report-citations").ReportCitation[] | undefined;
+                claims?: import("../utils/report-citations").ReportClaim[] | undefined;
                 id: string;
                 workspaceId: string;
                 projectId: string;
@@ -84,6 +86,7 @@ export declare class AiTeamReportController {
                 updatedAt: Date | undefined;
                 inputData?: Record<string, unknown> | undefined;
                 citations?: import("../utils/report-citations").ReportCitation[] | undefined;
+                claims?: import("../utils/report-citations").ReportClaim[] | undefined;
                 id: string;
                 workspaceId: string;
                 projectId: string;
@@ -116,6 +119,7 @@ export declare class AiTeamReportController {
                 updatedAt: Date | undefined;
                 inputData?: Record<string, unknown> | undefined;
                 citations?: import("../utils/report-citations").ReportCitation[] | undefined;
+                claims?: import("../utils/report-citations").ReportClaim[] | undefined;
                 id: string;
                 workspaceId: string;
                 projectId: string;
@@ -149,6 +153,7 @@ export declare class AiTeamReportController {
                 updatedAt: Date | undefined;
                 inputData?: Record<string, unknown> | undefined;
                 citations?: import("../utils/report-citations").ReportCitation[] | undefined;
+                claims?: import("../utils/report-citations").ReportClaim[] | undefined;
                 id: string;
                 workspaceId: string;
                 projectId: string;
@@ -181,6 +186,7 @@ export declare class AiTeamReportController {
                 updatedAt: Date | undefined;
                 inputData?: Record<string, unknown> | undefined;
                 citations?: import("../utils/report-citations").ReportCitation[] | undefined;
+                claims?: import("../utils/report-citations").ReportClaim[] | undefined;
                 id: string;
                 workspaceId: string;
                 projectId: string;
@@ -213,6 +219,7 @@ export declare class AiTeamReportController {
                 updatedAt: Date | undefined;
                 inputData?: Record<string, unknown> | undefined;
                 citations?: import("../utils/report-citations").ReportCitation[] | undefined;
+                claims?: import("../utils/report-citations").ReportClaim[] | undefined;
                 id: string;
                 workspaceId: string;
                 projectId: string;
