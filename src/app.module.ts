@@ -25,6 +25,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { UsersModule } from './modules/users/users.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { AutomationModule } from './modules/automation/automation.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     SprintsModule,
     TasksModule,
     NotificationsModule,
+    AutomationModule,
     DailyUpdatesModule,
     MeetingsModule,
     ShiftHandoversModule,
