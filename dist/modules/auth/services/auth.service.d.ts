@@ -11,13 +11,19 @@ import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { VerifyMfaDto } from '../dto/verify-mfa.dto';
 import { OtpService } from './otp.service';
 import { AuthUser } from '../types/auth-user.type';
+import { AuthSecurityRepository } from '../repositories/auth-security.repository';
+type LoginContext = {
+    ipAddress?: string | null;
+    userAgent?: string | null;
+};
 export declare class AuthService {
     private readonly usersService;
     private readonly jwtService;
     private readonly otpService;
     private readonly mailService;
+    private readonly authSecurityRepository?;
     private readonly saltRounds;
-    constructor(usersService: UsersService, jwtService: JwtService, otpService: OtpService, mailService: MailService);
+    constructor(usersService: UsersService, jwtService: JwtService, otpService: OtpService, mailService: MailService, authSecurityRepository?: AuthSecurityRepository | undefined);
     register(dto: RegisterDto): Promise<{
         success: boolean;
         message: string;
@@ -62,7 +68,7 @@ export declare class AuthService {
         };
     }>;
     private sendOtpMail;
-    login(dto: LoginDto): Promise<{
+    login(dto: LoginDto, context?: LoginContext): Promise<{
         body: {
             success: boolean;
             message: string;
@@ -201,8 +207,37 @@ export declare class AuthService {
             updatedAt: Date;
         };
     }>;
+    getSessions(authUser: AuthUser): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            items: {
+                id: string;
+                current: boolean;
+                userAgent: string | null;
+                ipAddress: string | null;
+                lastUsedAt: Date;
+                createdAt: Date;
+                expiresAt: Date;
+                revokedAt: Date | null;
+            }[];
+        };
+    }>;
+    revokeSession(authUser: AuthUser, sessionId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
+    }>;
+    revokeOtherSessions(authUser: AuthUser): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
+    }>;
     private issueTokens;
+    private issueSessionTokens;
+    private recordLoginAttempt;
     private storeRefreshTokenHash;
     private authResponse;
     private toPublicUser;
 }
+export {};

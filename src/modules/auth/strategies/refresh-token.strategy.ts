@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Optional, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import type { Request } from 'express';
@@ -7,13 +7,14 @@ import { UserStatus } from '../../users/enums/user-status.enum';
 import { UsersService } from '../../users/services/users.service';
 import { AuthUser } from '../types/auth-user.type';
 import { JwtPayload } from '../types/jwt-payload.type';
+import { AuthSecurityRepository } from '../repositories/auth-security.repository';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
   Strategy,
   'jwt-refresh',
 ) {
-  constructor(private readonly usersService: UsersService) {
+  constructor(private readonly usersService: UsersService, @Optional() private readonly securityRepository?: AuthSecurityRepository) {
     super({
       jwtFromRequest: (request: Request) =>
         RefreshTokenStrategy.extractRefreshTokenFromCookie(request),
@@ -28,10 +29,12 @@ export class RefreshTokenStrategy extends PassportStrategy(
     if (!user || user.status !== UserStatus.Active) {
       throw new UnauthorizedException('Invalid refresh token');
     }
+    if (payload.sid && this.securityRepository && !(await this.securityRepository.findSession(payload.sid, user.id))) throw new UnauthorizedException('Session has been revoked');
 
     return {
       id: user.id,
       email: user.email,
+      sessionId: payload.sid,
     };
   }
 

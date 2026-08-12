@@ -11,6 +11,10 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const passport_1 = require("@nestjs/passport");
 const throttler_1 = require("@nestjs/throttler");
+const typeorm_1 = require("@nestjs/typeorm");
+const auth_session_entity_1 = require("./entities/auth-session.entity");
+const auth_login_attempt_entity_1 = require("./entities/auth-login-attempt.entity");
+const auth_security_repository_1 = require("./repositories/auth-security.repository");
 const users_module_1 = require("../users/users.module");
 const auth_controller_1 = require("./controllers/auth.controller");
 const access_token_guard_1 = require("./guards/access-token.guard");
@@ -26,6 +30,7 @@ exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
             users_module_1.UsersModule,
+            typeorm_1.TypeOrmModule.forFeature([auth_session_entity_1.AuthSession, auth_login_attempt_entity_1.AuthLoginAttempt]),
             passport_1.PassportModule,
             jwt_1.JwtModule.register({}),
             throttler_1.ThrottlerModule.forRoot([{ ttl: 60_000, limit: 10 }]),
@@ -38,6 +43,7 @@ exports.AuthModule = AuthModule = __decorate([
             refresh_token_strategy_1.RefreshTokenStrategy,
             access_token_guard_1.AccessTokenGuard,
             refresh_token_guard_1.RefreshTokenGuard,
+            auth_security_repository_1.AuthSecurityRepository,
         ],
     })
 ], AuthModule);

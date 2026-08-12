@@ -4,6 +4,8 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
+  Param,
   Req,
   Res,
   UnauthorizedException,
@@ -98,6 +100,8 @@ export class AuthController {
   }
 
   @Post('login')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 8, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Dang nhap',
     description: 'Nhap email/password de lay accessToken va refreshToken.',
@@ -107,9 +111,10 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Sai email hoac mat khau.' })
   async login(
     @Body() dto: LoginDto,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const result = await this.authService.login(dto);
+    const result = await this.authService.login(dto, this.requestContext(request));
     if ('mfaRequired' in result) return result.body;
     this.setRefreshTokenCookie(response, result.refreshToken);
 
@@ -131,6 +136,8 @@ export class AuthController {
   setMfa(@CurrentUser() user: AuthUser, @Body() dto: { enabled: boolean }) { return this.authService.setMfa(user, dto.enabled === true); }
 
   @Post('refresh')
+  @UseGuards(ThrottlerGuard, RefreshTokenGuard)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Lam moi token',
     description:
@@ -138,7 +145,6 @@ export class AuthController {
   })
   @ApiResponse({ status: 201, description: 'Cap token moi thanh cong.' })
   @ApiResponse({ status: 401, description: 'Refresh token khong hop le.' })
-  @UseGuards(RefreshTokenGuard)
   refresh(
     @CurrentUser() user: AuthUser,
     @Req() request: Request,
@@ -186,6 +192,17 @@ export class AuthController {
   me(@CurrentUser() user: AuthUser) {
     return this.authService.getMe(user);
   }
+
+  @Get('sessions') @UseGuards(AccessTokenGuard) @ApiBearerAuth()
+  sessions(@CurrentUser() user: AuthUser) { return this.authService.getSessions(user); }
+
+  @Delete('sessions/others') @UseGuards(AccessTokenGuard) @ApiBearerAuth()
+  revokeOthers(@CurrentUser() user: AuthUser) { return this.authService.revokeOtherSessions(user); }
+
+  @Delete('sessions/:sessionId') @UseGuards(AccessTokenGuard) @ApiBearerAuth()
+  revokeSession(@CurrentUser() user: AuthUser, @Param('sessionId') sessionId: string) { return this.authService.revokeSession(user, sessionId); }
+
+  private requestContext(request: Request) { return { ipAddress: request.ip ?? request.socket?.remoteAddress ?? null, userAgent: request.headers['user-agent'] ?? null }; }
 
   private setRefreshTokenCookie(response: Response, refreshToken: string) {
     response.cookie(

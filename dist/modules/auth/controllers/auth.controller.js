@@ -44,8 +44,8 @@ let AuthController = class AuthController {
     resendOtp(dto) {
         return this.authService.resendRegistrationOtp(dto);
     }
-    async login(dto, response) {
-        const result = await this.authService.login(dto);
+    async login(dto, request, response) {
+        const result = await this.authService.login(dto, this.requestContext(request));
         if ('mfaRequired' in result)
             return result.body;
         this.setRefreshTokenCookie(response, result.refreshToken);
@@ -76,6 +76,10 @@ let AuthController = class AuthController {
     me(user) {
         return this.authService.getMe(user);
     }
+    sessions(user) { return this.authService.getSessions(user); }
+    revokeOthers(user) { return this.authService.revokeOtherSessions(user); }
+    revokeSession(user, sessionId) { return this.authService.revokeSession(user, sessionId); }
+    requestContext(request) { return { ipAddress: request.ip ?? request.socket?.remoteAddress ?? null, userAgent: request.headers['user-agent'] ?? null }; }
     setRefreshTokenCookie(response, refreshToken) {
         response.cookie(REFRESH_TOKEN_COOKIE, refreshToken, this.getRefreshTokenCookieOptions());
     }
@@ -201,6 +205,8 @@ __decorate([
 ], AuthController.prototype, "resendOtp", null);
 __decorate([
     (0, common_1.Post)('login'),
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 8, ttl: 60_000 } }),
     (0, swagger_1.ApiOperation)({
         summary: 'Dang nhap',
         description: 'Nhap email/password de lay accessToken va refreshToken.',
@@ -209,9 +215,10 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Request body khong hop le.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Sai email hoac mat khau.' }),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, common_1.Res)({ passthrough: true })),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [login_dto_1.LoginDto, Object]),
+    __metadata("design:paramtypes", [login_dto_1.LoginDto, Object, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
@@ -253,13 +260,14 @@ __decorate([
 ], AuthController.prototype, "setMfa", null);
 __decorate([
     (0, common_1.Post)('refresh'),
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard, refresh_token_guard_1.RefreshTokenGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 20, ttl: 60_000 } }),
     (0, swagger_1.ApiOperation)({
         summary: 'Lam moi token',
         description: 'Refresh token duoc gui tu HttpOnly cookie, FE khong doc truc tiep token nay.',
     }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Cap token moi thanh cong.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Refresh token khong hop le.' }),
-    (0, common_1.UseGuards)(refresh_token_guard_1.RefreshTokenGuard),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Req)()),
     __param(2, (0, common_1.Res)({ passthrough: true })),
@@ -298,6 +306,34 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "me", null);
+__decorate([
+    (0, common_1.Get)('sessions'),
+    (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "sessions", null);
+__decorate([
+    (0, common_1.Delete)('sessions/others'),
+    (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "revokeOthers", null);
+__decorate([
+    (0, common_1.Delete)('sessions/:sessionId'),
+    (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('sessionId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "revokeSession", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     (0, swagger_1.ApiTags)('Auth'),

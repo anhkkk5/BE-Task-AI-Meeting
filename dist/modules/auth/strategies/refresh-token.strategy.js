@@ -8,6 +8,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var RefreshTokenStrategy_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RefreshTokenStrategy = void 0;
@@ -17,24 +20,30 @@ const passport_jwt_1 = require("passport-jwt");
 const jwt_config_1 = require("../../../config/jwt.config");
 const user_status_enum_1 = require("../../users/enums/user-status.enum");
 const users_service_1 = require("../../users/services/users.service");
+const auth_security_repository_1 = require("../repositories/auth-security.repository");
 let RefreshTokenStrategy = RefreshTokenStrategy_1 = class RefreshTokenStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy, 'jwt-refresh') {
     usersService;
-    constructor(usersService) {
+    securityRepository;
+    constructor(usersService, securityRepository) {
         super({
             jwtFromRequest: (request) => RefreshTokenStrategy_1.extractRefreshTokenFromCookie(request),
             secretOrKey: (0, jwt_config_1.jwtConfig)().refreshSecret,
             passReqToCallback: false,
         });
         this.usersService = usersService;
+        this.securityRepository = securityRepository;
     }
     async validate(payload) {
         const user = await this.usersService.findById(payload.sub);
         if (!user || user.status !== user_status_enum_1.UserStatus.Active) {
             throw new common_1.UnauthorizedException('Invalid refresh token');
         }
+        if (payload.sid && this.securityRepository && !(await this.securityRepository.findSession(payload.sid, user.id)))
+            throw new common_1.UnauthorizedException('Session has been revoked');
         return {
             id: user.id,
             email: user.email,
+            sessionId: payload.sid,
         };
     }
     static extractRefreshTokenFromCookie(request) {
@@ -53,6 +62,7 @@ let RefreshTokenStrategy = RefreshTokenStrategy_1 = class RefreshTokenStrategy e
 exports.RefreshTokenStrategy = RefreshTokenStrategy;
 exports.RefreshTokenStrategy = RefreshTokenStrategy = RefreshTokenStrategy_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [users_service_1.UsersService])
+    __param(1, (0, common_1.Optional)()),
+    __metadata("design:paramtypes", [users_service_1.UsersService, auth_security_repository_1.AuthSecurityRepository])
 ], RefreshTokenStrategy);
 //# sourceMappingURL=refresh-token.strategy.js.map

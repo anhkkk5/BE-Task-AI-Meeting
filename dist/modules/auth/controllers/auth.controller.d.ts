@@ -51,7 +51,7 @@ export declare class AuthController {
             resendAfterSeconds: number;
         };
     }>;
-    login(dto: LoginDto, response: Response): Promise<{
+    login(dto: LoginDto, request: Request, response: Response): Promise<{
         success: boolean;
         message: string;
         data: {
@@ -179,6 +179,33 @@ export declare class AuthController {
             updatedAt: Date;
         };
     }>;
+    sessions(user: AuthUser): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            items: {
+                id: string;
+                current: boolean;
+                userAgent: string | null;
+                ipAddress: string | null;
+                lastUsedAt: Date;
+                createdAt: Date;
+                expiresAt: Date;
+                revokedAt: Date | null;
+            }[];
+        };
+    }>;
+    revokeOthers(user: AuthUser): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
+    }>;
+    revokeSession(user: AuthUser, sessionId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
+    }>;
+    private requestContext;
     private setRefreshTokenCookie;
     private clearRefreshTokenCookie;
     private getRefreshTokenFromCookie;
