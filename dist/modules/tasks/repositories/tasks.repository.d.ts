@@ -19,6 +19,7 @@ export declare class TasksRepository {
     update(task: Task, data: Partial<Task>): Promise<Task>;
     findIncompleteChildren(parentId: string): Promise<Task[]>;
     findChildren(parentId: string): Promise<Task[]>;
+    findDuplicateCandidates(projectId: string, title: string, limit?: number): Promise<Task[]>;
     findWorkflowStatusId(templateId: string | null, status: TaskStatus): Promise<string | null>;
     findWorkflowStatus(templateId: string | null, workflowStatusId: string): Promise<{
         id: string;

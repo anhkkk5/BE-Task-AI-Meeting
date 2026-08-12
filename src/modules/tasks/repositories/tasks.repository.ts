@@ -164,6 +164,18 @@ export class TasksRepository {
     return this.repository.find({ where: { parentId, deletedAt: IsNull() } });
   }
 
+  findDuplicateCandidates(projectId: string, title: string, limit = 5) {
+    const tokens = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((token) => token.length >= 4).slice(0, 6);
+    if (!tokens.length) return Promise.resolve([] as Task[]);
+    const builder = this.repository.createQueryBuilder('task')
+      .where('task.projectId = :projectId', { projectId })
+      .andWhere('task.deletedAt IS NULL');
+    builder.andWhere(`(${tokens.map((_, index) => `LOWER(task.title) LIKE :token${index}`).join(' OR ')})`,
+      Object.fromEntries(tokens.map((token, index) => [`token${index}`, `%${token}%`])));
+    return builder.orderBy('task.updatedAt', 'DESC').take(limit).getMany();
+  }
+
   async findWorkflowStatusId(templateId: string | null, status: TaskStatus) {
     if (!templateId) return null;
     const rows = await this.repository.manager.query('SELECT `id` FROM `workflow_statuses` WHERE `template_id` = ? AND `status_key` = ? AND `enabled`=1 LIMIT 1', [templateId, status]) as Array<{ id: string }>;

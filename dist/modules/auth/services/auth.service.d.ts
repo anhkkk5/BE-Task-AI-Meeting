@@ -6,6 +6,9 @@ import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { ResendOtpDto } from '../dto/resend-otp.dto';
 import { VerifyOtpDto } from '../dto/verify-otp.dto';
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { VerifyMfaDto } from '../dto/verify-mfa.dto';
 import { OtpService } from './otp.service';
 import { AuthUser } from '../types/auth-user.type';
 export declare class AuthService {
@@ -38,6 +41,7 @@ export declare class AuthService {
                     jobTitle: string | null;
                     status: UserStatus;
                     isSystemAdmin: boolean;
+                    mfaEnabled: boolean;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -72,6 +76,7 @@ export declare class AuthService {
                     jobTitle: string | null;
                     status: UserStatus;
                     isSystemAdmin: boolean;
+                    mfaEnabled: boolean;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -81,6 +86,17 @@ export declare class AuthService {
             };
         };
         refreshToken: string;
+    } | {
+        mfaRequired: true;
+        body: {
+            success: boolean;
+            message: string;
+            data: {
+                mfaRequired: boolean;
+                email: string;
+                otpExpiresInSeconds: number;
+            };
+        };
     }>;
     refreshTokens(authUser: AuthUser, refreshToken: string): Promise<{
         body: {
@@ -96,6 +112,7 @@ export declare class AuthService {
                     jobTitle: string | null;
                     status: UserStatus;
                     isSystemAdmin: boolean;
+                    mfaEnabled: boolean;
                     createdAt: Date;
                     updatedAt: Date;
                 };
@@ -111,6 +128,62 @@ export declare class AuthService {
         message: string;
         data: null;
     }>;
+    forgotPassword(dto: ForgotPasswordDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            email: string;
+            otpExpiresInSeconds: number;
+        };
+    }>;
+    resetPassword(dto: ResetPasswordDto): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
+    }>;
+    setMfa(authUser: AuthUser, enabled: boolean): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: string;
+            email: string;
+            fullName: string;
+            avatarUrl: string | null;
+            phoneNumber: string | null;
+            jobTitle: string | null;
+            status: UserStatus;
+            isSystemAdmin: boolean;
+            mfaEnabled: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
+    }>;
+    verifyMfa(dto: VerifyMfaDto): Promise<{
+        body: {
+            success: boolean;
+            message: string;
+            data: {
+                user: {
+                    id: string;
+                    email: string;
+                    fullName: string;
+                    avatarUrl: string | null;
+                    phoneNumber: string | null;
+                    jobTitle: string | null;
+                    status: UserStatus;
+                    isSystemAdmin: boolean;
+                    mfaEnabled: boolean;
+                    createdAt: Date;
+                    updatedAt: Date;
+                };
+                tokens: {
+                    accessToken: string;
+                };
+            };
+        };
+        refreshToken: string;
+    }>;
+    private sendSecurityOtp;
     getMe(authUser: AuthUser): Promise<{
         success: boolean;
         message: string;
@@ -123,6 +196,7 @@ export declare class AuthService {
             jobTitle: string | null;
             status: UserStatus;
             isSystemAdmin: boolean;
+            mfaEnabled: boolean;
             createdAt: Date;
             updatedAt: Date;
         };

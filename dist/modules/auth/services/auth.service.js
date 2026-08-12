@@ -169,6 +169,12 @@ let AuthService = class AuthService {
         if (!isPasswordValid) {
             throw new common_1.UnauthorizedException('Invalid email or password');
         }
+        if (user.mfaEnabled) {
+            const otp = this.otpService.generateOtp();
+            await this.otpService.saveSecurityChallenge('mfa', user.email, otp, { userId: user.id });
+            await this.sendSecurityOtp(user.email, user.fullName, otp, 'Mã xác thực đăng nhập');
+            return { mfaRequired: true, body: { success: true, message: 'Cần xác thực MFA', data: { mfaRequired: true, email: user.email, otpExpiresInSeconds: otp_service_1.OTP_TTL_SECONDS } } };
+        }
         const tokens = await this.issueTokens(user);
         await this.storeRefreshTokenHash(user.id, tokens.refreshToken);
         return this.authResponse('Login successfully', user, tokens);
@@ -193,6 +199,46 @@ let AuthService = class AuthService {
             message: 'Logout successfully',
             data: null,
         };
+    }
+    async forgotPassword(dto) {
+        const email = dto.email.trim().toLowerCase();
+        const user = await this.usersService.findByEmail(email);
+        if (user?.status === user_status_enum_1.UserStatus.Active) {
+            const otp = this.otpService.generateOtp();
+            await this.otpService.saveSecurityChallenge('reset', email, otp, { userId: user.id });
+            await this.sendSecurityOtp(email, user.fullName, otp, 'Mã đặt lại mật khẩu');
+        }
+        return { success: true, message: 'Nếu email tồn tại, mã đặt lại mật khẩu đã được gửi.', data: { email, otpExpiresInSeconds: otp_service_1.OTP_TTL_SECONDS } };
+    }
+    async resetPassword(dto) {
+        const email = dto.email.trim().toLowerCase();
+        const result = await this.otpService.verifySecurityChallenge('reset', email, dto.otp);
+        if (result.status !== 'OK')
+            throw new common_1.BadRequestException('Mã xác thực không hợp lệ hoặc đã hết hạn');
+        const user = await this.usersService.findByEmail(email);
+        if (!user || result.data.userId !== user.id)
+            throw new common_1.BadRequestException('Mã xác thực không hợp lệ');
+        await this.usersService.updateSecurity(user.id, { passwordHash: await bcrypt.hash(dto.newPassword, this.saltRounds), refreshTokenHash: null });
+        return { success: true, message: 'Đặt lại mật khẩu thành công', data: null };
+    }
+    async setMfa(authUser, enabled) {
+        const user = await this.usersService.updateSecurity(authUser.id, { mfaEnabled: enabled, refreshTokenHash: enabled ? null : undefined });
+        return { success: true, message: enabled ? 'Đã bật MFA qua email' : 'Đã tắt MFA', data: user ? this.toPublicUser(user) : null };
+    }
+    async verifyMfa(dto) {
+        const email = dto.email.trim().toLowerCase();
+        const result = await this.otpService.verifySecurityChallenge('mfa', email, dto.otp);
+        if (result.status !== 'OK')
+            throw new common_1.UnauthorizedException('Mã MFA không hợp lệ hoặc đã hết hạn');
+        const user = await this.usersService.findByEmail(email);
+        if (!user || result.data.userId !== user.id || !user.mfaEnabled)
+            throw new common_1.UnauthorizedException('Mã MFA không hợp lệ');
+        const tokens = await this.issueTokens(user);
+        await this.storeRefreshTokenHash(user.id, tokens.refreshToken);
+        return this.authResponse('Xác thực MFA thành công', user, tokens);
+    }
+    sendSecurityOtp(email, fullName, otp, subject) {
+        return this.mailService.sendMail({ to: email, subject, html: `<p>Xin chào ${fullName},</p><p>Mã xác thực của bạn là <strong>${otp}</strong>. Mã hết hạn sau 10 phút.</p>`, text: `Mã xác thực của bạn là ${otp}. Mã hết hạn sau 10 phút.` });
     }
     async getMe(authUser) {
         const user = await this.usersService.findById(authUser.id);

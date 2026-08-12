@@ -20,6 +20,7 @@ export declare class AiPersonalReportController {
                 createdAt: Date | undefined;
                 updatedAt: Date | undefined;
                 inputData?: Record<string, unknown> | undefined;
+                citations?: import("../utils/report-citations").ReportCitation[] | undefined;
                 id: string;
                 workspaceId: string;
                 projectId: string;
@@ -43,6 +44,7 @@ export declare class AiPersonalReportController {
                 createdAt: Date | undefined;
                 updatedAt: Date | undefined;
                 inputData?: Record<string, unknown> | undefined;
+                citations?: import("../utils/report-citations").ReportCitation[] | undefined;
                 id: string;
                 workspaceId: string;
                 projectId: string;
@@ -66,6 +68,7 @@ export declare class AiPersonalReportController {
                 createdAt: Date | undefined;
                 updatedAt: Date | undefined;
                 inputData?: Record<string, unknown> | undefined;
+                citations?: import("../utils/report-citations").ReportCitation[] | undefined;
                 id: string;
                 workspaceId: string;
                 projectId: string;
@@ -94,6 +97,7 @@ export declare class AiPersonalReportController {
                 createdAt: Date | undefined;
                 updatedAt: Date | undefined;
                 inputData?: Record<string, unknown> | undefined;
+                citations?: import("../utils/report-citations").ReportCitation[] | undefined;
                 id: string;
                 workspaceId: string;
                 projectId: string;
@@ -122,6 +126,7 @@ export declare class AiPersonalReportController {
                 createdAt: Date | undefined;
                 updatedAt: Date | undefined;
                 inputData?: Record<string, unknown> | undefined;
+                citations?: import("../utils/report-citations").ReportCitation[] | undefined;
                 id: string;
                 workspaceId: string;
                 projectId: string;

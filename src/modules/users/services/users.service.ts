@@ -32,6 +32,10 @@ export class UsersService {
     return this.usersRepository.updateRefreshTokenHash(id, refreshTokenHash);
   }
 
+  updateSecurity(id: string, data: Pick<Partial<User>, 'passwordHash' | 'refreshTokenHash' | 'mfaEnabled'>) {
+    return this.usersRepository.update(id, data);
+  }
+
   async getProfile(id: string) {
     const user = await this.findExistingUser(id);
 
@@ -97,6 +101,7 @@ export class UsersService {
       jobTitle: user.jobTitle,
       status: user.status,
       isSystemAdmin: user.isSystemAdmin ?? false,
+      mfaEnabled: user.mfaEnabled ?? false,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

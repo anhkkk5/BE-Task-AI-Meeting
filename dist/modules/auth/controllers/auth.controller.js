@@ -21,6 +21,9 @@ const login_dto_1 = require("../dto/login.dto");
 const register_dto_1 = require("../dto/register.dto");
 const resend_otp_dto_1 = require("../dto/resend-otp.dto");
 const verify_otp_dto_1 = require("../dto/verify-otp.dto");
+const forgot_password_dto_1 = require("../dto/forgot-password.dto");
+const reset_password_dto_1 = require("../dto/reset-password.dto");
+const verify_mfa_dto_1 = require("../dto/verify-mfa.dto");
 const access_token_guard_1 = require("../guards/access-token.guard");
 const refresh_token_guard_1 = require("../guards/refresh-token.guard");
 const auth_service_1 = require("../services/auth.service");
@@ -43,9 +46,19 @@ let AuthController = class AuthController {
     }
     async login(dto, response) {
         const result = await this.authService.login(dto);
+        if ('mfaRequired' in result)
+            return result.body;
         this.setRefreshTokenCookie(response, result.refreshToken);
         return result.body;
     }
+    forgotPassword(dto) { return this.authService.forgotPassword(dto); }
+    resetPassword(dto) { return this.authService.resetPassword(dto); }
+    async verifyMfa(dto, response) {
+        const result = await this.authService.verifyMfa(dto);
+        this.setRefreshTokenCookie(response, result.refreshToken);
+        return result.body;
+    }
+    setMfa(user, dto) { return this.authService.setMfa(user, dto.enabled === true); }
     refresh(user, request, response) {
         const refreshToken = this.getRefreshTokenFromCookie(request);
         if (!refreshToken) {
@@ -201,6 +214,43 @@ __decorate([
     __metadata("design:paramtypes", [login_dto_1.LoginDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('forgot-password'),
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 3, ttl: 60_000 } }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "forgotPassword", null);
+__decorate([
+    (0, common_1.Post)('reset-password'),
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [reset_password_dto_1.ResetPasswordDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "resetPassword", null);
+__decorate([
+    (0, common_1.Post)('mfa/verify'),
+    (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [verify_mfa_dto_1.VerifyMfaDto, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "verifyMfa", null);
+__decorate([
+    (0, common_1.Patch)('mfa'),
+    (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "setMfa", null);
 __decorate([
     (0, common_1.Post)('refresh'),
     (0, swagger_1.ApiOperation)({

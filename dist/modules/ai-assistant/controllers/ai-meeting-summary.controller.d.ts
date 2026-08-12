@@ -147,6 +147,20 @@ export declare class AiMeetingSummaryDetailController {
                 createdTaskId: string | null;
                 rejectionReason: string | null;
                 reviewedAt: Date | null;
+                duplicateCandidates: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    status: string;
+                }[];
+                confidence: number | null;
+                citation: {
+                    startedAt: string;
+                    endedAt: string | null;
+                    speakerName: string | null;
+                    text: string;
+                    confidence: number | null;
+                } | null;
             }[];
         };
     }>;
@@ -166,6 +180,20 @@ export declare class AiMeetingSummaryDetailController {
                 createdTaskId: string | null;
                 rejectionReason: string | null;
                 reviewedAt: Date | null;
+                duplicateCandidates: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    status: string;
+                }[];
+                confidence: number | null;
+                citation: {
+                    startedAt: string;
+                    endedAt: string | null;
+                    speakerName: string | null;
+                    text: string;
+                    confidence: number | null;
+                } | null;
             };
             task: {
                 id: string;
@@ -252,6 +280,20 @@ export declare class AiMeetingSummaryDetailController {
                 createdTaskId: string | null;
                 rejectionReason: string | null;
                 reviewedAt: Date | null;
+                duplicateCandidates: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    status: string;
+                }[];
+                confidence: number | null;
+                citation: {
+                    startedAt: string;
+                    endedAt: string | null;
+                    speakerName: string | null;
+                    text: string;
+                    confidence: number | null;
+                } | null;
             };
         };
     }>;

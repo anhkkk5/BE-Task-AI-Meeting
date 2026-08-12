@@ -143,6 +143,33 @@ let OtpService = OtpService_1 = class OtpService {
     async clearPendingRegistration(email) {
         await this.redis.del(this.registrationKey(email));
     }
+    async saveSecurityChallenge(purpose, email, otp, data = {}) {
+        const otpHash = await bcrypt.hash(otp, OTP_SALT_ROUNDS);
+        await this.redis.set(`auth:${purpose}:otp:${email.toLowerCase()}`, JSON.stringify({ otpHash, attempts: 0, data }), 'EX', exports.OTP_TTL_SECONDS);
+    }
+    async verifySecurityChallenge(purpose, email, otp) {
+        const key = `auth:${purpose}:otp:${email.toLowerCase()}`;
+        const raw = await this.redis.get(key);
+        if (!raw)
+            return { status: 'NOT_FOUND' };
+        const stored = JSON.parse(raw);
+        if (stored.attempts >= exports.OTP_MAX_ATTEMPTS) {
+            await this.redis.del(key);
+            return { status: 'TOO_MANY_ATTEMPTS' };
+        }
+        if (await bcrypt.compare(otp, stored.otpHash)) {
+            await this.redis.del(key);
+            return { status: 'OK', data: stored.data };
+        }
+        stored.attempts += 1;
+        const ttl = await this.redis.ttl(key);
+        if (stored.attempts >= exports.OTP_MAX_ATTEMPTS) {
+            await this.redis.del(key);
+            return { status: 'TOO_MANY_ATTEMPTS' };
+        }
+        await this.redis.set(key, JSON.stringify(stored), 'EX', Math.max(1, ttl));
+        return { status: 'INVALID', remainingAttempts: exports.OTP_MAX_ATTEMPTS - stored.attempts };
+    }
     registrationKey(email) {
         return `auth:register:otp:${email.toLowerCase()}`;
     }

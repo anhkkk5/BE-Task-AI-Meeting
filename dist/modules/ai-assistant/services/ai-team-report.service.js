@@ -26,6 +26,7 @@ const ai_provider_service_1 = require("./ai-provider.service");
 const ai_report_access_service_1 = require("./ai-report-access.service");
 const ai_report_events_service_1 = require("./ai-report-events.service");
 const ai_team_report_data_builder_service_1 = require("./ai-team-report-data-builder.service");
+const report_citations_1 = require("../utils/report-citations");
 const prompt_builder_service_1 = require("./prompt-builder.service");
 let AiTeamReportService = class AiTeamReportService {
     aiReportModel;
@@ -425,7 +426,7 @@ let AiTeamReportService = class AiTeamReportService {
             approvedBy: report.approvedBy ?? null,
             approvedAt: report.approvedAt ?? null,
             createdBy: report.createdBy,
-            ...(includeInputData ? { inputData: report.inputData } : {}),
+            ...(includeInputData ? { inputData: report.inputData, citations: (0, report_citations_1.buildReportCitations)(report.inputData) } : {}),
             createdAt: stampedReport.createdAt,
             updatedAt: stampedReport.updatedAt,
         };

@@ -24,6 +24,7 @@ let User = class User {
     isSystemAdmin;
     emailVerifiedAt;
     refreshTokenHash;
+    mfaEnabled;
     createdAt;
     updatedAt;
 };
@@ -87,6 +88,10 @@ __decorate([
     }),
     __metadata("design:type", Object)
 ], User.prototype, "refreshTokenHash", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'mfa_enabled', type: 'tinyint', width: 1, default: 0 }),
+    __metadata("design:type", Boolean)
+], User.prototype, "mfaEnabled", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)

@@ -26,6 +26,7 @@ const ai_report_schema_1 = require("../schemas/ai-report.schema");
 const ai_provider_service_1 = require("./ai-provider.service");
 const ai_report_access_service_1 = require("./ai-report-access.service");
 const ai_report_data_builder_service_1 = require("./ai-report-data-builder.service");
+const report_citations_1 = require("../utils/report-citations");
 const prompt_builder_service_1 = require("./prompt-builder.service");
 let AiPersonalReportService = class AiPersonalReportService {
     aiReportModel;
@@ -311,7 +312,7 @@ let AiPersonalReportService = class AiPersonalReportService {
             model: report.aiModel ?? null,
             status: report.status,
             createdBy: report.createdBy,
-            ...(includeInputData ? { inputData: report.inputData } : {}),
+            ...(includeInputData ? { inputData: report.inputData, citations: (0, report_citations_1.buildReportCitations)(report.inputData) } : {}),
             createdAt: stampedReport.createdAt,
             updatedAt: stampedReport.updatedAt,
         };

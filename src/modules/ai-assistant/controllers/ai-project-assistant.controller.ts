@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -43,6 +43,16 @@ export class AiProjectAssistantController {
       projectId,
       dto,
     );
+  }
+
+  @Get('history')
+  getHistory(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('projectId') projectId: string) {
+    return this.aiProjectAssistantService.getHistory(user.id, workspaceId, projectId);
+  }
+
+  @Delete('history')
+  clearHistory(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('projectId') projectId: string) {
+    return this.aiProjectAssistantService.clearHistory(user.id, workspaceId, projectId);
   }
 
   @Get('sprints/:sprintId/risk')

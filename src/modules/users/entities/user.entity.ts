@@ -64,6 +64,9 @@ export class User {
   })
   refreshTokenHash: string | null;
 
+  @Column({ name: 'mfa_enabled', type: 'tinyint', width: 1, default: 0 })
+  mfaEnabled: boolean;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

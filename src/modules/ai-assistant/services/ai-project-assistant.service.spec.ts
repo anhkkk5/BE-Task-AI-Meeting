@@ -145,4 +145,27 @@ describe('AiProjectAssistantService', () => {
     expect(result.metrics.totalTasks).toBe(1);
     expect(result.metrics.remainingTasks).toBe(1);
   });
+
+  it('creates a confirmation-only task draft from an explicit write request', () => {
+    const draft = service.buildActionDraft(
+      'Tạo task: Sửa lỗi đăng nhập, ưu tiên cao',
+      sprint,
+    );
+
+    expect(draft).toMatchObject({
+      type: 'CREATE_TASK',
+      requiresConfirmation: true,
+      payload: {
+        title: 'Sửa lỗi đăng nhập, ưu tiên cao',
+        sprintId: 'sprint-1',
+        priority: 'HIGH',
+      },
+    });
+  });
+
+  it('does not propose a write action for an analytical question', () => {
+    expect(
+      service.buildActionDraft('Task nào đang quá hạn?', sprint),
+    ).toBeUndefined();
+  });
 });

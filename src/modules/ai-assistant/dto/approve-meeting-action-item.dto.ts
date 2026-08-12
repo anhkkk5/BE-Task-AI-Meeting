@@ -1,6 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { TaskPriority } from '../../../common/enums/task-priority.enum';
 import {
+  IsBoolean,
   IsDateString,
+  IsEnum,
   IsOptional,
   IsString,
   IsUUID,
@@ -19,6 +22,14 @@ export class ApproveMeetingActionItemDto {
   @MaxLength(200)
   title?: string;
 
+  @ApiPropertyOptional({ maxLength: 2000 })
+  @IsOptional() @IsString() @MaxLength(2000)
+  description?: string;
+
+  @ApiPropertyOptional({ enum: TaskPriority })
+  @IsOptional() @IsEnum(TaskPriority)
+  priority?: TaskPriority;
+
   @ApiPropertyOptional({ description: 'User UUID se duoc gan task.' })
   @IsOptional()
   @IsUUID()
@@ -35,4 +46,9 @@ export class ApproveMeetingActionItemDto {
   @IsOptional()
   @IsDateString()
   dueDate?: string;
+
+  @ApiPropertyOptional({ description: 'Cho phép tạo dù hệ thống phát hiện task tương tự.' })
+  @IsOptional()
+  @IsBoolean()
+  allowDuplicate?: boolean;
 }

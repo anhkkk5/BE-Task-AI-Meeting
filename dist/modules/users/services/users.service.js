@@ -65,6 +65,9 @@ let UsersService = class UsersService {
     updateRefreshTokenHash(id, refreshTokenHash) {
         return this.usersRepository.updateRefreshTokenHash(id, refreshTokenHash);
     }
+    updateSecurity(id, data) {
+        return this.usersRepository.update(id, data);
+    }
     async getProfile(id) {
         const user = await this.findExistingUser(id);
         return {
@@ -117,6 +120,7 @@ let UsersService = class UsersService {
             jobTitle: user.jobTitle,
             status: user.status,
             isSystemAdmin: user.isSystemAdmin ?? false,
+            mfaEnabled: user.mfaEnabled ?? false,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
         };

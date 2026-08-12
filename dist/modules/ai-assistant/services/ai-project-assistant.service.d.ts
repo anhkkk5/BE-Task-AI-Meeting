@@ -1,3 +1,5 @@
+import { Model } from 'mongoose';
+import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { DailyUpdate } from '../../daily-updates/entities/daily-update.entity';
 import { DailyUpdatesRepository } from '../../daily-updates/repositories/daily-updates.repository';
 import { ProjectsRepository } from '../../projects/repositories/projects.repository';
@@ -10,6 +12,7 @@ import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { AskProjectAssistantDto } from '../dto/ask-project-assistant.dto';
 import { AiProviderService } from './ai-provider.service';
+import { ProjectAssistantMessageDocument } from '../schemas/project-assistant-message.schema';
 export type SprintRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type RiskSeverity = 'INFO' | 'WARNING' | 'DANGER';
 export type SprintRiskAssessment = {
@@ -49,6 +52,20 @@ type AssistantSource = {
     label: string;
     detail: string;
 };
+export type ProjectAssistantActionDraft = {
+    type: 'CREATE_TASK' | 'UPDATE_TASK' | 'CHANGE_STATUS' | 'ASSIGN_TASK' | 'MOVE_TASK';
+    requiresConfirmation: true;
+    taskId?: string;
+    taskLabel?: string;
+    payload: {
+        title?: string;
+        description?: string;
+        sprintId?: string;
+        priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+        status?: TaskStatus;
+        assigneeId?: string | null;
+    };
+};
 export declare class AiProjectAssistantService {
     private readonly aiProviderService;
     private readonly dailyUpdatesRepository;
@@ -58,7 +75,8 @@ export declare class AiProjectAssistantService {
     private readonly sprintsRepository;
     private readonly tasksRepository;
     private readonly workspaceAccessService;
-    constructor(aiProviderService: AiProviderService, dailyUpdatesRepository: DailyUpdatesRepository, projectAccessService: ProjectAccessService, projectsRepository: ProjectsRepository, sprintAccessService: SprintAccessService, sprintsRepository: SprintsRepository, tasksRepository: TasksRepository, workspaceAccessService: WorkspaceAccessService);
+    private readonly messageModel?;
+    constructor(aiProviderService: AiProviderService, dailyUpdatesRepository: DailyUpdatesRepository, projectAccessService: ProjectAccessService, projectsRepository: ProjectsRepository, sprintAccessService: SprintAccessService, sprintsRepository: SprintsRepository, tasksRepository: TasksRepository, workspaceAccessService: WorkspaceAccessService, messageModel?: Model<ProjectAssistantMessageDocument> | undefined);
     ask(userId: string, workspaceId: string, projectId: string, dto: AskProjectAssistantDto): Promise<{
         success: boolean;
         message: string;
@@ -75,7 +93,27 @@ export declare class AiProjectAssistantService {
                 sprintId: string | null;
                 sprintName: string | null;
             };
+            actionDraft: ProjectAssistantActionDraft | undefined;
         };
+    }>;
+    getHistory(userId: string, workspaceId: string, projectId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            items: {
+                id: any;
+                role: any;
+                content: any;
+                sources: any;
+                actionDraft: any;
+                createdAt: any;
+            }[];
+        };
+    }>;
+    clearHistory(userId: string, workspaceId: string, projectId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
     }>;
     getSprintRisk(userId: string, workspaceId: string, projectId: string, sprintId: string): Promise<{
         success: boolean;
@@ -83,6 +121,7 @@ export declare class AiProjectAssistantService {
         data: SprintRiskAssessment;
     }>;
     buildRiskAssessment(sprint: Sprint, sprintTasks: Task[], updates: DailyUpdate[], now?: Date): SprintRiskAssessment;
+    buildActionDraft(question: string, sprint: Sprint | null, tasks?: Task[]): ProjectAssistantActionDraft | undefined;
     private assertAccess;
     private findDefaultSprint;
     private buildFallbackAnswer;

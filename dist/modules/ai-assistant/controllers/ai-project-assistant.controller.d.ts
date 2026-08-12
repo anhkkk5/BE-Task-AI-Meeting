@@ -25,7 +25,27 @@ export declare class AiProjectAssistantController {
                 sprintId: string | null;
                 sprintName: string | null;
             };
+            actionDraft: import("../services/ai-project-assistant.service").ProjectAssistantActionDraft | undefined;
         };
+    }>;
+    getHistory(user: AuthUser, workspaceId: string, projectId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            items: {
+                id: any;
+                role: any;
+                content: any;
+                sources: any;
+                actionDraft: any;
+                createdAt: any;
+            }[];
+        };
+    }>;
+    clearHistory(user: AuthUser, workspaceId: string, projectId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: null;
     }>;
     getSprintRisk(user: AuthUser, workspaceId: string, projectId: string, sprintId: string): Promise<{
         success: boolean;

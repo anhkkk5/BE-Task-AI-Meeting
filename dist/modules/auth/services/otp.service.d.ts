@@ -34,6 +34,24 @@ export declare class OtpService {
     verifyOtp(email: string, otp: string): Promise<VerifyOtpResult>;
     refreshOtp(email: string, otp: string): Promise<boolean>;
     clearPendingRegistration(email: string): Promise<void>;
+    saveSecurityChallenge(purpose: 'reset' | 'mfa', email: string, otp: string, data?: Record<string, unknown>): Promise<void>;
+    verifySecurityChallenge(purpose: 'reset' | 'mfa', email: string, otp: string): Promise<{
+        status: "NOT_FOUND";
+        data?: undefined;
+        remainingAttempts?: undefined;
+    } | {
+        status: "TOO_MANY_ATTEMPTS";
+        data?: undefined;
+        remainingAttempts?: undefined;
+    } | {
+        status: "OK";
+        data: Record<string, unknown>;
+        remainingAttempts?: undefined;
+    } | {
+        status: "INVALID";
+        remainingAttempts: number;
+        data?: undefined;
+    }>;
     private registrationKey;
     private cooldownKey;
 }

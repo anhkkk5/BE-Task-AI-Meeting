@@ -10,6 +10,7 @@ export declare class UsersService {
     findById(id: string): Promise<User | null>;
     findByEmail(email: string): Promise<User | null>;
     updateRefreshTokenHash(id: string, refreshTokenHash: string | null): Promise<void>;
+    updateSecurity(id: string, data: Pick<Partial<User>, 'passwordHash' | 'refreshTokenHash' | 'mfaEnabled'>): Promise<User | null>;
     getProfile(id: string): Promise<{
         success: boolean;
         message: string;
@@ -22,6 +23,7 @@ export declare class UsersService {
             jobTitle: string | null;
             status: import("../enums/user-status.enum").UserStatus;
             isSystemAdmin: boolean;
+            mfaEnabled: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -38,6 +40,7 @@ export declare class UsersService {
             jobTitle: string | null;
             status: import("../enums/user-status.enum").UserStatus;
             isSystemAdmin: boolean;
+            mfaEnabled: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -56,6 +59,7 @@ export declare class UsersService {
         jobTitle: string | null;
         status: import("../enums/user-status.enum").UserStatus;
         isSystemAdmin: boolean;
+        mfaEnabled: boolean;
         createdAt: Date;
         updatedAt: Date;
     };

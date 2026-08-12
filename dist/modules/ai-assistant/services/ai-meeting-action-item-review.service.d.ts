@@ -1,8 +1,10 @@
 import { Model } from 'mongoose';
 import { MeetingActionItemReviewStatus } from '../../../common/enums/meeting-action-item-review-status.enum';
 import { MeetingAccessService } from '../../meetings/services/meeting-access.service';
+import { MeetingTranscriptDocument } from '../../meetings/schemas/meeting-transcript.schema';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { TasksService } from '../../tasks/services/tasks.service';
+import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { ApproveMeetingActionItemDto } from '../dto/approve-meeting-action-item.dto';
 import { RejectMeetingActionItemDto } from '../dto/reject-meeting-action-item.dto';
 import { MeetingActionItemReviewsRepository } from '../repositories/meeting-action-item-reviews.repository';
@@ -15,7 +17,9 @@ export declare class AiMeetingActionItemReviewService {
     private readonly projectAccessService;
     private readonly meetingAccessService;
     private readonly tasksService;
-    constructor(meetingSummaryModel: Model<MeetingSummaryDocument> | null, reviewsRepository: MeetingActionItemReviewsRepository, summaryAccessService: AiMeetingSummaryAccessService, projectAccessService: ProjectAccessService, meetingAccessService: MeetingAccessService, tasksService: TasksService);
+    private readonly tasksRepository?;
+    private readonly meetingTranscriptModel?;
+    constructor(meetingSummaryModel: Model<MeetingSummaryDocument> | null, reviewsRepository: MeetingActionItemReviewsRepository, summaryAccessService: AiMeetingSummaryAccessService, projectAccessService: ProjectAccessService, meetingAccessService: MeetingAccessService, tasksService: TasksService, tasksRepository?: TasksRepository | undefined, meetingTranscriptModel?: (Model<MeetingTranscriptDocument> | null) | undefined);
     getActionItems(currentUserId: string, workspaceId: string, projectId: string, summaryId: string): Promise<{
         success: boolean;
         message: string;
@@ -33,6 +37,20 @@ export declare class AiMeetingActionItemReviewService {
                 createdTaskId: string | null;
                 rejectionReason: string | null;
                 reviewedAt: Date | null;
+                duplicateCandidates: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    status: string;
+                }[];
+                confidence: number | null;
+                citation: {
+                    startedAt: string;
+                    endedAt: string | null;
+                    speakerName: string | null;
+                    text: string;
+                    confidence: number | null;
+                } | null;
             }[];
         };
     }>;
@@ -52,6 +70,20 @@ export declare class AiMeetingActionItemReviewService {
                 createdTaskId: string | null;
                 rejectionReason: string | null;
                 reviewedAt: Date | null;
+                duplicateCandidates: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    status: string;
+                }[];
+                confidence: number | null;
+                citation: {
+                    startedAt: string;
+                    endedAt: string | null;
+                    speakerName: string | null;
+                    text: string;
+                    confidence: number | null;
+                } | null;
             };
             task: {
                 id: string;
@@ -138,6 +170,20 @@ export declare class AiMeetingActionItemReviewService {
                 createdTaskId: string | null;
                 rejectionReason: string | null;
                 reviewedAt: Date | null;
+                duplicateCandidates: {
+                    id: string;
+                    taskCode: string;
+                    title: string;
+                    status: string;
+                }[];
+                confidence: number | null;
+                citation: {
+                    startedAt: string;
+                    endedAt: string | null;
+                    speakerName: string | null;
+                    text: string;
+                    confidence: number | null;
+                } | null;
             };
         };
     }>;
@@ -148,5 +194,8 @@ export declare class AiMeetingActionItemReviewService {
     private buildTaskDescription;
     private normalizeDueDate;
     private toActionItemResponse;
+    private findDuplicates;
+    private normalizeText;
+    private findCitation;
     private getSummaryModel;
 }

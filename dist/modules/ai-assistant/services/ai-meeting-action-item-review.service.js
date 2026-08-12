@@ -18,8 +18,10 @@ const mongoose_1 = require("@nestjs/mongoose");
 const meeting_action_item_review_status_enum_1 = require("../../../common/enums/meeting-action-item-review-status.enum");
 const workspace_role_enum_1 = require("../../../common/enums/workspace-role.enum");
 const meeting_access_service_1 = require("../../meetings/services/meeting-access.service");
+const meeting_transcript_schema_1 = require("../../meetings/schemas/meeting-transcript.schema");
 const project_access_service_1 = require("../../projects/services/project-access.service");
 const tasks_service_1 = require("../../tasks/services/tasks.service");
+const tasks_repository_1 = require("../../tasks/repositories/tasks.repository");
 const meeting_action_item_reviews_repository_1 = require("../repositories/meeting-action-item-reviews.repository");
 const meeting_summary_schema_1 = require("../schemas/meeting-summary.schema");
 const ai_meeting_summary_access_service_1 = require("./ai-meeting-summary-access.service");
@@ -35,13 +37,17 @@ let AiMeetingActionItemReviewService = class AiMeetingActionItemReviewService {
     projectAccessService;
     meetingAccessService;
     tasksService;
-    constructor(meetingSummaryModel, reviewsRepository, summaryAccessService, projectAccessService, meetingAccessService, tasksService) {
+    tasksRepository;
+    meetingTranscriptModel;
+    constructor(meetingSummaryModel, reviewsRepository, summaryAccessService, projectAccessService, meetingAccessService, tasksService, tasksRepository, meetingTranscriptModel) {
         this.meetingSummaryModel = meetingSummaryModel;
         this.reviewsRepository = reviewsRepository;
         this.summaryAccessService = summaryAccessService;
         this.projectAccessService = projectAccessService;
         this.meetingAccessService = meetingAccessService;
         this.tasksService = tasksService;
+        this.tasksRepository = tasksRepository;
+        this.meetingTranscriptModel = meetingTranscriptModel;
     }
     async getActionItems(currentUserId, workspaceId, projectId, summaryId) {
         const { summary, role } = await this.getSummaryContext(currentUserId, workspaceId, projectId, summaryId, false);
@@ -52,7 +58,7 @@ let AiMeetingActionItemReviewService = class AiMeetingActionItemReviewService {
             message: 'Lấy danh sách việc cần làm thành công',
             data: {
                 canReview: managerRoles.some((managerRole) => managerRole === role),
-                items: (summary.actionItems ?? []).map((item, index) => this.toActionItemResponse(index, item, reviewsByIndex.get(index))),
+                items: await Promise.all((summary.actionItems ?? []).map(async (item, index) => this.toActionItemResponse(index, item, reviewsByIndex.get(index), await this.findDuplicates(projectId, item.text), await this.findCitation(summary.meetingId, item.text)))),
             },
         };
     }
@@ -61,6 +67,14 @@ let AiMeetingActionItemReviewService = class AiMeetingActionItemReviewService {
         const item = this.getActionItem(summary, actionItemIndex);
         const existing = await this.reviewsRepository.findOne(summaryId, actionItemIndex);
         this.assertPending(existing);
+        const duplicateCandidates = await this.findDuplicates(projectId, dto.title?.trim() || item.text);
+        if (duplicateCandidates.length && !dto.allowDuplicate) {
+            throw new common_1.ConflictException({
+                message: 'Phát hiện task tương tự. Hãy kiểm tra trước khi xác nhận tạo trùng.',
+                duplicateCandidates,
+                allowDuplicateRequired: true,
+            });
+        }
         const pendingReview = existing ??
             (await this.reviewsRepository.save({
                 workspaceId,
@@ -79,10 +93,11 @@ let AiMeetingActionItemReviewService = class AiMeetingActionItemReviewService {
             }));
         const taskResult = await this.tasksService.createTask(currentUserId, workspaceId, projectId, {
             title: dto.title?.trim() || this.buildTaskTitle(item.text),
-            description: this.buildTaskDescription(item),
+            description: dto.description?.trim() || this.buildTaskDescription(item),
             assigneeId: dto.assigneeId,
             sprintId: dto.sprintId,
             dueDate: dto.dueDate ?? this.normalizeDueDate(item.dueDate),
+            priority: dto.priority,
         });
         const task = taskResult.data.task;
         const review = await this.reviewsRepository.save({
@@ -105,7 +120,7 @@ let AiMeetingActionItemReviewService = class AiMeetingActionItemReviewService {
             success: true,
             message: 'Đã duyệt và tạo task thành công',
             data: {
-                actionItem: this.toActionItemResponse(actionItemIndex, item, review),
+                actionItem: this.toActionItemResponse(actionItemIndex, item, review, [], await this.findCitation(summary.meetingId, item.text)),
                 task,
             },
         };
@@ -195,7 +210,7 @@ let AiMeetingActionItemReviewService = class AiMeetingActionItemReviewService {
         const match = value.trim().match(/^\d{4}-\d{2}-\d{2}/);
         return match?.[0];
     }
-    toActionItemResponse(index, item, review) {
+    toActionItemResponse(index, item, review, duplicateCandidates = [], citation = null) {
         return {
             index,
             text: item.text,
@@ -208,7 +223,40 @@ let AiMeetingActionItemReviewService = class AiMeetingActionItemReviewService {
             createdTaskId: review?.createdTaskId ?? null,
             rejectionReason: review?.rejectionReason ?? null,
             reviewedAt: review?.reviewedAt ?? null,
+            duplicateCandidates,
+            confidence: citation?.confidence ?? null,
+            citation: citation ? { ...citation, startedAt: citation.startedAt.toISOString(), endedAt: citation.endedAt?.toISOString() ?? null } : null,
         };
+    }
+    async findDuplicates(projectId, title) {
+        if (!this.tasksRepository)
+            return [];
+        const candidates = await this.tasksRepository.findDuplicateCandidates(projectId, title);
+        const normalized = this.normalizeText(title);
+        return candidates.map((task) => {
+            const candidate = this.normalizeText(task.title);
+            const sourceTokens = new Set(normalized.split(' ').filter(Boolean));
+            const candidateTokens = new Set(candidate.split(' ').filter(Boolean));
+            const overlap = [...sourceTokens].filter((token) => candidateTokens.has(token)).length;
+            const similarity = Math.round((overlap / Math.max(1, Math.min(sourceTokens.size, candidateTokens.size))) * 100);
+            return { id: task.id, taskCode: task.taskCode, title: task.title, status: task.status, similarity };
+        }).filter((item) => item.similarity >= 50).sort((a, b) => b.similarity - a.similarity);
+    }
+    normalizeText(value) {
+        return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+    }
+    async findCitation(meetingId, actionText) {
+        if (!this.meetingTranscriptModel)
+            return null;
+        const transcript = await this.meetingTranscriptModel.findOne({ meetingId }).lean().exec();
+        const actionTokens = new Set(this.normalizeText(actionText).split(' ').filter((token) => token.length >= 4));
+        const ranked = (transcript?.liveSegments ?? []).map((segment) => {
+            const segmentTokens = new Set(this.normalizeText(segment.text).split(' ').filter((token) => token.length >= 4));
+            const overlap = [...actionTokens].filter((token) => segmentTokens.has(token)).length;
+            return { segment, score: overlap / Math.max(1, actionTokens.size) };
+        }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
+        const best = ranked[0]?.segment;
+        return best ? { speakerName: best.speakerName ?? null, text: best.text, startedAt: new Date(best.startedAt), endedAt: best.endedAt ? new Date(best.endedAt) : null, confidence: best.confidence ?? null } : null;
     }
     getSummaryModel() {
         if (!this.meetingSummaryModel) {
@@ -222,10 +270,14 @@ exports.AiMeetingActionItemReviewService = AiMeetingActionItemReviewService = __
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Optional)()),
     __param(0, (0, mongoose_1.InjectModel)(meeting_summary_schema_1.MeetingSummary.name)),
+    __param(6, (0, common_1.Optional)()),
+    __param(7, (0, common_1.Optional)()),
+    __param(7, (0, mongoose_1.InjectModel)(meeting_transcript_schema_1.MeetingTranscript.name)),
     __metadata("design:paramtypes", [Object, meeting_action_item_reviews_repository_1.MeetingActionItemReviewsRepository,
         ai_meeting_summary_access_service_1.AiMeetingSummaryAccessService,
         project_access_service_1.ProjectAccessService,
         meeting_access_service_1.MeetingAccessService,
-        tasks_service_1.TasksService])
+        tasks_service_1.TasksService,
+        tasks_repository_1.TasksRepository, Object])
 ], AiMeetingActionItemReviewService);
 //# sourceMappingURL=ai-meeting-action-item-review.service.js.map

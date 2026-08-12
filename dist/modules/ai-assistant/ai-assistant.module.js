@@ -57,12 +57,16 @@ const team_report_action_item_entity_1 = require("./entities/team-report-action-
 const team_report_action_items_repository_1 = require("./repositories/team-report-action-items.repository");
 const ai_team_report_action_item_service_1 = require("./services/ai-team-report-action-item.service");
 const ai_team_report_action_item_controller_1 = require("./controllers/ai-team-report-action-item.controller");
+const meeting_transcript_schema_1 = require("../meetings/schemas/meeting-transcript.schema");
+const project_assistant_message_schema_1 = require("./schemas/project-assistant-message.schema");
 const mongoImports = (0, mongodb_config_1.mongodbConfig)().enabled
     ? [
         mongoose_1.MongooseModule.forFeature([
             { name: ai_report_schema_1.AiReport.name, schema: ai_report_schema_1.AiReportSchema },
             { name: ai_prompt_log_schema_1.AiPromptLog.name, schema: ai_prompt_log_schema_1.AiPromptLogSchema },
             { name: meeting_summary_schema_1.MeetingSummary.name, schema: meeting_summary_schema_1.MeetingSummarySchema },
+            { name: meeting_transcript_schema_1.MeetingTranscript.name, schema: meeting_transcript_schema_1.MeetingTranscriptSchema },
+            { name: project_assistant_message_schema_1.ProjectAssistantMessage.name, schema: project_assistant_message_schema_1.ProjectAssistantMessageSchema },
             {
                 name: personalized_meeting_summary_schema_1.PersonalizedMeetingSummary.name,
                 schema: personalized_meeting_summary_schema_1.PersonalizedMeetingSummarySchema,

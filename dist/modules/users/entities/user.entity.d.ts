@@ -11,6 +11,7 @@ export declare class User {
     isSystemAdmin: boolean;
     emailVerifiedAt: Date | null;
     refreshTokenHash: string | null;
+    mfaEnabled: boolean;
     createdAt: Date;
     updatedAt: Date;
 }

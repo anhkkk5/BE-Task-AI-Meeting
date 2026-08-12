@@ -8,9 +8,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiProjectAssistantService = void 0;
 const common_1 = require("@nestjs/common");
+const mongoose_1 = require("@nestjs/mongoose");
+const mongoose_2 = require("mongoose");
 const daily_mood_enum_1 = require("../../../common/enums/daily-mood.enum");
 const sprint_status_enum_1 = require("../../../common/enums/sprint-status.enum");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
@@ -22,6 +27,7 @@ const sprint_access_service_1 = require("../../sprints/services/sprint-access.se
 const tasks_repository_1 = require("../../tasks/repositories/tasks.repository");
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
 const ai_provider_service_1 = require("./ai-provider.service");
+const project_assistant_message_schema_1 = require("../schemas/project-assistant-message.schema");
 let AiProjectAssistantService = class AiProjectAssistantService {
     aiProviderService;
     dailyUpdatesRepository;
@@ -31,7 +37,8 @@ let AiProjectAssistantService = class AiProjectAssistantService {
     sprintsRepository;
     tasksRepository;
     workspaceAccessService;
-    constructor(aiProviderService, dailyUpdatesRepository, projectAccessService, projectsRepository, sprintAccessService, sprintsRepository, tasksRepository, workspaceAccessService) {
+    messageModel;
+    constructor(aiProviderService, dailyUpdatesRepository, projectAccessService, projectsRepository, sprintAccessService, sprintsRepository, tasksRepository, workspaceAccessService, messageModel) {
         this.aiProviderService = aiProviderService;
         this.dailyUpdatesRepository = dailyUpdatesRepository;
         this.projectAccessService = projectAccessService;
@@ -40,6 +47,7 @@ let AiProjectAssistantService = class AiProjectAssistantService {
         this.sprintsRepository = sprintsRepository;
         this.tasksRepository = tasksRepository;
         this.workspaceAccessService = workspaceAccessService;
+        this.messageModel = messageModel;
     }
     async ask(userId, workspaceId, projectId, dto) {
         await this.assertAccess(userId, workspaceId, projectId);
@@ -63,6 +71,7 @@ let AiProjectAssistantService = class AiProjectAssistantService {
             : undefined;
         const fallback = this.buildFallbackAnswer(dto.question, project, sprint, tasks, updates, risk);
         const sources = this.buildSources(project, sprint, tasks, updates, dto.question);
+        const actionDraft = this.buildActionDraft(dto.question, sprint, tasks);
         let output = fallback;
         try {
             output = (await this.aiProviderService.generateProjectAssistantAnswer(this.buildPrompt(dto.question, project, sprint, tasks, updates, risk), fallback)).output;
@@ -70,6 +79,10 @@ let AiProjectAssistantService = class AiProjectAssistantService {
         catch {
             output = fallback;
         }
+        await this.messageModel?.create([
+            { workspaceId, projectId, userId, sprintId: sprint?.id ?? null, role: 'USER', content: dto.question, sources: [] },
+            { workspaceId, projectId, userId, sprintId: sprint?.id ?? null, role: 'ASSISTANT', content: output.answer, sources, actionDraft: actionDraft ?? null },
+        ]);
         return {
             success: true,
             message: 'Hỏi trợ lý dự án thành công',
@@ -88,8 +101,21 @@ let AiProjectAssistantService = class AiProjectAssistantService {
                     sprintId: sprint?.id ?? null,
                     sprintName: sprint?.name ?? null,
                 },
+                actionDraft,
             },
         };
+    }
+    async getHistory(userId, workspaceId, projectId) {
+        await this.assertAccess(userId, workspaceId, projectId);
+        if (!this.messageModel)
+            return { success: true, message: 'Get assistant history successfully', data: { items: [] } };
+        const items = await this.messageModel.find({ workspaceId, projectId, userId }).sort({ createdAt: 1 }).limit(100).lean().exec();
+        return { success: true, message: 'Get assistant history successfully', data: { items: items.map((item) => ({ id: item._id.toString(), role: item.role, content: item.content, sources: item.sources ?? [], actionDraft: item.actionDraft ?? undefined, createdAt: item.createdAt })) } };
+    }
+    async clearHistory(userId, workspaceId, projectId) {
+        await this.assertAccess(userId, workspaceId, projectId);
+        await this.messageModel?.deleteMany({ workspaceId, projectId, userId }).exec();
+        return { success: true, message: 'Clear assistant history successfully', data: null };
     }
     async getSprintRisk(userId, workspaceId, projectId, sprintId) {
         await this.assertAccess(userId, workspaceId, projectId);
@@ -236,6 +262,57 @@ let AiProjectAssistantService = class AiProjectAssistantService {
             recommendations,
             generatedAt: now.toISOString(),
         };
+    }
+    buildActionDraft(question, sprint, tasks = []) {
+        const normalized = question.trim();
+        const referencedTask = tasks.find((task) => new RegExp(`(?:^|\\s)${task.taskCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\s|[,.:;-])`, 'iu').test(normalized));
+        const extractedTitle = normalized
+            .replace(/^.*?(?:tạo|thêm|lập)\s+(?:một\s+)?(?:task|công việc)\s*(?:mới\s*)?(?::|-)?\s*/iu, '')
+            .replace(/[.!?]+$/u, '')
+            .trim();
+        const title = extractedTitle || 'Công việc mới từ Project Assistant';
+        const priority = /khẩn|urgent/iu.test(normalized)
+            ? 'URGENT'
+            : /ưu tiên cao|priority high|high priority/iu.test(normalized)
+                ? 'HIGH'
+                : /ưu tiên thấp|priority low|low priority/iu.test(normalized)
+                    ? 'LOW'
+                    : 'MEDIUM';
+        if (/(?:tạo|thêm|lập)\s+(?:một\s+)?(?:task|công việc)/iu.test(normalized))
+            return {
+                type: 'CREATE_TASK',
+                requiresConfirmation: true,
+                payload: {
+                    title: title.slice(0, 255),
+                    description: `Bản nháp được đề xuất từ yêu cầu: ${normalized}`,
+                    ...(sprint ? { sprintId: sprint.id } : {}),
+                    priority,
+                },
+            };
+        if (!referencedTask)
+            return undefined;
+        const base = {
+            requiresConfirmation: true,
+            taskId: referencedTask.id,
+            taskLabel: `${referencedTask.taskCode} - ${referencedTask.title}`,
+        };
+        if (/\b(?:đổi|chuyển|cập nhật)\s+(?:trạng thái|status)/iu.test(normalized)) {
+            const status = /hoàn thành|done/iu.test(normalized) ? task_status_enum_1.TaskStatus.Done
+                : /đang (?:làm|xử lý)|in[_ ]?progress/iu.test(normalized) ? task_status_enum_1.TaskStatus.InProgress
+                    : /review|kiểm thử|duyệt/iu.test(normalized) ? task_status_enum_1.TaskStatus.Review
+                        : /backlog/iu.test(normalized) ? task_status_enum_1.TaskStatus.Backlog : task_status_enum_1.TaskStatus.Todo;
+            return { ...base, type: 'CHANGE_STATUS', payload: { priority, status } };
+        }
+        if (/\b(?:giao|gán|assign|đổi người phụ trách)/iu.test(normalized)) {
+            return { ...base, type: 'ASSIGN_TASK', payload: { priority, assigneeId: null } };
+        }
+        if (/\b(?:chuyển|đưa)\s+.*(?:sprint|backlog)/iu.test(normalized)) {
+            return { ...base, type: 'MOVE_TASK', payload: { priority, sprintId: /backlog/iu.test(normalized) ? undefined : sprint?.id } };
+        }
+        if (/\b(?:sửa|cập nhật|đổi)\s+(?:task|công việc|tiêu đề|mô tả)/iu.test(normalized)) {
+            return { ...base, type: 'UPDATE_TASK', payload: { priority, title: referencedTask.title, description: referencedTask.description ?? '' } };
+        }
+        return undefined;
     }
     async assertAccess(userId, workspaceId, projectId) {
         await this.workspaceAccessService.assertWorkspaceMember(userId, workspaceId);
@@ -424,6 +501,8 @@ let AiProjectAssistantService = class AiProjectAssistantService {
 exports.AiProjectAssistantService = AiProjectAssistantService;
 exports.AiProjectAssistantService = AiProjectAssistantService = __decorate([
     (0, common_1.Injectable)(),
+    __param(8, (0, common_1.Optional)()),
+    __param(8, (0, mongoose_1.InjectModel)(project_assistant_message_schema_1.ProjectAssistantMessage.name)),
     __metadata("design:paramtypes", [ai_provider_service_1.AiProviderService,
         daily_updates_repository_1.DailyUpdatesRepository,
         project_access_service_1.ProjectAccessService,
@@ -431,6 +510,7 @@ exports.AiProjectAssistantService = AiProjectAssistantService = __decorate([
         sprint_access_service_1.SprintAccessService,
         sprints_repository_1.SprintsRepository,
         tasks_repository_1.TasksRepository,
-        workspace_access_service_1.WorkspaceAccessService])
+        workspace_access_service_1.WorkspaceAccessService,
+        mongoose_2.Model])
 ], AiProjectAssistantService);
 //# sourceMappingURL=ai-project-assistant.service.js.map

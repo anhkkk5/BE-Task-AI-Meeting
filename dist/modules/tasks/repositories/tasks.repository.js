@@ -146,6 +146,17 @@ let TasksRepository = class TasksRepository {
     findChildren(parentId) {
         return this.repository.find({ where: { parentId, deletedAt: (0, typeorm_2.IsNull)() } });
     }
+    findDuplicateCandidates(projectId, title, limit = 5) {
+        const tokens = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((token) => token.length >= 4).slice(0, 6);
+        if (!tokens.length)
+            return Promise.resolve([]);
+        const builder = this.repository.createQueryBuilder('task')
+            .where('task.projectId = :projectId', { projectId })
+            .andWhere('task.deletedAt IS NULL');
+        builder.andWhere(`(${tokens.map((_, index) => `LOWER(task.title) LIKE :token${index}`).join(' OR ')})`, Object.fromEntries(tokens.map((token, index) => [`token${index}`, `%${token}%`])));
+        return builder.orderBy('task.updatedAt', 'DESC').take(limit).getMany();
+    }
     async findWorkflowStatusId(templateId, status) {
         if (!templateId)
             return null;

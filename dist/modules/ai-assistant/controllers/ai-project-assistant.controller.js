@@ -28,6 +28,12 @@ let AiProjectAssistantController = class AiProjectAssistantController {
     ask(user, workspaceId, projectId, dto) {
         return this.aiProjectAssistantService.ask(user.id, workspaceId, projectId, dto);
     }
+    getHistory(user, workspaceId, projectId) {
+        return this.aiProjectAssistantService.getHistory(user.id, workspaceId, projectId);
+    }
+    clearHistory(user, workspaceId, projectId) {
+        return this.aiProjectAssistantService.clearHistory(user.id, workspaceId, projectId);
+    }
     getSprintRisk(user, workspaceId, projectId, sprintId) {
         return this.aiProjectAssistantService.getSprintRisk(user.id, workspaceId, projectId, sprintId);
     }
@@ -50,6 +56,24 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String, ask_project_assistant_dto_1.AskProjectAssistantDto]),
     __metadata("design:returntype", void 0)
 ], AiProjectAssistantController.prototype, "ask", null);
+__decorate([
+    (0, common_1.Get)('history'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], AiProjectAssistantController.prototype, "getHistory", null);
+__decorate([
+    (0, common_1.Delete)('history'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], AiProjectAssistantController.prototype, "clearHistory", null);
 __decorate([
     (0, common_1.Get)('sprints/:sprintId/risk'),
     (0, swagger_1.ApiOperation)({

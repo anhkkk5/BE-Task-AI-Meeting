@@ -11,12 +11,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApproveMeetingActionItemDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
+const task_priority_enum_1 = require("../../../common/enums/task-priority.enum");
 const class_validator_1 = require("class-validator");
 class ApproveMeetingActionItemDto {
     title;
+    description;
+    priority;
     assigneeId;
     sprintId;
     dueDate;
+    allowDuplicate;
 }
 exports.ApproveMeetingActionItemDto = ApproveMeetingActionItemDto;
 __decorate([
@@ -30,6 +34,19 @@ __decorate([
     (0, class_validator_1.MaxLength)(200),
     __metadata("design:type", String)
 ], ApproveMeetingActionItemDto.prototype, "title", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ maxLength: 2000 }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(2000),
+    __metadata("design:type", String)
+], ApproveMeetingActionItemDto.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: task_priority_enum_1.TaskPriority }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(task_priority_enum_1.TaskPriority),
+    __metadata("design:type", String)
+], ApproveMeetingActionItemDto.prototype, "priority", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: 'User UUID se duoc gan task.' }),
     (0, class_validator_1.IsOptional)(),
@@ -50,4 +67,10 @@ __decorate([
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], ApproveMeetingActionItemDto.prototype, "dueDate", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Cho phép tạo dù hệ thống phát hiện task tương tự.' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], ApproveMeetingActionItemDto.prototype, "allowDuplicate", void 0);
 //# sourceMappingURL=approve-meeting-action-item.dto.js.map

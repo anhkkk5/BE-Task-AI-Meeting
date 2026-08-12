@@ -23,6 +23,7 @@ import { AiReport, AiReportDocument } from '../schemas/ai-report.schema';
 import { AiProviderService } from './ai-provider.service';
 import { AiReportAccessService } from './ai-report-access.service';
 import { AiReportDataBuilderService } from './ai-report-data-builder.service';
+import { buildReportCitations } from '../utils/report-citations';
 import { PromptBuilderService } from './prompt-builder.service';
 
 type AiReportWithTimestamps = AiReportDocument & {
@@ -489,7 +490,7 @@ export class AiPersonalReportService {
       model: report.aiModel ?? null,
       status: report.status,
       createdBy: report.createdBy,
-      ...(includeInputData ? { inputData: report.inputData } : {}),
+      ...(includeInputData ? { inputData: report.inputData, citations: buildReportCitations(report.inputData) } : {}),
       createdAt: stampedReport.createdAt,
       updatedAt: stampedReport.updatedAt,
     };

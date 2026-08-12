@@ -60,6 +60,8 @@ import { TeamReportActionItem } from './entities/team-report-action-item.entity'
 import { TeamReportActionItemsRepository } from './repositories/team-report-action-items.repository';
 import { AiTeamReportActionItemService } from './services/ai-team-report-action-item.service';
 import { AiTeamReportActionItemController } from './controllers/ai-team-report-action-item.controller';
+import { MeetingTranscript, MeetingTranscriptSchema } from '../meetings/schemas/meeting-transcript.schema';
+import { ProjectAssistantMessage, ProjectAssistantMessageSchema } from './schemas/project-assistant-message.schema';
 
 const mongoImports = mongodbConfig().enabled
   ? [
@@ -67,6 +69,8 @@ const mongoImports = mongodbConfig().enabled
         { name: AiReport.name, schema: AiReportSchema },
         { name: AiPromptLog.name, schema: AiPromptLogSchema },
         { name: MeetingSummary.name, schema: MeetingSummarySchema },
+        { name: MeetingTranscript.name, schema: MeetingTranscriptSchema },
+        { name: ProjectAssistantMessage.name, schema: ProjectAssistantMessageSchema },
         {
           name: PersonalizedMeetingSummary.name,
           schema: PersonalizedMeetingSummarySchema,

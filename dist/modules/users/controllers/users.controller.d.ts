@@ -35,6 +35,7 @@ export declare class UsersController {
             jobTitle: string | null;
             status: import("../enums/user-status.enum").UserStatus;
             isSystemAdmin: boolean;
+            mfaEnabled: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -51,6 +52,7 @@ export declare class UsersController {
             jobTitle: string | null;
             status: import("../enums/user-status.enum").UserStatus;
             isSystemAdmin: boolean;
+            mfaEnabled: boolean;
             createdAt: Date;
             updatedAt: Date;
         };
