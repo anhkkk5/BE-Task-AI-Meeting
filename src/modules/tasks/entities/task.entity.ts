@@ -22,6 +22,8 @@ import { User } from '../../users/entities/user.entity';
 export class Task {
   isBlocked?: boolean;
   isBlocking?: boolean;
+  /** Canonical key resolved from workflow_statuses; status remains a temporary shadow. */
+  workflowStatusKey?: TaskStatus;
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

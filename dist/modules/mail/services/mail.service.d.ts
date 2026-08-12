@@ -1,3 +1,4 @@
+import { ObservabilityService } from '../../observability/observability.service';
 export type SendMailInput = {
     to: string;
     subject: string;
@@ -5,8 +6,10 @@ export type SendMailInput = {
     text: string;
 };
 export declare class MailService {
+    private readonly observability;
     private readonly logger;
     private transporter?;
+    constructor(observability: ObservabilityService);
     sendMail(input: SendMailInput): Promise<void>;
     sendMailSafely(input: SendMailInput): Promise<boolean>;
     private sendViaSmtp;

@@ -20,14 +20,17 @@ const user_status_enum_1 = require("../users/enums/user-status.enum");
 const user_entity_1 = require("../users/entities/user.entity");
 const workspace_entity_1 = require("../workspaces/entities/workspace.entity");
 const workspace_status_enum_1 = require("../../common/enums/workspace-status.enum");
+const observability_service_1 = require("../observability/observability.service");
 let AdminService = class AdminService {
     userRepo;
     workspaceRepo;
     dataSource;
-    constructor(userRepo, workspaceRepo, dataSource) {
+    observability;
+    constructor(userRepo, workspaceRepo, dataSource, observability) {
         this.userRepo = userRepo;
         this.workspaceRepo = workspaceRepo;
         this.dataSource = dataSource;
+        this.observability = observability;
     }
     async getSystemStats() {
         const [totalUsers, activeUsers, adminUsers, totalWorkspaces, activeWorkspaces,] = await Promise.all([
@@ -111,9 +114,11 @@ let AdminService = class AdminService {
         const user = await this.userRepo.findOne({ where: { id: targetUserId } });
         if (!user)
             throw new common_1.NotFoundException('User not found');
+        const before = user.status;
         user.status =
             user.status === user_status_enum_1.UserStatus.Active ? user_status_enum_1.UserStatus.Inactive : user_status_enum_1.UserStatus.Active;
         await this.userRepo.save(user);
+        await this.observability.audit({ actorId: adminId, action: user.status === user_status_enum_1.UserStatus.Active ? 'USER_ENABLED' : 'USER_DISABLED', targetType: 'USER', targetId: user.id, before: { status: before }, after: { status: user.status }, metadata: null });
         return {
             success: true,
             message: `Tài khoản đã được ${user.status === user_status_enum_1.UserStatus.Active ? 'kích hoạt' : 'vô hiệu hóa'}.`,
@@ -127,8 +132,10 @@ let AdminService = class AdminService {
         const user = await this.userRepo.findOne({ where: { id: targetUserId } });
         if (!user)
             throw new common_1.NotFoundException('User not found');
+        const before = user.isSystemAdmin;
         user.isSystemAdmin = !user.isSystemAdmin;
         await this.userRepo.save(user);
+        await this.observability.audit({ actorId: adminId, action: user.isSystemAdmin ? 'ADMIN_GRANTED' : 'ADMIN_REVOKED', targetType: 'USER', targetId: user.id, before: { isSystemAdmin: before }, after: { isSystemAdmin: user.isSystemAdmin }, metadata: null });
         return {
             success: true,
             message: `Quyền System Admin đã được ${user.isSystemAdmin ? 'cấp' : 'thu hồi'}.`,
@@ -183,15 +190,17 @@ let AdminService = class AdminService {
             },
         };
     }
-    async toggleWorkspaceStatus(workspaceId) {
+    async toggleWorkspaceStatus(adminId, workspaceId) {
         const ws = await this.workspaceRepo.findOne({ where: { id: workspaceId } });
         if (!ws)
             throw new common_1.NotFoundException('Workspace not found');
+        const before = ws.status;
         ws.status =
             ws.status === workspace_status_enum_1.WorkspaceStatus.Active
                 ? workspace_status_enum_1.WorkspaceStatus.Archived
                 : workspace_status_enum_1.WorkspaceStatus.Active;
         await this.workspaceRepo.save(ws);
+        await this.observability.audit({ actorId: adminId, action: ws.status === workspace_status_enum_1.WorkspaceStatus.Active ? 'WORKSPACE_RESTORED' : 'WORKSPACE_ARCHIVED', targetType: 'WORKSPACE', targetId: ws.id, before: { status: before }, after: { status: ws.status }, metadata: { name: ws.name } });
         return {
             success: true,
             message: `Workspace đã được ${ws.status === workspace_status_enum_1.WorkspaceStatus.Active ? 'kích hoạt' : 'lưu trữ'}.`,
@@ -220,6 +229,7 @@ exports.AdminService = AdminService = __decorate([
     __param(2, (0, typeorm_1.InjectDataSource)()),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
-        typeorm_2.DataSource])
+        typeorm_2.DataSource,
+        observability_service_1.ObservabilityService])
 ], AdminService);
 //# sourceMappingURL=admin.service.js.map

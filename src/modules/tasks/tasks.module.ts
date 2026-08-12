@@ -21,6 +21,7 @@ import { TaskAccessService } from './services/task-access.service';
 import { TaskCodeService } from './services/task-code.service';
 import { TasksService } from './services/tasks.service';
 import { TaskDeadlineNotificationSchedulerService } from './schedulers/task-deadline-notification-scheduler.service';
+import { WorkflowShadowMonitorScheduler } from './schedulers/workflow-shadow-monitor.scheduler';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { TaskDeadlineNotificationSchedulerService } from './schedulers/task-dead
     TaskDependenciesRepository,
     TaskDependenciesService,
     TaskDeadlineNotificationSchedulerService,
+    WorkflowShadowMonitorScheduler,
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,
   ],

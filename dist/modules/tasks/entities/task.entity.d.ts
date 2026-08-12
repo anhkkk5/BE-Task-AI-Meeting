@@ -7,6 +7,7 @@ import { User } from '../../users/entities/user.entity';
 export declare class Task {
     isBlocked?: boolean;
     isBlocking?: boolean;
+    workflowStatusKey?: TaskStatus;
     id: string;
     projectId: string;
     sprintId: string | null;

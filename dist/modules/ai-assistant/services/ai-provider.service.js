@@ -5,11 +5,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiProviderService = void 0;
 const common_1 = require("@nestjs/common");
 const transcript_noise_util_1 = require("../../../common/utils/transcript-noise.util");
+const observability_service_1 = require("../../observability/observability.service");
 let AiProviderService = class AiProviderService {
+    observability;
+    constructor(observability) {
+        this.observability = observability;
+    }
     async generateProjectAssistantAnswer(prompt, fallback) {
         const provider = process.env.AI_PROVIDER ?? 'mock';
         const apiKey = process.env.AI_API_KEY ?? '';
@@ -439,6 +447,7 @@ let AiProviderService = class AiProviderService {
         };
     }
     async callGroqJson(params) {
+        const started = Date.now();
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -466,6 +475,7 @@ let AiProviderService = class AiProviderService {
         });
         const rawText = await response.text();
         if (!response.ok) {
+            await this.observability?.record({ kind: 'AI', status: 'FAILED', operation: `groq.${params.model}`, durationMs: Date.now() - started, inputTokens: null, outputTokens: null, estimatedCostUsd: null, error: `HTTP ${response.status}: ${rawText.slice(0, 500)}`, metadata: null });
             throw new Error(`Groq API failed: ${response.status} ${rawText}`);
         }
         const groqResponse = JSON.parse(rawText);
@@ -473,6 +483,11 @@ let AiProviderService = class AiProviderService {
         if (!content) {
             throw new Error('Groq API returned empty content');
         }
+        const inputTokens = groqResponse.usage?.prompt_tokens ?? 0;
+        const outputTokens = groqResponse.usage?.completion_tokens ?? 0;
+        const inputRate = Number(process.env.AI_INPUT_COST_PER_MILLION_USD ?? 0);
+        const outputRate = Number(process.env.AI_OUTPUT_COST_PER_MILLION_USD ?? 0);
+        await this.observability?.record({ kind: 'AI', status: 'SUCCESS', operation: `groq.${params.model}`, durationMs: Date.now() - started, inputTokens, outputTokens, estimatedCostUsd: (inputTokens * inputRate + outputTokens * outputRate) / 1_000_000, error: null, metadata: { model: groqResponse.model ?? params.model } });
         return this.parseJsonContent(content);
     }
     parseJsonContent(content) {
@@ -946,6 +961,7 @@ let AiProviderService = class AiProviderService {
 };
 exports.AiProviderService = AiProviderService;
 exports.AiProviderService = AiProviderService = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [observability_service_1.ObservabilityService])
 ], AiProviderService);
 //# sourceMappingURL=ai-provider.service.js.map

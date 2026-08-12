@@ -1183,6 +1183,7 @@ let TasksService = class TasksService {
             acceptanceCriteria: task.acceptanceCriteria,
             status: task.status,
             workflowStatusId: task.workflowStatusId,
+            workflowStatusKey: task.workflowStatusKey ?? task.status,
             taskType: task.taskType ?? task_type_enum_1.TaskType.Task,
             priority: task.priority ?? task_priority_enum_1.TaskPriority.Medium,
             parentId: task.parentId ?? null,

@@ -57,6 +57,8 @@ export type PersonalReportInputData = {
         taskCode: string;
         title: string;
         status: string;
+        workflowStatusId: string;
+        workflowStatusKey: string;
         sprintId: string | null;
         dueDate: string | null;
         estimatedHours: number | null;
@@ -129,6 +131,8 @@ export declare class AiReportDataBuilderService {
             taskCode: string;
             title: string;
             status: TaskStatus;
+            workflowStatusId: string;
+            workflowStatusKey: TaskStatus;
             sprintId: string | null;
             dueDate: string | null;
             estimatedHours: number | null;

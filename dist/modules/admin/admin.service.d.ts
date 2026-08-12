@@ -3,11 +3,13 @@ import { UserStatus } from '../users/enums/user-status.enum';
 import { User } from '../users/entities/user.entity';
 import { Workspace } from '../workspaces/entities/workspace.entity';
 import { WorkspaceStatus } from '../../common/enums/workspace-status.enum';
+import { ObservabilityService } from '../observability/observability.service';
 export declare class AdminService {
     private readonly userRepo;
     private readonly workspaceRepo;
     private readonly dataSource;
-    constructor(userRepo: Repository<User>, workspaceRepo: Repository<Workspace>, dataSource: DataSource);
+    private readonly observability;
+    constructor(userRepo: Repository<User>, workspaceRepo: Repository<Workspace>, dataSource: DataSource, observability: ObservabilityService);
     getSystemStats(): Promise<{
         success: boolean;
         message: string;
@@ -119,7 +121,7 @@ export declare class AdminService {
             totalPages: number;
         };
     }>;
-    toggleWorkspaceStatus(workspaceId: string): Promise<{
+    toggleWorkspaceStatus(adminId: string, workspaceId: string): Promise<{
         success: boolean;
         message: string;
         data: {

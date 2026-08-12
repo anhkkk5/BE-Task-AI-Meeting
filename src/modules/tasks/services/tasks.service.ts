@@ -1753,6 +1753,7 @@ export class TasksService {
       acceptanceCriteria: task.acceptanceCriteria,
       status: task.status,
       workflowStatusId: task.workflowStatusId,
+      workflowStatusKey: task.workflowStatusKey ?? task.status,
       taskType: task.taskType ?? TaskType.Task,
       priority: task.priority ?? TaskPriority.Medium,
       parentId: task.parentId ?? null,

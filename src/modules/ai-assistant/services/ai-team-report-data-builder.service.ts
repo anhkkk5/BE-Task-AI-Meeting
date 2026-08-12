@@ -474,6 +474,8 @@ export class AiTeamReportDataBuilderService {
       taskCode: task.taskCode,
       title: task.title,
       status: task.status,
+      workflowStatusId: task.workflowStatusId,
+      workflowStatusKey: task.workflowStatusKey ?? task.status,
       sprintId: task.sprintId,
       assigneeId: task.assigneeId,
       assigneeName:

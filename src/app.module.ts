@@ -26,6 +26,7 @@ import { UsersModule } from './modules/users/users.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AutomationModule } from './modules/automation/automation.module';
+import { ObservabilityModule } from './modules/observability/observability.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { AutomationModule } from './modules/automation/automation.module';
         ]
       : []),
     RedisModule,
+    ObservabilityModule,
     MailModule,
     ScheduleModule.forRoot(),
     AdminModule,

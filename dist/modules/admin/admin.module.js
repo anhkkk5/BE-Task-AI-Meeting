@@ -15,12 +15,13 @@ const users_repository_1 = require("../users/repositories/users.repository");
 const workspace_entity_1 = require("../workspaces/entities/workspace.entity");
 const admin_controller_1 = require("./admin.controller");
 const admin_service_1 = require("./admin.service");
+const observability_module_1 = require("../observability/observability.module");
 let AdminModule = class AdminModule {
 };
 exports.AdminModule = AdminModule;
 exports.AdminModule = AdminModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, workspace_entity_1.Workspace])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, workspace_entity_1.Workspace]), observability_module_1.ObservabilityModule],
         controllers: [admin_controller_1.AdminController],
         providers: [admin_service_1.AdminService, users_repository_1.UsersRepository, system_admin_guard_1.SystemAdminGuard],
     })

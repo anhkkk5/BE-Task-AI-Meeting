@@ -6,6 +6,7 @@ import { MeetingSummaryInputData } from './ai-meeting-summary-data-builder.servi
 import { PersonalizedMeetingSummaryInputData } from './ai-personalized-meeting-summary-data-builder.service';
 import { PersonalReportInputData } from './ai-report-data-builder.service';
 import { TeamReportInputData } from './ai-team-report-data-builder.service';
+import { ObservabilityService } from '../../observability/observability.service';
 export type AiProviderResult<TOutput = PersonalDailyReportOutput> = {
     model: string;
     rawResponse: string;
@@ -16,6 +17,8 @@ export type ProjectAssistantOutput = {
     suggestedQuestions: string[];
 };
 export declare class AiProviderService {
+    private readonly observability;
+    constructor(observability: ObservabilityService);
     generateProjectAssistantAnswer(prompt: string, fallback: ProjectAssistantOutput): Promise<AiProviderResult<ProjectAssistantOutput>>;
     generatePersonalDailyReport(prompt: string, inputData: PersonalReportInputData): Promise<AiProviderResult>;
     generateTeamDailyReport(prompt: string, inputData: TeamReportInputData): Promise<AiProviderResult<TeamDailyReportOutput>>;

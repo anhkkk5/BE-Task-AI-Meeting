@@ -59,6 +59,7 @@ const ai_team_report_action_item_service_1 = require("./services/ai-team-report-
 const ai_team_report_action_item_controller_1 = require("./controllers/ai-team-report-action-item.controller");
 const meeting_transcript_schema_1 = require("../meetings/schemas/meeting-transcript.schema");
 const project_assistant_message_schema_1 = require("./schemas/project-assistant-message.schema");
+const mongodb_observability_scheduler_1 = require("./schedulers/mongodb-observability.scheduler");
 const mongoImports = (0, mongodb_config_1.mongodbConfig)().enabled
     ? [
         mongoose_1.MongooseModule.forFeature([
@@ -128,6 +129,7 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
             team_report_action_items_repository_1.TeamReportActionItemsRepository,
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,
+            ...((0, mongodb_config_1.mongodbConfig)().enabled ? [mongodb_observability_scheduler_1.MongodbObservabilityScheduler] : []),
         ],
     })
 ], AiAssistantModule);

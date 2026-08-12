@@ -6,9 +6,10 @@ import { UsersRepository } from '../users/repositories/users.repository';
 import { Workspace } from '../workspaces/entities/workspace.entity';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { ObservabilityModule } from '../observability/observability.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Workspace])],
+  imports: [TypeOrmModule.forFeature([User, Workspace]), ObservabilityModule],
   controllers: [AdminController],
   providers: [AdminService, UsersRepository, SystemAdminGuard],
 })

@@ -62,6 +62,7 @@ import { AiTeamReportActionItemService } from './services/ai-team-report-action-
 import { AiTeamReportActionItemController } from './controllers/ai-team-report-action-item.controller';
 import { MeetingTranscript, MeetingTranscriptSchema } from '../meetings/schemas/meeting-transcript.schema';
 import { ProjectAssistantMessage, ProjectAssistantMessageSchema } from './schemas/project-assistant-message.schema';
+import { MongodbObservabilityScheduler } from './schedulers/mongodb-observability.scheduler';
 
 const mongoImports = mongodbConfig().enabled
   ? [
@@ -129,6 +130,7 @@ const mongoImports = mongodbConfig().enabled
     TeamReportActionItemsRepository,
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,
+    ...(mongodbConfig().enabled ? [MongodbObservabilityScheduler] : []),
   ],
 })
 export class AiAssistantModule {}

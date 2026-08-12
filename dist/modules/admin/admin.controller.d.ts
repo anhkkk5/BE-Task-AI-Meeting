@@ -1,8 +1,10 @@
 import type { AuthUser } from '../auth/types/auth-user.type';
 import { AdminService } from './admin.service';
+import { ObservabilityService } from '../observability/observability.service';
 export declare class AdminController {
     private readonly adminService;
-    constructor(adminService: AdminService);
+    private readonly observability;
+    constructor(adminService: AdminService, observability: ObservabilityService);
     getSystemStats(): Promise<{
         success: boolean;
         message: string;
@@ -29,6 +31,38 @@ export declare class AdminController {
             meetings: {
                 total: number;
             };
+        };
+    }>;
+    getObservability(hours?: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            windowHours: number;
+            totals: {
+                events: number;
+                failures: number;
+                slowApis: number;
+                failedJobs: number;
+                failedEmails: number;
+            };
+            ai: {
+                calls: number;
+                inputTokens: number;
+                outputTokens: number;
+                estimatedCostUsd: number;
+                averageLatencyMs: number;
+            };
+            recentFailures: import("../observability/entities/observability-event.entity").ObservabilityEvent[];
+        };
+    }>;
+    getAuditLogs(page?: string, limit?: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            items: import("../observability/entities/admin-audit-log.entity").AdminAuditLog[];
+            total: number;
+            page: number;
+            limit: number;
         };
     }>;
     getAllUsers(page?: string, limit?: string, search?: string, status?: string): Promise<{
@@ -104,7 +138,7 @@ export declare class AdminController {
             totalPages: number;
         };
     }>;
-    toggleWorkspaceStatus(workspaceId: string): Promise<{
+    toggleWorkspaceStatus(admin: AuthUser, workspaceId: string): Promise<{
         success: boolean;
         message: string;
         data: {

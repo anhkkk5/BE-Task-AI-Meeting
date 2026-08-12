@@ -30,6 +30,7 @@ const task_access_service_1 = require("./services/task-access.service");
 const task_code_service_1 = require("./services/task-code.service");
 const tasks_service_1 = require("./services/tasks.service");
 const task_deadline_notification_scheduler_service_1 = require("./schedulers/task-deadline-notification-scheduler.service");
+const workflow_shadow_monitor_scheduler_1 = require("./schedulers/workflow-shadow-monitor.scheduler");
 let TasksModule = class TasksModule {
 };
 exports.TasksModule = TasksModule;
@@ -53,6 +54,7 @@ exports.TasksModule = TasksModule = __decorate([
             task_dependencies_repository_1.TaskDependenciesRepository,
             task_dependencies_service_1.TaskDependenciesService,
             task_deadline_notification_scheduler_service_1.TaskDeadlineNotificationSchedulerService,
+            workflow_shadow_monitor_scheduler_1.WorkflowShadowMonitorScheduler,
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,
         ],

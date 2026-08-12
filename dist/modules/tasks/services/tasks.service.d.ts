@@ -66,6 +66,7 @@ export declare class TasksService {
                 acceptanceCriteria: string | null;
                 status: TaskStatus;
                 workflowStatusId: string | null;
+                workflowStatusKey: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
                 parentId: string | null;
@@ -152,6 +153,7 @@ export declare class TasksService {
                 acceptanceCriteria: string | null;
                 status: TaskStatus;
                 workflowStatusId: string | null;
+                workflowStatusKey: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
                 parentId: string | null;
@@ -228,6 +230,7 @@ export declare class TasksService {
                 acceptanceCriteria: string | null;
                 status: TaskStatus;
                 workflowStatusId: string | null;
+                workflowStatusKey: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
                 parentId: string | null;
@@ -306,6 +309,7 @@ export declare class TasksService {
                 acceptanceCriteria: string | null;
                 status: TaskStatus;
                 workflowStatusId: string | null;
+                workflowStatusKey: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
                 parentId: string | null;
@@ -379,6 +383,7 @@ export declare class TasksService {
                 acceptanceCriteria: string | null;
                 status: TaskStatus;
                 workflowStatusId: string | null;
+                workflowStatusKey: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
                 parentId: string | null;
@@ -452,6 +457,7 @@ export declare class TasksService {
                 acceptanceCriteria: string | null;
                 status: TaskStatus;
                 workflowStatusId: string | null;
+                workflowStatusKey: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
                 parentId: string | null;
@@ -611,6 +617,7 @@ export declare class TasksService {
                 acceptanceCriteria: string | null;
                 status: TaskStatus;
                 workflowStatusId: string | null;
+                workflowStatusKey: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
                 parentId: string | null;
@@ -684,6 +691,7 @@ export declare class TasksService {
                 acceptanceCriteria: string | null;
                 status: TaskStatus;
                 workflowStatusId: string | null;
+                workflowStatusKey: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
                 parentId: string | null;
@@ -757,6 +765,7 @@ export declare class TasksService {
                 acceptanceCriteria: string | null;
                 status: TaskStatus;
                 workflowStatusId: string | null;
+                workflowStatusKey: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
                 parentId: string | null;
@@ -830,6 +839,7 @@ export declare class TasksService {
                 acceptanceCriteria: string | null;
                 status: TaskStatus;
                 workflowStatusId: string | null;
+                workflowStatusKey: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
                 parentId: string | null;
@@ -903,6 +913,7 @@ export declare class TasksService {
                 acceptanceCriteria: string | null;
                 status: TaskStatus;
                 workflowStatusId: string | null;
+                workflowStatusKey: TaskStatus;
                 taskType: TaskType;
                 priority: TaskPriority;
                 parentId: string | null;

@@ -38,28 +38,43 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 var MailService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MailService = void 0;
 const common_1 = require("@nestjs/common");
 const nodemailer = __importStar(require("nodemailer"));
 const mail_config_1 = require("../../../config/mail.config");
+const observability_service_1 = require("../../observability/observability.service");
 const BREVO_ENDPOINT = 'https://api.brevo.com/v3/smtp/email';
 const REQUEST_TIMEOUT_MS = 15_000;
 let MailService = MailService_1 = class MailService {
+    observability;
     logger = new common_1.Logger(MailService_1.name);
     transporter;
+    constructor(observability) {
+        this.observability = observability;
+    }
     async sendMail(input) {
         const config = (0, mail_config_1.mailConfig)();
-        switch (config.provider) {
-            case 'smtp':
-                await this.sendViaSmtp(input);
-                break;
-            case 'brevo':
-                await this.sendViaBrevo(input);
-                break;
-            default:
-                this.logToConsole(input);
+        const started = Date.now();
+        try {
+            switch (config.provider) {
+                case 'smtp':
+                    await this.sendViaSmtp(input);
+                    break;
+                case 'brevo':
+                    await this.sendViaBrevo(input);
+                    break;
+                default: this.logToConsole(input);
+            }
+            await this.observability?.record({ kind: 'EMAIL', status: 'SUCCESS', operation: `mail.${config.provider}`, durationMs: Date.now() - started, error: null, metadata: { subject: input.subject, recipientDomain: input.to.split('@')[1] ?? 'unknown' } });
+        }
+        catch (error) {
+            await this.observability?.record({ kind: 'EMAIL', status: 'FAILED', operation: `mail.${config.provider}`, durationMs: Date.now() - started, error: error instanceof Error ? error.message : String(error), metadata: { subject: input.subject, recipientDomain: input.to.split('@')[1] ?? 'unknown' } });
+            throw error;
         }
     }
     async sendMailSafely(input) {
@@ -143,6 +158,7 @@ let MailService = MailService_1 = class MailService {
 };
 exports.MailService = MailService;
 exports.MailService = MailService = MailService_1 = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [observability_service_1.ObservabilityService])
 ], MailService);
 //# sourceMappingURL=mail.service.js.map

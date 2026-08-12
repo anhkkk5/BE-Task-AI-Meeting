@@ -9,6 +9,7 @@ import { UserStatus } from '../users/enums/user-status.enum';
 import { User } from '../users/entities/user.entity';
 import { Workspace } from '../workspaces/entities/workspace.entity';
 import { WorkspaceStatus } from '../../common/enums/workspace-status.enum';
+import { ObservabilityService } from '../observability/observability.service';
 
 @Injectable()
 export class AdminService {
@@ -19,6 +20,7 @@ export class AdminService {
     private readonly workspaceRepo: Repository<Workspace>,
     @InjectDataSource()
     private readonly dataSource: DataSource,
+    private readonly observability: ObservabilityService,
   ) {}
 
   // ===== SYSTEM STATS =====
@@ -139,9 +141,11 @@ export class AdminService {
     const user = await this.userRepo.findOne({ where: { id: targetUserId } });
     if (!user) throw new NotFoundException('User not found');
 
+    const before = user.status;
     user.status =
       user.status === UserStatus.Active ? UserStatus.Inactive : UserStatus.Active;
     await this.userRepo.save(user);
+    await this.observability.audit({ actorId: adminId, action: user.status === UserStatus.Active ? 'USER_ENABLED' : 'USER_DISABLED', targetType: 'USER', targetId: user.id, before: { status: before }, after: { status: user.status }, metadata: null });
 
     return {
       success: true,
@@ -158,8 +162,10 @@ export class AdminService {
     const user = await this.userRepo.findOne({ where: { id: targetUserId } });
     if (!user) throw new NotFoundException('User not found');
 
+    const before = user.isSystemAdmin;
     user.isSystemAdmin = !user.isSystemAdmin;
     await this.userRepo.save(user);
+    await this.observability.audit({ actorId: adminId, action: user.isSystemAdmin ? 'ADMIN_GRANTED' : 'ADMIN_REVOKED', targetType: 'USER', targetId: user.id, before: { isSystemAdmin: before }, after: { isSystemAdmin: user.isSystemAdmin }, metadata: null });
 
     return {
       success: true,
@@ -237,15 +243,17 @@ export class AdminService {
     };
   }
 
-  async toggleWorkspaceStatus(workspaceId: string) {
+  async toggleWorkspaceStatus(adminId: string, workspaceId: string) {
     const ws = await this.workspaceRepo.findOne({ where: { id: workspaceId } });
     if (!ws) throw new NotFoundException('Workspace not found');
 
+    const before = ws.status;
     ws.status =
       ws.status === WorkspaceStatus.Active
         ? WorkspaceStatus.Archived
         : WorkspaceStatus.Active;
     await this.workspaceRepo.save(ws);
+    await this.observability.audit({ actorId: adminId, action: ws.status === WorkspaceStatus.Active ? 'WORKSPACE_RESTORED' : 'WORKSPACE_ARCHIVED', targetType: 'WORKSPACE', targetId: ws.id, before: { status: before }, after: { status: ws.status }, metadata: { name: ws.name } });
 
     return {
       success: true,

@@ -139,6 +139,8 @@ export class AiDraftService {
         title: task.title,
         description: task.description ?? null,
         status: task.status,
+        workflowStatusId: task.workflowStatusId,
+        workflowStatusKey: task.workflowStatusKey ?? task.status,
         dueDate: task.dueDate ?? null,
         assigneeName: task.assignee?.fullName ?? null,
       },

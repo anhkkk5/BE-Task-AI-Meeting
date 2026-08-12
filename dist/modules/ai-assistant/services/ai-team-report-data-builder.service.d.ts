@@ -181,6 +181,8 @@ export declare class AiTeamReportDataBuilderService {
             taskCode: string;
             title: string;
             status: TaskStatus;
+            workflowStatusId: string | null;
+            workflowStatusKey: TaskStatus;
             sprintId: string | null;
             assigneeId: string | null;
             assigneeName: string | null;
@@ -272,6 +274,8 @@ export declare class AiTeamReportDataBuilderService {
         taskCode: string;
         title: string;
         status: TaskStatus;
+        workflowStatusId: string | null;
+        workflowStatusKey: TaskStatus;
         sprintId: string | null;
         assigneeId: string | null;
         assigneeName: string | null;

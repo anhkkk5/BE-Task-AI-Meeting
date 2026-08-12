@@ -38,6 +38,7 @@ const users_module_1 = require("./modules/users/users.module");
 const workspaces_module_1 = require("./modules/workspaces/workspaces.module");
 const notifications_module_1 = require("./modules/notifications/notifications.module");
 const automation_module_1 = require("./modules/automation/automation.module");
+const observability_module_1 = require("./modules/observability/observability.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -59,6 +60,7 @@ exports.AppModule = AppModule = __decorate([
                 ]
                 : []),
             redis_module_1.RedisModule,
+            observability_module_1.ObservabilityModule,
             mail_module_1.MailModule,
             schedule_1.ScheduleModule.forRoot(),
             admin_module_1.AdminModule,

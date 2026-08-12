@@ -24,6 +24,7 @@ import { MeetingSummaryInputData } from './ai-meeting-summary-data-builder.servi
 import { PersonalizedMeetingSummaryInputData } from './ai-personalized-meeting-summary-data-builder.service';
 import { PersonalReportInputData } from './ai-report-data-builder.service';
 import { TeamReportInputData } from './ai-team-report-data-builder.service';
+import { ObservabilityService } from '../../observability/observability.service';
 
 export type AiProviderResult<TOutput = PersonalDailyReportOutput> = {
   model: string;
@@ -43,10 +44,12 @@ type GroqChatResponse = {
       content?: string | null;
     };
   }[];
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
 };
 
 @Injectable()
 export class AiProviderService {
+  constructor(private readonly observability: ObservabilityService) {}
   async generateProjectAssistantAnswer(
     prompt: string,
     fallback: ProjectAssistantOutput,
@@ -691,6 +694,7 @@ export class AiProviderService {
     system: string;
     user: string;
   }): Promise<TOutput> {
+    const started = Date.now();
     const response = await fetch(
       'https://api.groq.com/openai/v1/chat/completions',
       {
@@ -723,6 +727,7 @@ export class AiProviderService {
     const rawText = await response.text();
 
     if (!response.ok) {
+      await this.observability?.record({ kind: 'AI', status: 'FAILED', operation: `groq.${params.model}`, durationMs: Date.now() - started, inputTokens: null, outputTokens: null, estimatedCostUsd: null, error: `HTTP ${response.status}: ${rawText.slice(0, 500)}`, metadata: null });
       throw new Error(`Groq API failed: ${response.status} ${rawText}`);
     }
 
@@ -732,6 +737,12 @@ export class AiProviderService {
     if (!content) {
       throw new Error('Groq API returned empty content');
     }
+
+    const inputTokens = groqResponse.usage?.prompt_tokens ?? 0;
+    const outputTokens = groqResponse.usage?.completion_tokens ?? 0;
+    const inputRate = Number(process.env.AI_INPUT_COST_PER_MILLION_USD ?? 0);
+    const outputRate = Number(process.env.AI_OUTPUT_COST_PER_MILLION_USD ?? 0);
+    await this.observability?.record({ kind: 'AI', status: 'SUCCESS', operation: `groq.${params.model}`, durationMs: Date.now() - started, inputTokens, outputTokens, estimatedCostUsd: (inputTokens * inputRate + outputTokens * outputRate) / 1_000_000, error: null, metadata: { model: groqResponse.model ?? params.model } });
 
     return this.parseJsonContent<TOutput>(content);
   }

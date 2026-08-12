@@ -41,4 +41,5 @@ export declare class TasksRepository {
     private blockedExistsSql;
     private blockingExistsSql;
     private attachDependencyState;
+    private hydrateCanonicalStatus;
 }

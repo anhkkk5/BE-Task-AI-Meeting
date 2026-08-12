@@ -65,6 +65,7 @@ export declare class AiTeamReportActionItemService {
                 acceptanceCriteria: string | null;
                 status: import("../../../common/enums/task-status.enum").TaskStatus;
                 workflowStatusId: string | null;
+                workflowStatusKey: import("../../../common/enums/task-status.enum").TaskStatus;
                 taskType: import("../../../common/enums/task-type.enum").TaskType;
                 priority: import("../../../common/enums/task-priority.enum").TaskPriority;
                 parentId: string | null;

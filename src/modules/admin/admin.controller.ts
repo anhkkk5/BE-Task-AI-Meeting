@@ -19,13 +19,14 @@ import { SystemAdminGuard } from '../../common/guards/system-admin.guard';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
 import type { AuthUser } from '../auth/types/auth-user.type';
 import { AdminService } from './admin.service';
+import { ObservabilityService } from '../observability/observability.service';
 
 @Controller('admin')
 @ApiTags('System Admin')
 @ApiBearerAuth()
 @UseGuards(AccessTokenGuard, SystemAdminGuard)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminService, private readonly observability: ObservabilityService) {}
 
   // ===== SYSTEM STATS =====
   @Get('stats')
@@ -36,6 +37,12 @@ export class AdminController {
   getSystemStats() {
     return this.adminService.getSystemStats();
   }
+
+  @Get('observability')
+  getObservability(@Query('hours') hours?: string) { return this.observability.summary(Math.min(168, Math.max(1, Number(hours) || 24))).then((data) => ({ success: true, message: 'Success', data })); }
+
+  @Get('audit-logs')
+  getAuditLogs(@Query('page') page?: string, @Query('limit') limit?: string) { return this.observability.auditLogs(Math.max(1, Number(page) || 1), Math.min(100, Math.max(1, Number(limit) || 50))).then((data) => ({ success: true, message: 'Success', data })); }
 
   // ===== USER MANAGEMENT =====
   @Get('users')
@@ -106,7 +113,7 @@ export class AdminController {
   @Patch('workspaces/:workspaceId/status')
   @ApiOperation({ summary: '[ADMIN] Bật / Archive workspace' })
   @ApiParam({ name: 'workspaceId' })
-  toggleWorkspaceStatus(@Param('workspaceId') workspaceId: string) {
-    return this.adminService.toggleWorkspaceStatus(workspaceId);
+  toggleWorkspaceStatus(@CurrentUser() admin: AuthUser, @Param('workspaceId') workspaceId: string) {
+    return this.adminService.toggleWorkspaceStatus(admin.id, workspaceId);
   }
 }

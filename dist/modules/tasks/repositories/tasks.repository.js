@@ -43,8 +43,8 @@ let TasksRepository = class TasksRepository {
             },
         });
     }
-    findByIdAndProject(taskId, projectId) {
-        return this.repository.findOne({
+    async findByIdAndProject(taskId, projectId) {
+        const task = await this.repository.findOne({
             where: {
                 id: taskId,
                 projectId,
@@ -59,6 +59,7 @@ let TasksRepository = class TasksRepository {
                 children: true,
             },
         });
+        return task ? this.hydrateCanonicalStatus(task) : null;
     }
     async findByProject(projectId, query) {
         const page = query.page ?? 1;
@@ -135,27 +136,30 @@ let TasksRepository = class TasksRepository {
         Object.assign(task, data);
         return this.repository.save(task);
     }
-    findIncompleteChildren(parentId) {
-        return this.repository.createQueryBuilder('task')
+    async findIncompleteChildren(parentId) {
+        const tasks = await this.repository.createQueryBuilder('task')
             .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
             .where('task.parentId = :parentId', { parentId })
             .andWhere('task.deletedAt IS NULL')
             .andWhere('workflowStatus.category != :doneCategory', { doneCategory: 'DONE' })
             .getMany();
+        return Promise.all(tasks.map((task) => this.hydrateCanonicalStatus(task)));
     }
-    findChildren(parentId) {
-        return this.repository.find({ where: { parentId, deletedAt: (0, typeorm_2.IsNull)() } });
+    async findChildren(parentId) {
+        const tasks = await this.repository.find({ where: { parentId, deletedAt: (0, typeorm_2.IsNull)() } });
+        return Promise.all(tasks.map((task) => this.hydrateCanonicalStatus(task)));
     }
-    findDuplicateCandidates(projectId, title, limit = 5) {
+    async findDuplicateCandidates(projectId, title, limit = 5) {
         const tokens = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
             .replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((token) => token.length >= 4).slice(0, 6);
         if (!tokens.length)
-            return Promise.resolve([]);
+            return [];
         const builder = this.repository.createQueryBuilder('task')
             .where('task.projectId = :projectId', { projectId })
             .andWhere('task.deletedAt IS NULL');
         builder.andWhere(`(${tokens.map((_, index) => `LOWER(task.title) LIKE :token${index}`).join(' OR ')})`, Object.fromEntries(tokens.map((token, index) => [`token${index}`, `%${token}%`])));
-        return builder.orderBy('task.updatedAt', 'DESC').take(limit).getMany();
+        const tasks = await builder.orderBy('task.updatedAt', 'DESC').take(limit).getMany();
+        return Promise.all(tasks.map((task) => this.hydrateCanonicalStatus(task)));
     }
     async findWorkflowStatusId(templateId, status) {
         if (!templateId)
@@ -204,9 +208,20 @@ let TasksRepository = class TasksRepository {
         return items.map((task, index) => {
             task.isBlocked = Number(raw[index]?.task_isBlocked ?? 0) === 1;
             task.isBlocking = Number(raw[index]?.task_isBlocking ?? 0) === 1;
-            task.status = raw[index]?.task_workflowStatusKey ?? task.status;
+            task.workflowStatusKey = raw[index]?.task_workflowStatusKey;
+            task.status = task.workflowStatusKey ?? task.status;
             return task;
         });
+    }
+    async hydrateCanonicalStatus(task) {
+        const workflow = await this.findWorkflowStatusById(task.workflowStatusId);
+        task.workflowStatusKey = workflow?.key;
+        task.status = workflow?.key ?? task.status;
+        if (task.children?.length)
+            await Promise.all(task.children.map((child) => this.hydrateCanonicalStatus(child)));
+        if (task.parent)
+            await this.hydrateCanonicalStatus(task.parent);
+        return task;
     }
 };
 exports.TasksRepository = TasksRepository;

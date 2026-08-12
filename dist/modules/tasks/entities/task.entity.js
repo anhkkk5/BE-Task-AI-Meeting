@@ -20,6 +20,7 @@ const user_entity_1 = require("../../users/entities/user.entity");
 let Task = class Task {
     isBlocked;
     isBlocking;
+    workflowStatusKey;
     id;
     projectId;
     sprintId;

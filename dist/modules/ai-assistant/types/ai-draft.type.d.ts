@@ -5,6 +5,8 @@ export type HandoverDraftInputData = {
         title: string;
         description: string | null;
         status: string;
+        workflowStatusId: string | null;
+        workflowStatusKey: string;
         dueDate: string | null;
         assigneeName: string | null;
     };
