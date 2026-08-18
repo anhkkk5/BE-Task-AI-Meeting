@@ -19,7 +19,7 @@ class CreateTaskActivityLogs1786040000000 {
         PRIMARY KEY (\`id\`),
         CONSTRAINT \`FK_task_activity_task\` FOREIGN KEY (\`task_id\`) REFERENCES \`tasks\`(\`id\`) ON DELETE CASCADE,
         CONSTRAINT \`FK_task_activity_actor\` FOREIGN KEY (\`actor_id\`) REFERENCES \`users\`(\`id\`) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+      ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin
     `);
     }
     async down(queryRunner) {

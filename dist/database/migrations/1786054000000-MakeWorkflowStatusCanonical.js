@@ -14,14 +14,14 @@ class MakeWorkflowStatusCanonical1786054000000 {
       WHERE task.workflow_status_id IS NULL
     `);
         await queryRunner.query('ALTER TABLE `tasks` DROP FOREIGN KEY `FK_task_workflow_status`');
-        await queryRunner.query('ALTER TABLE `tasks` MODIFY `workflow_status_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+        await queryRunner.query('ALTER TABLE `tasks` MODIFY `workflow_status_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL');
         await queryRunner.query('ALTER TABLE `tasks` ADD CONSTRAINT `FK_task_workflow_status` FOREIGN KEY (`workflow_status_id`) REFERENCES `workflow_statuses`(`id`) ON DELETE RESTRICT');
         await queryRunner.query('CREATE INDEX `IDX_tasks_workflow_status_id` ON `tasks` (`workflow_status_id`)');
     }
     async down(queryRunner) {
         await queryRunner.query('DROP INDEX `IDX_tasks_workflow_status_id` ON `tasks`');
         await queryRunner.query('ALTER TABLE `tasks` DROP FOREIGN KEY `FK_task_workflow_status`');
-        await queryRunner.query('ALTER TABLE `tasks` MODIFY `workflow_status_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
+        await queryRunner.query('ALTER TABLE `tasks` MODIFY `workflow_status_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL');
         await queryRunner.query('ALTER TABLE `tasks` ADD CONSTRAINT `FK_task_workflow_status` FOREIGN KEY (`workflow_status_id`) REFERENCES `workflow_statuses`(`id`) ON DELETE SET NULL');
     }
 }

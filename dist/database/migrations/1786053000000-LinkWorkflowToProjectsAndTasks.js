@@ -11,8 +11,8 @@ class LinkWorkflowToProjectsAndTasks1786053000000 {
         const transitions = [['21', 'BACKLOG', 'TODO'], ['22', 'TODO', 'BACKLOG'], ['23', 'TODO', 'IN_PROGRESS'], ['24', 'IN_PROGRESS', 'TODO'], ['25', 'IN_PROGRESS', 'REVIEW'], ['26', 'REVIEW', 'IN_PROGRESS'], ['27', 'REVIEW', 'DONE'], ['28', 'DONE', 'IN_PROGRESS']];
         for (const [suffix, from, to] of transitions)
             await q.query('INSERT INTO `workflow_transitions` (`id`,`template_id`,`from_key`,`to_key`,`allowed_roles`) VALUES (?,?,?,?,NULL)', [`00000000-0000-4000-8000-0000000000${suffix}`, '00000000-0000-4000-8000-000000000001', from, to]);
-        await q.query('ALTER TABLE `projects` ADD `workflow_template_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
-        await q.query('ALTER TABLE `tasks` ADD `workflow_status_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
+        await q.query('ALTER TABLE `projects` ADD `workflow_template_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL');
+        await q.query('ALTER TABLE `tasks` ADD `workflow_status_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL');
         await q.query("UPDATE `projects` SET `workflow_template_id`='00000000-0000-4000-8000-000000000001' WHERE `workflow_template_id` IS NULL");
         await q.query("UPDATE `tasks` t JOIN `workflow_statuses` s ON s.template_id='00000000-0000-4000-8000-000000000001' AND s.status_key=t.status SET t.workflow_status_id=s.id");
         await q.query('ALTER TABLE `projects` ADD CONSTRAINT `FK_project_workflow_template` FOREIGN KEY (`workflow_template_id`) REFERENCES `workflow_templates`(`id`) ON DELETE SET NULL');

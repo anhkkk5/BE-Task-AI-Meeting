@@ -6,7 +6,7 @@ class AddTaskMetadata1786048000000 {
     async up(queryRunner) {
         await queryRunner.query('ALTER TABLE `tasks` ADD `labels` json NULL');
         await queryRunner.query('ALTER TABLE `tasks` ADD `acceptance_criteria` text NULL');
-        await queryRunner.query('ALTER TABLE `tasks` ADD `reporter_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
+        await queryRunner.query('ALTER TABLE `tasks` ADD `reporter_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL');
         await queryRunner.query('ALTER TABLE `tasks` ADD `completed_at` datetime NULL');
         await queryRunner.query('CREATE INDEX `IDX_tasks_reporter_id` ON `tasks` (`reporter_id`)');
         await queryRunner.query('ALTER TABLE `tasks` ADD CONSTRAINT `FK_tasks_reporter_id` FOREIGN KEY (`reporter_id`) REFERENCES `users`(`id`) ON DELETE SET NULL');

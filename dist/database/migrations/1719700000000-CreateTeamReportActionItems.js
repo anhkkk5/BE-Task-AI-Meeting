@@ -33,7 +33,7 @@ class CreateTeamReportActionItems1719700000000 {
         CONSTRAINT \`FK_team_report_item_receiver\` FOREIGN KEY (\`suggested_receiver_id\`) REFERENCES \`users\`(\`id\`) ON DELETE SET NULL,
         CONSTRAINT \`FK_team_report_item_handover\` FOREIGN KEY (\`handover_id\`) REFERENCES \`shift_handovers\`(\`id\`) ON DELETE SET NULL,
         CONSTRAINT \`FK_team_report_item_handler\` FOREIGN KEY (\`handled_by\`) REFERENCES \`users\`(\`id\`) ON DELETE SET NULL
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin
     `);
     }
     async down(queryRunner) {
