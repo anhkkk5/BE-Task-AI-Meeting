@@ -4,6 +4,9 @@ import {
   Delete,
   Get,
   Patch,
+  Post,
+  UploadedFile,
+  UseInterceptors,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -11,7 +14,10 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { AccessTokenGuard } from '../../auth/guards/access-token.guard';
 import type { AuthUser } from '../../auth/types/auth-user.type';
@@ -20,6 +26,7 @@ import { UpdateAiUserPreferencesDto } from '../dto/update-ai-user-preferences.dt
 import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { AiUserPreferencesService } from '../services/ai-user-preferences.service';
 import { UsersService } from '../services/users.service';
+import { AvatarUploadService } from '../services/avatar-upload.service';
 
 @Controller('users')
 @ApiTags('Users')
@@ -29,6 +36,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly aiUserPreferencesService: AiUserPreferencesService,
+    private readonly avatarUploadService: AvatarUploadService,
   ) {}
 
   @Get('me/ai-preferences')
@@ -74,6 +82,19 @@ export class UsersController {
   @ApiResponse({ status: 401, description: 'Access token khong hop le.' })
   updateProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdateProfileDto) {
     return this.usersService.updateProfile(user.id, dto);
+  }
+
+  @Post('me/avatar')
+  @UseInterceptors(FileInterceptor('avatar', { limits: { fileSize: 5 * 1024 * 1024 } }))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ schema: { type: 'object', properties: { avatar: { type: 'string', format: 'binary' } }, required: ['avatar'] } })
+  @ApiOperation({ summary: 'Tải ảnh đại diện lên Cloudinary' })
+  async uploadAvatar(
+    @CurrentUser() user: AuthUser,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const uploaded = await this.avatarUploadService.upload(user.id, file);
+    return this.usersService.updateProfile(user.id, { avatarUrl: uploaded.secure_url });
   }
 
   @Patch('me/password')

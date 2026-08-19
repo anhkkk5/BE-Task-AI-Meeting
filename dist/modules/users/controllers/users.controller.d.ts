@@ -4,10 +4,12 @@ import { UpdateAiUserPreferencesDto } from '../dto/update-ai-user-preferences.dt
 import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { AiUserPreferencesService } from '../services/ai-user-preferences.service';
 import { UsersService } from '../services/users.service';
+import { AvatarUploadService } from '../services/avatar-upload.service';
 export declare class UsersController {
     private readonly usersService;
     private readonly aiUserPreferencesService;
-    constructor(usersService: UsersService, aiUserPreferencesService: AiUserPreferencesService);
+    private readonly avatarUploadService;
+    constructor(usersService: UsersService, aiUserPreferencesService: AiUserPreferencesService, avatarUploadService: AvatarUploadService);
     getAiPreferences(user: AuthUser): Promise<{
         success: boolean;
         message: string;
@@ -41,6 +43,23 @@ export declare class UsersController {
         };
     }>;
     updateProfile(user: AuthUser, dto: UpdateProfileDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: string;
+            email: string;
+            fullName: string;
+            avatarUrl: string | null;
+            phoneNumber: string | null;
+            jobTitle: string | null;
+            status: import("../enums/user-status.enum").UserStatus;
+            isSystemAdmin: boolean;
+            mfaEnabled: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }>;
+    uploadAvatar(user: AuthUser, file: Express.Multer.File): Promise<{
         success: boolean;
         message: string;
         data: {

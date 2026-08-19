@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const platform_express_1 = require("@nestjs/platform-express");
 const current_user_decorator_1 = require("../../../common/decorators/current-user.decorator");
 const access_token_guard_1 = require("../../auth/guards/access-token.guard");
 const change_password_dto_1 = require("../dto/change-password.dto");
@@ -22,12 +23,15 @@ const update_ai_user_preferences_dto_1 = require("../dto/update-ai-user-preferen
 const update_profile_dto_1 = require("../dto/update-profile.dto");
 const ai_user_preferences_service_1 = require("../services/ai-user-preferences.service");
 const users_service_1 = require("../services/users.service");
+const avatar_upload_service_1 = require("../services/avatar-upload.service");
 let UsersController = class UsersController {
     usersService;
     aiUserPreferencesService;
-    constructor(usersService, aiUserPreferencesService) {
+    avatarUploadService;
+    constructor(usersService, aiUserPreferencesService, avatarUploadService) {
         this.usersService = usersService;
         this.aiUserPreferencesService = aiUserPreferencesService;
+        this.avatarUploadService = avatarUploadService;
     }
     getAiPreferences(user) {
         return this.aiUserPreferencesService.getPreferences(user.id);
@@ -43,6 +47,10 @@ let UsersController = class UsersController {
     }
     updateProfile(user, dto) {
         return this.usersService.updateProfile(user.id, dto);
+    }
+    async uploadAvatar(user, file) {
+        const uploaded = await this.avatarUploadService.upload(user.id, file);
+        return this.usersService.updateProfile(user.id, { avatarUrl: uploaded.secure_url });
     }
     changePassword(user, dto) {
         return this.usersService.changePassword(user.id, dto);
@@ -103,6 +111,18 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "updateProfile", null);
 __decorate([
+    (0, common_1.Post)('me/avatar'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('avatar', { limits: { fileSize: 5 * 1024 * 1024 } })),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, swagger_1.ApiBody)({ schema: { type: 'object', properties: { avatar: { type: 'string', format: 'binary' } }, required: ['avatar'] } }),
+    (0, swagger_1.ApiOperation)({ summary: 'Tải ảnh đại diện lên Cloudinary' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "uploadAvatar", null);
+__decorate([
     (0, common_1.Patch)('me/password'),
     (0, swagger_1.ApiOperation)({
         summary: 'Doi mat khau',
@@ -126,6 +146,7 @@ exports.UsersController = UsersController = __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard),
     __metadata("design:paramtypes", [users_service_1.UsersService,
-        ai_user_preferences_service_1.AiUserPreferencesService])
+        ai_user_preferences_service_1.AiUserPreferencesService,
+        avatar_upload_service_1.AvatarUploadService])
 ], UsersController);
 //# sourceMappingURL=users.controller.js.map
