@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -108,6 +109,33 @@ export class AdminController {
       search,
       status,
     });
+  }
+
+  @Post('workspaces')
+  @ApiOperation({ summary: '[ADMIN] Tạo workspace và chỉ định chủ sở hữu' })
+  createWorkspace(
+    @CurrentUser() admin: AuthUser,
+    @Body() body: { name: string; description?: string; ownerId?: string },
+  ) {
+    return this.adminService.createWorkspace(admin.id, body);
+  }
+
+  @Get('workspaces/:workspaceId')
+  @ApiOperation({ summary: '[ADMIN] Xem chủ sở hữu, thành viên, dự án và thống kê workspace' })
+  @ApiParam({ name: 'workspaceId' })
+  getWorkspaceDetail(@Param('workspaceId') workspaceId: string) {
+    return this.adminService.getWorkspaceDetail(workspaceId);
+  }
+
+  @Patch('workspaces/:workspaceId')
+  @ApiOperation({ summary: '[ADMIN] Sửa thông tin và gói dịch vụ workspace' })
+  @ApiParam({ name: 'workspaceId' })
+  updateWorkspace(
+    @CurrentUser() admin: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Body() body: { name?: string; description?: string; plan?: string },
+  ) {
+    return this.adminService.updateWorkspace(admin.id, workspaceId, body);
   }
 
   @Patch('workspaces/:workspaceId/status')

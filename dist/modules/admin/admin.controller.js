@@ -54,6 +54,15 @@ let AdminController = class AdminController {
             status,
         });
     }
+    createWorkspace(admin, body) {
+        return this.adminService.createWorkspace(admin.id, body);
+    }
+    getWorkspaceDetail(workspaceId) {
+        return this.adminService.getWorkspaceDetail(workspaceId);
+    }
+    updateWorkspace(admin, workspaceId, body) {
+        return this.adminService.updateWorkspace(admin.id, workspaceId, body);
+    }
     toggleWorkspaceStatus(admin, workspaceId) {
         return this.adminService.toggleWorkspaceStatus(admin.id, workspaceId);
     }
@@ -138,6 +147,35 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "getAllWorkspaces", null);
+__decorate([
+    (0, common_1.Post)('workspaces'),
+    (0, swagger_1.ApiOperation)({ summary: '[ADMIN] Tạo workspace và chỉ định chủ sở hữu' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "createWorkspace", null);
+__decorate([
+    (0, common_1.Get)('workspaces/:workspaceId'),
+    (0, swagger_1.ApiOperation)({ summary: '[ADMIN] Xem chủ sở hữu, thành viên, dự án và thống kê workspace' }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId' }),
+    __param(0, (0, common_1.Param)('workspaceId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "getWorkspaceDetail", null);
+__decorate([
+    (0, common_1.Patch)('workspaces/:workspaceId'),
+    (0, swagger_1.ApiOperation)({ summary: '[ADMIN] Sửa thông tin và gói dịch vụ workspace' }),
+    (0, swagger_1.ApiParam)({ name: 'workspaceId' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "updateWorkspace", null);
 __decorate([
     (0, common_1.Patch)('workspaces/:workspaceId/status'),
     (0, swagger_1.ApiOperation)({ summary: '[ADMIN] Bật / Archive workspace' }),

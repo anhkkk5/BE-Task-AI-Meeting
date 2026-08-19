@@ -138,6 +138,83 @@ export declare class AdminController {
             totalPages: number;
         };
     }>;
+    createWorkspace(admin: AuthUser, body: {
+        name: string;
+        description?: string;
+        ownerId?: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            workspace: {
+                owner: any;
+                id: string;
+                name: string;
+                slug: string;
+                description: string | null;
+                ownerId: string;
+                plan: import("../../common/enums/workspace-plan.enum").WorkspacePlan;
+                status: import("../../common/enums/workspace-status.enum").WorkspaceStatus;
+                members: import("../workspaces/entities/workspace-member.entity").WorkspaceMember[];
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+            };
+            members: any;
+            projects: any;
+            totals: any;
+        };
+    }>;
+    getWorkspaceDetail(workspaceId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            workspace: {
+                owner: any;
+                id: string;
+                name: string;
+                slug: string;
+                description: string | null;
+                ownerId: string;
+                plan: import("../../common/enums/workspace-plan.enum").WorkspacePlan;
+                status: import("../../common/enums/workspace-status.enum").WorkspaceStatus;
+                members: import("../workspaces/entities/workspace-member.entity").WorkspaceMember[];
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+            };
+            members: any;
+            projects: any;
+            totals: any;
+        };
+    }>;
+    updateWorkspace(admin: AuthUser, workspaceId: string, body: {
+        name?: string;
+        description?: string;
+        plan?: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            workspace: {
+                owner: any;
+                id: string;
+                name: string;
+                slug: string;
+                description: string | null;
+                ownerId: string;
+                plan: import("../../common/enums/workspace-plan.enum").WorkspacePlan;
+                status: import("../../common/enums/workspace-status.enum").WorkspaceStatus;
+                members: import("../workspaces/entities/workspace-member.entity").WorkspaceMember[];
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+            };
+            members: any;
+            projects: any;
+            totals: any;
+        };
+    }>;
     toggleWorkspaceStatus(admin: AuthUser, workspaceId: string): Promise<{
         success: boolean;
         message: string;

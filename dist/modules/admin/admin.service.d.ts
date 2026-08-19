@@ -129,5 +129,82 @@ export declare class AdminService {
             status: WorkspaceStatus;
         };
     }>;
+    getWorkspaceDetail(workspaceId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            workspace: {
+                owner: any;
+                id: string;
+                name: string;
+                slug: string;
+                description: string | null;
+                ownerId: string;
+                plan: import("../../common/enums/workspace-plan.enum").WorkspacePlan;
+                status: WorkspaceStatus;
+                members: import("../workspaces/entities/workspace-member.entity").WorkspaceMember[];
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+            };
+            members: any;
+            projects: any;
+            totals: any;
+        };
+    }>;
+    createWorkspace(adminId: string, dto: {
+        name: string;
+        description?: string;
+        ownerId?: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            workspace: {
+                owner: any;
+                id: string;
+                name: string;
+                slug: string;
+                description: string | null;
+                ownerId: string;
+                plan: import("../../common/enums/workspace-plan.enum").WorkspacePlan;
+                status: WorkspaceStatus;
+                members: import("../workspaces/entities/workspace-member.entity").WorkspaceMember[];
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+            };
+            members: any;
+            projects: any;
+            totals: any;
+        };
+    }>;
+    updateWorkspace(adminId: string, workspaceId: string, dto: {
+        name?: string;
+        description?: string;
+        plan?: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            workspace: {
+                owner: any;
+                id: string;
+                name: string;
+                slug: string;
+                description: string | null;
+                ownerId: string;
+                plan: import("../../common/enums/workspace-plan.enum").WorkspacePlan;
+                status: WorkspaceStatus;
+                members: import("../workspaces/entities/workspace-member.entity").WorkspaceMember[];
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+            };
+            members: any;
+            projects: any;
+            totals: any;
+        };
+    }>;
     private toUserResponse;
 }

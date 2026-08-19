@@ -21,6 +21,8 @@ const user_entity_1 = require("../users/entities/user.entity");
 const workspace_entity_1 = require("../workspaces/entities/workspace.entity");
 const workspace_status_enum_1 = require("../../common/enums/workspace-status.enum");
 const observability_service_1 = require("../observability/observability.service");
+const crypto_1 = require("crypto");
+const slug_util_1 = require("../../common/utils/slug.util");
 let AdminService = class AdminService {
     userRepo;
     workspaceRepo;
@@ -161,7 +163,7 @@ let AdminService = class AdminService {
         const memberCounts = await this.dataSource.query(`SELECT workspace_id, COUNT(*) as cnt 
        FROM workspace_members 
        WHERE workspace_id IN (${items.map((w) => `'${w.id}'`).join(',') || "''"}) 
-         AND status = 'active'
+         AND status = 'ACTIVE'
        GROUP BY workspace_id`);
         const countMap = new Map(memberCounts.map((r) => [
             r.workspace_id,
@@ -206,6 +208,54 @@ let AdminService = class AdminService {
             message: `Workspace đã được ${ws.status === workspace_status_enum_1.WorkspaceStatus.Active ? 'kích hoạt' : 'lưu trữ'}.`,
             data: { id: ws.id, status: ws.status },
         };
+    }
+    async getWorkspaceDetail(workspaceId) {
+        const workspace = await this.workspaceRepo.findOne({ where: { id: workspaceId } });
+        if (!workspace)
+            throw new common_1.NotFoundException('Workspace not found');
+        const [owners, members, projects, totals] = await Promise.all([
+            this.dataSource.query('SELECT id,email,full_name,avatar_url,job_title FROM users WHERE id=? LIMIT 1', [workspace.ownerId]),
+            this.dataSource.query(`SELECT wm.id,wm.user_id userId,wm.role,wm.status,wm.joined_at joinedAt,u.full_name fullName,u.email,u.avatar_url avatarUrl,u.job_title jobTitle FROM workspace_members wm JOIN users u ON u.id=wm.user_id WHERE wm.workspace_id=? ORDER BY FIELD(wm.role,'OWNER','PROJECT_MANAGER','SCRUM_MASTER','MEMBER','VIEWER'),wm.created_at`, [workspaceId]),
+            this.dataSource.query(`SELECT p.id,p.name,p.key_code keyCode,p.status,p.created_by createdBy,p.created_at createdAt,u.full_name creatorName,(SELECT COUNT(*) FROM sprints s WHERE s.project_id=p.id AND s.deleted_at IS NULL) sprintCount,(SELECT COUNT(*) FROM tasks t WHERE t.project_id=p.id AND t.deleted_at IS NULL) taskCount FROM projects p LEFT JOIN users u ON u.id=p.created_by WHERE p.workspace_id=? AND p.deleted_at IS NULL ORDER BY p.created_at DESC`, [workspaceId]),
+            this.dataSource.query(`SELECT (SELECT COUNT(*) FROM workspace_members WHERE workspace_id=? AND status='ACTIVE') memberCount,(SELECT COUNT(*) FROM projects WHERE workspace_id=? AND deleted_at IS NULL) projectCount,(SELECT COUNT(*) FROM sprints s JOIN projects p ON p.id=s.project_id WHERE p.workspace_id=? AND s.deleted_at IS NULL) sprintCount,(SELECT COUNT(*) FROM tasks t JOIN projects p ON p.id=t.project_id WHERE p.workspace_id=? AND t.deleted_at IS NULL) taskCount`, [workspaceId, workspaceId, workspaceId, workspaceId]),
+        ]);
+        return { success: true, message: 'Success', data: { workspace: { ...workspace, owner: owners[0] ?? null }, members, projects, totals: totals[0] } };
+    }
+    async createWorkspace(adminId, dto) {
+        const name = dto.name?.trim();
+        if (!name)
+            throw new common_1.NotFoundException('Workspace name is required');
+        const ownerId = dto.ownerId || adminId;
+        const owner = await this.userRepo.findOne({ where: { id: ownerId } });
+        if (!owner)
+            throw new common_1.NotFoundException('Owner not found');
+        const base = (0, slug_util_1.createSlug)(name) || 'workspace';
+        let slug = base;
+        let suffix = 1;
+        while (await this.workspaceRepo.findOne({ where: { slug } }))
+            slug = `${base}-${++suffix}`;
+        const id = (0, crypto_1.randomUUID)();
+        await this.dataSource.transaction(async (manager) => {
+            await manager.query(`INSERT INTO workspaces (id,name,slug,description,owner_id,plan,status,created_at,updated_at) VALUES (?,?,?,?,?,'FREE','ACTIVE',NOW(),NOW())`, [id, name, slug, dto.description?.trim() || null, ownerId]);
+            await manager.query(`INSERT INTO workspace_members (id,workspace_id,user_id,role,status,joined_at,daily_capacity_hours,unavailable_dates,created_at,updated_at) VALUES (?,?,?,'OWNER','ACTIVE',NOW(),8,JSON_ARRAY(),NOW(),NOW())`, [(0, crypto_1.randomUUID)(), id, ownerId]);
+        });
+        await this.observability.audit({ actorId: adminId, action: 'WORKSPACE_CREATED', targetType: 'WORKSPACE', targetId: id, before: null, after: { name, ownerId }, metadata: null });
+        return this.getWorkspaceDetail(id);
+    }
+    async updateWorkspace(adminId, workspaceId, dto) {
+        const workspace = await this.workspaceRepo.findOne({ where: { id: workspaceId } });
+        if (!workspace)
+            throw new common_1.NotFoundException('Workspace not found');
+        const before = { name: workspace.name, description: workspace.description, plan: workspace.plan };
+        if (dto.name?.trim())
+            workspace.name = dto.name.trim();
+        if (dto.description !== undefined)
+            workspace.description = dto.description.trim() || null;
+        if (dto.plan && ['FREE', 'PRO', 'ENTERPRISE'].includes(dto.plan))
+            workspace.plan = dto.plan;
+        await this.workspaceRepo.save(workspace);
+        await this.observability.audit({ actorId: adminId, action: 'WORKSPACE_UPDATED', targetType: 'WORKSPACE', targetId: workspaceId, before, after: { name: workspace.name, description: workspace.description, plan: workspace.plan }, metadata: null });
+        return this.getWorkspaceDetail(workspaceId);
     }
     toUserResponse(user) {
         return {
