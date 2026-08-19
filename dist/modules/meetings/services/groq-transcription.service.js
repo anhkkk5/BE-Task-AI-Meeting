@@ -40,27 +40,36 @@ let GroqTranscriptionService = GroqTranscriptionService_1 = class GroqTranscript
     logger = new common_1.Logger(GroqTranscriptionService_1.name);
     async transcribe(file, options = {}) {
         this.validateAudio(file);
-        const apiKey = process.env.GROQ_API_KEY || process.env.AI_API_KEY;
+        const useOpenAi = process.env.AI_PROVIDER === 'openai';
+        const apiKey = useOpenAi
+            ? process.env.OPENAI_API_KEY
+            : process.env.GROQ_API_KEY || process.env.AI_API_KEY;
         if (!apiKey) {
-            throw new common_1.ServiceUnavailableException('Chua cau hinh GROQ_API_KEY cho chuyen am thanh thanh van ban');
+            throw new common_1.ServiceUnavailableException(useOpenAi
+                ? 'Chua cau hinh OPENAI_API_KEY cho chuyen am thanh thanh van ban'
+                : 'Chua cau hinh GROQ_API_KEY cho chuyen am thanh thanh van ban');
         }
-        const model = process.env.GROQ_TRANSCRIPTION_MODEL || 'whisper-large-v3';
-        const timeoutMs = Number(process.env.GROQ_TRANSCRIPTION_TIMEOUT_MS || 45000);
+        const model = useOpenAi
+            ? process.env.OPENAI_TRANSCRIPTION_MODEL || 'gpt-4o-mini-transcribe'
+            : process.env.GROQ_TRANSCRIPTION_MODEL || 'whisper-large-v3';
+        const timeoutMs = Number(process.env.AI_TRANSCRIPTION_TIMEOUT_MS || 45000);
         const formData = new FormData();
         const mimeType = file.mimetype?.split(';')[0].toLowerCase();
         const extension = AUDIO_EXTENSIONS[mimeType] ?? 'webm';
         formData.append('file', new Blob([new Uint8Array(file.buffer)], { type: mimeType }), file.originalname || `meeting-audio-${Date.now()}.${extension}`);
         formData.append('model', model);
-        formData.append('language', process.env.GROQ_TRANSCRIPTION_LANGUAGE || 'vi');
+        formData.append('language', process.env.AI_TRANSCRIPTION_LANGUAGE || 'vi');
         const prompt = this.buildPrompt(options);
         if (prompt)
             formData.append('prompt', prompt);
-        formData.append('response_format', 'verbose_json');
+        formData.append('response_format', useOpenAi ? 'json' : 'verbose_json');
         formData.append('temperature', '0');
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), timeoutMs);
         try {
-            const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+            const response = await fetch(useOpenAi
+                ? 'https://api.openai.com/v1/audio/transcriptions'
+                : 'https://api.groq.com/openai/v1/audio/transcriptions', {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${apiKey}` },
                 body: formData,
@@ -70,7 +79,8 @@ let GroqTranscriptionService = GroqTranscriptionService_1 = class GroqTranscript
                 .json()
                 .catch(() => ({})));
             if (!response.ok) {
-                throw new common_1.BadGatewayException(payload.error?.message || 'Groq khong the xu ly doan am thanh');
+                throw new common_1.BadGatewayException(payload.error?.message ||
+                    `${useOpenAi ? 'OpenAI' : 'Groq'} khong the xu ly doan am thanh`);
             }
             return {
                 text: this.extractConfidentText(payload),
@@ -81,7 +91,7 @@ let GroqTranscriptionService = GroqTranscriptionService_1 = class GroqTranscript
         }
         catch (error) {
             if (error instanceof Error && error.name === 'AbortError') {
-                throw new common_1.RequestTimeoutException('Groq xu ly am thanh qua thoi gian cho phep');
+                throw new common_1.RequestTimeoutException(`${useOpenAi ? 'OpenAI' : 'Groq'} xu ly am thanh qua thoi gian cho phep`);
             }
             throw error;
         }

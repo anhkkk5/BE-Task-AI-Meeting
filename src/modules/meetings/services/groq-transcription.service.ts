@@ -78,18 +78,23 @@ export class GroqTranscriptionService {
   async transcribe(file: MeetingAudioFile, options: TranscribeOptions = {}) {
     this.validateAudio(file);
 
-    const apiKey = process.env.GROQ_API_KEY || process.env.AI_API_KEY;
+    const useOpenAi = process.env.AI_PROVIDER === 'openai';
+    const apiKey = useOpenAi
+      ? process.env.OPENAI_API_KEY
+      : process.env.GROQ_API_KEY || process.env.AI_API_KEY;
 
     if (!apiKey) {
       throw new ServiceUnavailableException(
-        'Chua cau hinh GROQ_API_KEY cho chuyen am thanh thanh van ban',
+        useOpenAi
+          ? 'Chua cau hinh OPENAI_API_KEY cho chuyen am thanh thanh van ban'
+          : 'Chua cau hinh GROQ_API_KEY cho chuyen am thanh thanh van ban',
       );
     }
 
-    const model = process.env.GROQ_TRANSCRIPTION_MODEL || 'whisper-large-v3';
-    const timeoutMs = Number(
-      process.env.GROQ_TRANSCRIPTION_TIMEOUT_MS || 45000,
-    );
+    const model = useOpenAi
+      ? process.env.OPENAI_TRANSCRIPTION_MODEL || 'gpt-4o-mini-transcribe'
+      : process.env.GROQ_TRANSCRIPTION_MODEL || 'whisper-large-v3';
+    const timeoutMs = Number(process.env.AI_TRANSCRIPTION_TIMEOUT_MS || 45000);
     const formData = new FormData();
     const mimeType = file.mimetype?.split(';')[0].toLowerCase();
     const extension = AUDIO_EXTENSIONS[mimeType] ?? 'webm';
@@ -101,7 +106,7 @@ export class GroqTranscriptionService {
     formData.append('model', model);
     formData.append(
       'language',
-      process.env.GROQ_TRANSCRIPTION_LANGUAGE || 'vi',
+      process.env.AI_TRANSCRIPTION_LANGUAGE || 'vi',
     );
 
     // Chi gui prompt khi that su co ten rieng can giu dung chinh ta. Prompt
@@ -110,7 +115,7 @@ export class GroqTranscriptionService {
 
     if (prompt) formData.append('prompt', prompt);
 
-    formData.append('response_format', 'verbose_json');
+    formData.append('response_format', useOpenAi ? 'json' : 'verbose_json');
     // temperature = 0 va tat fallback: Whisper khong duoc tu suy dien khi
     // khong chac chan, tra ve rong con hon tra ve cau bia.
     formData.append('temperature', '0');
@@ -120,7 +125,9 @@ export class GroqTranscriptionService {
 
     try {
       const response = await fetch(
-        'https://api.groq.com/openai/v1/audio/transcriptions',
+        useOpenAi
+          ? 'https://api.openai.com/v1/audio/transcriptions'
+          : 'https://api.groq.com/openai/v1/audio/transcriptions',
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${apiKey}` },
@@ -136,7 +143,8 @@ export class GroqTranscriptionService {
 
       if (!response.ok) {
         throw new BadGatewayException(
-          payload.error?.message || 'Groq khong the xu ly doan am thanh',
+          payload.error?.message ||
+            `${useOpenAi ? 'OpenAI' : 'Groq'} khong the xu ly doan am thanh`,
         );
       }
 
@@ -149,7 +157,7 @@ export class GroqTranscriptionService {
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new RequestTimeoutException(
-          'Groq xu ly am thanh qua thoi gian cho phep',
+          `${useOpenAi ? 'OpenAI' : 'Groq'} xu ly am thanh qua thoi gian cho phep`,
         );
       }
 

@@ -55,9 +55,9 @@ export class AiProviderService {
     fallback: ProjectAssistantOutput,
   ): Promise<AiProviderResult<ProjectAssistantOutput>> {
     const provider = process.env.AI_PROVIDER ?? 'mock';
-    const apiKey = process.env.AI_API_KEY ?? '';
+    const apiKey = this.getApiKey(provider);
 
-    if (provider !== 'groq' || !apiKey) {
+    if (!this.isRemoteProvider(provider) || !apiKey) {
       return {
         model: 'mock-project-assistant',
         rawResponse: JSON.stringify(fallback),
@@ -100,9 +100,9 @@ export class AiProviderService {
     inputData: PersonalReportInputData,
   ): Promise<AiProviderResult> {
     const provider = process.env.AI_PROVIDER ?? 'mock';
-    const apiKey = process.env.AI_API_KEY ?? '';
+    const apiKey = this.getApiKey(provider);
 
-    if (provider === 'groq' && apiKey) {
+    if (this.isRemoteProvider(provider) && apiKey) {
       return this.generateGroqPersonalDailyReport(prompt, inputData, apiKey);
     }
 
@@ -115,9 +115,9 @@ export class AiProviderService {
     inputData: TeamReportInputData,
   ): Promise<AiProviderResult<TeamDailyReportOutput>> {
     const provider = process.env.AI_PROVIDER ?? 'mock';
-    const apiKey = process.env.AI_API_KEY ?? '';
+    const apiKey = this.getApiKey(provider);
 
-    if (provider === 'groq' && apiKey) {
+    if (this.isRemoteProvider(provider) && apiKey) {
       return this.generateGroqTeamDailyReport(prompt, inputData, apiKey);
     }
 
@@ -134,9 +134,9 @@ export class AiProviderService {
     inputData: MeetingSummaryInputData,
   ): Promise<AiProviderResult<MeetingSummaryOutput>> {
     const provider = process.env.AI_PROVIDER ?? 'mock';
-    const apiKey = process.env.AI_API_KEY ?? '';
+    const apiKey = this.getApiKey(provider);
 
-    if (provider === 'groq' && apiKey) {
+    if (this.isRemoteProvider(provider) && apiKey) {
       return this.generateGroqMeetingSummary(prompt, inputData, apiKey);
     }
 
@@ -153,9 +153,9 @@ export class AiProviderService {
     inputData: PersonalizedMeetingSummaryInputData,
   ): Promise<AiProviderResult<PersonalizedMeetingSummaryOutput>> {
     const provider = process.env.AI_PROVIDER ?? 'mock';
-    const apiKey = process.env.AI_API_KEY ?? '';
+    const apiKey = this.getApiKey(provider);
 
-    if (provider === 'groq' && apiKey) {
+    if (this.isRemoteProvider(provider) && apiKey) {
       return this.generateGroqPersonalizedMeetingSummary(
         prompt,
         inputData,
@@ -183,9 +183,9 @@ export class AiProviderService {
     inputData: PersonalReportInputData,
   ): Promise<AiProviderResult<DailyUpdateDraftOutput>> {
     const provider = process.env.AI_PROVIDER ?? 'mock';
-    const apiKey = process.env.AI_API_KEY ?? '';
+    const apiKey = this.getApiKey(provider);
 
-    if (provider === 'groq' && apiKey) {
+    if (this.isRemoteProvider(provider) && apiKey) {
       const model = this.getGroqModel();
       const output = await this.callGroqJson<Partial<DailyUpdateDraftOutput>>({
         apiKey,
@@ -231,9 +231,9 @@ export class AiProviderService {
     inputData: HandoverDraftInputData,
   ): Promise<AiProviderResult<HandoverDraftOutput>> {
     const provider = process.env.AI_PROVIDER ?? 'mock';
-    const apiKey = process.env.AI_API_KEY ?? '';
+    const apiKey = this.getApiKey(provider);
 
-    if (provider === 'groq' && apiKey) {
+    if (this.isRemoteProvider(provider) && apiKey) {
       const model = this.getGroqModel();
       const output = await this.callGroqJson<Partial<HandoverDraftOutput>>({
         apiKey,
@@ -695,8 +695,13 @@ export class AiProviderService {
     user: string;
   }): Promise<TOutput> {
     const started = Date.now();
+    const provider = process.env.AI_PROVIDER === 'openai' ? 'openai' : 'groq';
+    const endpoint =
+      provider === 'openai'
+        ? 'https://api.openai.com/v1/chat/completions'
+        : 'https://api.groq.com/openai/v1/chat/completions';
     const response = await fetch(
-      'https://api.groq.com/openai/v1/chat/completions',
+      endpoint,
       {
         method: 'POST',
         headers: {
@@ -718,7 +723,6 @@ export class AiProviderService {
           response_format: {
             type: 'json_object',
           },
-          temperature: 0.2,
           max_completion_tokens: 2048,
         }),
       },
@@ -727,22 +731,22 @@ export class AiProviderService {
     const rawText = await response.text();
 
     if (!response.ok) {
-      await this.observability?.record({ kind: 'AI', status: 'FAILED', operation: `groq.${params.model}`, durationMs: Date.now() - started, inputTokens: null, outputTokens: null, estimatedCostUsd: null, error: `HTTP ${response.status}: ${rawText.slice(0, 500)}`, metadata: null });
-      throw new Error(`Groq API failed: ${response.status} ${rawText}`);
+      await this.observability?.record({ kind: 'AI', status: 'FAILED', operation: `${provider}.${params.model}`, durationMs: Date.now() - started, inputTokens: null, outputTokens: null, estimatedCostUsd: null, error: `HTTP ${response.status}: ${rawText.slice(0, 500)}`, metadata: null });
+      throw new Error(`${provider} API failed: ${response.status} ${rawText}`);
     }
 
     const groqResponse = JSON.parse(rawText) as GroqChatResponse;
     const content = groqResponse.choices?.[0]?.message?.content;
 
     if (!content) {
-      throw new Error('Groq API returned empty content');
+      throw new Error(`${provider} API returned empty content`);
     }
 
     const inputTokens = groqResponse.usage?.prompt_tokens ?? 0;
     const outputTokens = groqResponse.usage?.completion_tokens ?? 0;
     const inputRate = Number(process.env.AI_INPUT_COST_PER_MILLION_USD ?? 0);
     const outputRate = Number(process.env.AI_OUTPUT_COST_PER_MILLION_USD ?? 0);
-    await this.observability?.record({ kind: 'AI', status: 'SUCCESS', operation: `groq.${params.model}`, durationMs: Date.now() - started, inputTokens, outputTokens, estimatedCostUsd: (inputTokens * inputRate + outputTokens * outputRate) / 1_000_000, error: null, metadata: { model: groqResponse.model ?? params.model } });
+    await this.observability?.record({ kind: 'AI', status: 'SUCCESS', operation: `${provider}.${params.model}`, durationMs: Date.now() - started, inputTokens, outputTokens, estimatedCostUsd: (inputTokens * inputRate + outputTokens * outputRate) / 1_000_000, error: null, metadata: { model: groqResponse.model ?? params.model, provider } });
 
     return this.parseJsonContent<TOutput>(content);
   }
@@ -758,7 +762,22 @@ export class AiProviderService {
   }
 
   private getGroqModel() {
-    return process.env.AI_MODEL || 'llama-3.3-70b-versatile';
+    if (process.env.AI_MODEL) return process.env.AI_MODEL;
+    return process.env.AI_PROVIDER === 'openai'
+      ? 'gpt-5.6-luna'
+      : 'llama-3.3-70b-versatile';
+  }
+
+  private isRemoteProvider(provider: string) {
+    return provider === 'groq' || provider === 'openai';
+  }
+
+  private getApiKey(provider: string) {
+    if (provider === 'openai') return process.env.OPENAI_API_KEY ?? '';
+    if (provider === 'groq') {
+      return process.env.GROQ_API_KEY ?? process.env.AI_API_KEY ?? '';
+    }
+    return '';
   }
 
   private normalizePersonalDailyReportOutput(

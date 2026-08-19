@@ -7,6 +7,7 @@ describe('AiProviderService', () => {
   const originalAiProvider = process.env.AI_PROVIDER;
   const originalAiApiKey = process.env.AI_API_KEY;
   const originalAiModel = process.env.AI_MODEL;
+  const originalOpenAiApiKey = process.env.OPENAI_API_KEY;
 
   const restoreEnv = (key: string, value: string | undefined) => {
     if (value === undefined) {
@@ -39,6 +40,7 @@ describe('AiProviderService', () => {
     process.env.AI_PROVIDER = 'mock';
     delete process.env.AI_API_KEY;
     delete process.env.AI_MODEL;
+    delete process.env.OPENAI_API_KEY;
   });
 
   afterEach(() => {
@@ -49,6 +51,7 @@ describe('AiProviderService', () => {
     restoreEnv('AI_PROVIDER', originalAiProvider);
     restoreEnv('AI_API_KEY', originalAiApiKey);
     restoreEnv('AI_MODEL', originalAiModel);
+    restoreEnv('OPENAI_API_KEY', originalOpenAiApiKey);
   });
 
   const inputData: PersonalReportInputData = {
@@ -397,6 +400,45 @@ describe('AiProviderService', () => {
     expect(result.output.title).toBe('Báo cáo cá nhân');
     expect(result.output.completedTasks).toEqual([
       'AGILEAI-1 - Code API tạo task',
+    ]);
+  });
+
+  it('calls OpenAI with the OpenAI key and supported JSON options', async () => {
+    process.env.AI_PROVIDER = 'openai';
+    process.env.OPENAI_API_KEY = 'test-openai-key';
+    process.env.AI_MODEL = 'gpt-5.6-luna';
+    const fetchSpy = mockGroqResponse({
+      title: 'Personal report',
+      summary: 'API task completed.',
+      yesterdaySummary: 'API task completed.',
+      todayPlanSummary: 'Test the task API.',
+      completedTasks: ['AGILEAI-1 - Code API tao task'],
+      inProgressTasks: ['AGILEAI-2 - Viet test task'],
+      blockers: [],
+      risks: [],
+      recommendations: ['Continue testing the API.'],
+      generatedText: 'Personal report generated.',
+    });
+    const service = new AiProviderService();
+
+    const result = await service.generatePersonalDailyReport(
+      'personal prompt',
+      inputData,
+    );
+
+    const [requestUrl, requestInit] = fetchSpy.mock.calls[0];
+    const requestHeaders = new Headers(requestInit?.headers);
+    const requestBody = JSON.parse(String(requestInit?.body)) as Record<
+      string,
+      unknown
+    >;
+    expect(requestUrl).toBe('https://api.openai.com/v1/chat/completions');
+    expect(requestHeaders.get('authorization')).toBe('Bearer test-openai-key');
+    expect(requestBody.model).toBe('gpt-5.6-luna');
+    expect(requestBody.response_format).toEqual({ type: 'json_object' });
+    expect(requestBody.temperature).toBeUndefined();
+    expect(result.output.completedTasks).toEqual([
+      'AGILEAI-1 - Code API tao task',
     ]);
   });
 

@@ -42,6 +42,8 @@ export declare class AiProviderService {
     private callGroqJson;
     private parseJsonContent;
     private getGroqModel;
+    private isRemoteProvider;
+    private getApiKey;
     private normalizePersonalDailyReportOutput;
     private normalizeTeamDailyReportOutput;
     private normalizePersonalizedMeetingSummaryOutput;
