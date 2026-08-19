@@ -23,6 +23,7 @@ import {
 import { AiDraftController } from './controllers/ai-draft.controller';
 import { AiPersonalReportController } from './controllers/ai-personal-report.controller';
 import { AiProjectAssistantController } from './controllers/ai-project-assistant.controller';
+import { AiAgileFlowAssistantController } from './controllers/ai-agileflow-assistant.controller';
 import { AiTeamReportController } from './controllers/ai-team-report.controller';
 import { AiPromptLog, AiPromptLogSchema } from './schemas/ai-prompt-log.schema';
 import { AiReport, AiReportSchema } from './schemas/ai-report.schema';
@@ -43,6 +44,7 @@ import { AiPersonalizedMeetingSummaryService } from './services/ai-personalized-
 import { AiDraftService } from './services/ai-draft.service';
 import { AiPersonalReportService } from './services/ai-personal-report.service';
 import { AiProjectAssistantService } from './services/ai-project-assistant.service';
+import { AiAgileFlowAssistantService } from './services/ai-agileflow-assistant.service';
 import { AiProviderService } from './services/ai-provider.service';
 import { AiReportAccessService } from './services/ai-report-access.service';
 import { AiReportDataBuilderService } from './services/ai-report-data-builder.service';
@@ -97,6 +99,7 @@ const mongoImports = mongodbConfig().enabled
     AiDraftController,
     AiPersonalReportController,
     AiProjectAssistantController,
+    AiAgileFlowAssistantController,
     AiTeamReportController,
     AiTeamReportActionItemController,
     AiMeetingSummaryController,
@@ -108,6 +111,7 @@ const mongoImports = mongodbConfig().enabled
     AiDraftService,
     AiPersonalReportService,
     AiProjectAssistantService,
+    AiAgileFlowAssistantService,
     AiTeamReportService,
     AiMeetingSummaryService,
     AiPersonalizedMeetingSummaryService,

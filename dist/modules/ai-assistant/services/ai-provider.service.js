@@ -32,7 +32,7 @@ let AiProviderService = class AiProviderService {
         const output = await this.callGroqJson({
             apiKey,
             model,
-            system: 'Bạn là trợ lý quản lý dự án Agile. Chỉ trả về JSON tiếng Việt có dấu. Chỉ dùng dữ liệu được cung cấp, không suy đoán người, ngày, trạng thái hoặc số liệu.',
+            system: 'Bạn là Trợ lý AgileFlow. Chỉ hỗ trợ cách sử dụng AgileFlow, kiến thức Agile/Scrum liên quan trực tiếp, và dữ liệu Workspace/Project/Sprint được hệ thống cung cấp. Nếu câu hỏi ngoài phạm vi này, hãy từ chối ngắn gọn và gợi ý người dùng hỏi về AgileFlow. Chỉ trả về JSON tiếng Việt có dấu. Không suy đoán người, ngày, trạng thái hoặc số liệu.',
             user: [
                 prompt,
                 '',
