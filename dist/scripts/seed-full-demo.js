@@ -58,9 +58,9 @@ async function main() {
             console.log('Full demo data already exists. Nothing was changed.');
             return;
         }
-        const [owners] = await db.execute('SELECT id FROM users WHERE status = ? ORDER BY is_system_admin DESC, created_at ASC LIMIT 1', ['ACTIVE']);
+        const [owners] = await db.execute('SELECT id FROM users ORDER BY is_system_admin DESC, created_at ASC LIMIT 1');
         if (!owners.length)
-            throw new Error('No active user exists to own demo workspaces.');
+            throw new Error('No user exists to own demo workspaces.');
         const ownerId = String(owners[0].id);
         const [templates] = await db.execute('SELECT workflow_template_id FROM projects WHERE workflow_template_id IS NOT NULL AND deleted_at IS NULL LIMIT 1');
         if (!templates.length)
@@ -85,7 +85,7 @@ async function main() {
             const id = (0, crypto_1.randomUUID)();
             userIds.push(id);
             await db.execute(`INSERT INTO users (id,email,full_name,avatar_url,phone_number,job_title,password_hash,status,is_system_admin,email_verified_at,mfa_enabled,created_at,updated_at)
-         VALUES (?,?,?,NULL,?,?,?,'ACTIVE',0,NOW(),0,NOW(),NOW())`, [id, `demo.user${i + 1}@agileflow.local`, people[i][0], `09000000${i + 1}`, people[i][1], hash]);
+         VALUES (?,?,?,NULL,?,?,?,'active',0,NOW(),0,NOW(),NOW())`, [id, `demo.user${i + 1}@agileflow.local`, people[i][0], `09000000${i + 1}`, people[i][1], hash]);
         }
         const workspaceNames = ['Phát triển sản phẩm', 'Nền tảng nội bộ', 'Mobile Experience'];
         let projectCount = 0;
