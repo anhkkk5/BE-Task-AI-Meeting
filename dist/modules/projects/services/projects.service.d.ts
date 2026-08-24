@@ -101,6 +101,8 @@ export declare class ProjectsService {
         message: string;
         data: {
             items: {
+                totalTasks: number;
+                completedTasks: number;
                 id: string;
                 workspaceId: string;
                 name: string;

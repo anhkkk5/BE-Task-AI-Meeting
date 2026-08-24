@@ -14,6 +14,10 @@ export declare class ProjectsRepository {
         page: number;
         limit: number;
     }>;
+    countTasksByProjects(projectIds: string[]): Promise<Map<string, {
+        totalTasks: number;
+        completedTasks: number;
+    }>>;
     findActiveForAutomaticReports(reportDate: string): Promise<Project[]>;
     update(project: Project, data: Partial<Project>): Promise<Project>;
     archive(project: Project): Promise<void>;

@@ -335,12 +335,21 @@ export class ProjectsService {
       workspaceId,
       query,
     );
+    const taskCounts = await this.projectsRepository.countTasksByProjects(
+      result.items.map((project) => project.id),
+    );
 
     return {
       success: true,
       message: 'Get projects successfully',
       data: {
-        items: result.items.map((project) => this.toProjectResponse(project)),
+        items: result.items.map((project) => ({
+          ...this.toProjectResponse(project),
+          ...(taskCounts.get(project.id) ?? {
+            totalTasks: 0,
+            completedTasks: 0,
+          }),
+        })),
         meta: {
           total: result.total,
           page: result.page,

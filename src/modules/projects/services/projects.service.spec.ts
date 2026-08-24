@@ -14,7 +14,12 @@ describe('ProjectsService', () => {
   let projectsRepository: jest.Mocked<
     Pick<
       ProjectsRepository,
-      'archive' | 'complete' | 'create' | 'findByWorkspace' | 'update'
+      | 'archive'
+      | 'complete'
+      | 'countTasksByProjects'
+      | 'create'
+      | 'findByWorkspace'
+      | 'update'
     >
   >;
   let projectAccessService: jest.Mocked<
@@ -52,6 +57,7 @@ describe('ProjectsService', () => {
     projectsRepository = {
       archive: jest.fn(),
       complete: jest.fn(),
+      countTasksByProjects: jest.fn().mockResolvedValue(new Map()),
       create: jest.fn(),
       findByWorkspace: jest.fn(),
       update: jest.fn(),
@@ -125,6 +131,11 @@ describe('ProjectsService', () => {
       page: 1,
       limit: 10,
     });
+    projectsRepository.countTasksByProjects.mockResolvedValue(
+      new Map([
+        ['project-id', { totalTasks: 33, completedTasks: 11 }],
+      ]),
+    );
 
     const response = await service.getProjects('member-id', 'workspace-id', {
       status: ProjectStatus.Active,
@@ -137,6 +148,10 @@ describe('ProjectsService', () => {
       'workspace-id',
     );
     expect(response.data.items).toHaveLength(1);
+    expect(response.data.items[0]).toMatchObject({
+      totalTasks: 33,
+      completedTasks: 11,
+    });
     expect(response.data.meta.total).toBe(1);
   });
 

@@ -18,6 +18,8 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const project_status_enum_1 = require("../../../common/enums/project-status.enum");
 const project_entity_1 = require("../entities/project.entity");
+const task_entity_1 = require("../../tasks/entities/task.entity");
+const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 let ProjectsRepository = class ProjectsRepository {
     repository;
     constructor(repository) {
@@ -76,6 +78,28 @@ let ProjectsRepository = class ProjectsRepository {
             .take(limit)
             .getManyAndCount();
         return { items, total, page, limit };
+    }
+    async countTasksByProjects(projectIds) {
+        if (projectIds.length === 0) {
+            return new Map();
+        }
+        const rows = await this.repository.manager
+            .createQueryBuilder(task_entity_1.Task, 'task')
+            .select('task.projectId', 'projectId')
+            .addSelect('COUNT(task.id)', 'totalTasks')
+            .addSelect('SUM(CASE WHEN task.status = :doneStatus THEN 1 ELSE 0 END)', 'completedTasks')
+            .where('task.projectId IN (:...projectIds)', { projectIds })
+            .andWhere('task.deletedAt IS NULL')
+            .setParameter('doneStatus', task_status_enum_1.TaskStatus.Done)
+            .groupBy('task.projectId')
+            .getRawMany();
+        return new Map(rows.map((row) => [
+            row.projectId,
+            {
+                totalTasks: Number(row.totalTasks),
+                completedTasks: Number(row.completedTasks),
+            },
+        ]));
     }
     findActiveForAutomaticReports(reportDate) {
         return this.repository

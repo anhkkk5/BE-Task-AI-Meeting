@@ -4,6 +4,8 @@ import { IsNull, Repository } from 'typeorm';
 import { ProjectStatus } from '../../../common/enums/project-status.enum';
 import { Project } from '../entities/project.entity';
 import { GetProjectsQueryDto } from '../dto/get-projects-query.dto';
+import { Task } from '../../tasks/entities/task.entity';
+import { TaskStatus } from '../../../common/enums/task-status.enum';
 
 @Injectable()
 export class ProjectsRepository {
@@ -103,6 +105,40 @@ export class ProjectsRepository {
       .getManyAndCount();
 
     return { items, total, page, limit };
+  }
+
+  async countTasksByProjects(projectIds: string[]) {
+    if (projectIds.length === 0) {
+      return new Map<string, { totalTasks: number; completedTasks: number }>();
+    }
+
+    const rows = await this.repository.manager
+      .createQueryBuilder(Task, 'task')
+      .select('task.projectId', 'projectId')
+      .addSelect('COUNT(task.id)', 'totalTasks')
+      .addSelect(
+        'SUM(CASE WHEN task.status = :doneStatus THEN 1 ELSE 0 END)',
+        'completedTasks',
+      )
+      .where('task.projectId IN (:...projectIds)', { projectIds })
+      .andWhere('task.deletedAt IS NULL')
+      .setParameter('doneStatus', TaskStatus.Done)
+      .groupBy('task.projectId')
+      .getRawMany<{
+        projectId: string;
+        totalTasks: string;
+        completedTasks: string;
+      }>();
+
+    return new Map(
+      rows.map((row) => [
+        row.projectId,
+        {
+          totalTasks: Number(row.totalTasks),
+          completedTasks: Number(row.completedTasks),
+        },
+      ]),
+    );
   }
 
   findActiveForAutomaticReports(reportDate: string) {
