@@ -61,7 +61,12 @@ export class TeamReportActionItem {
   })
   status: TeamReportActionItemStatus;
 
-  @Column({ name: 'created_task_id', type: 'varchar', length: 36, nullable: true })
+  @Column({
+    name: 'created_task_id',
+    type: 'varchar',
+    length: 36,
+    nullable: true,
+  })
   createdTaskId: string | null;
 
   /**
@@ -70,7 +75,12 @@ export class TeamReportActionItem {
    * Truong nhom khong tu tao ban giao ho duoc (chi nguoi dang giu task moi tao),
    * nen de nghi phai chi ro task nao de nguoi giu task mo dung form.
    */
-  @Column({ name: 'target_task_id', type: 'varchar', length: 36, nullable: true })
+  @Column({
+    name: 'target_task_id',
+    type: 'varchar',
+    length: 36,
+    nullable: true,
+  })
   targetTaskId: string | null;
 
   /** Nguoi duoc de xuat nhan ban giao. */

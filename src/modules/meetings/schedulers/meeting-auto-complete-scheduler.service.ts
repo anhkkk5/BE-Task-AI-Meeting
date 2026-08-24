@@ -29,10 +29,10 @@ export type MeetingAutoCompleteRunResult = {
  * va AI khong bao gio chay. Scheduler nay la moc kich hoat dang tin cay.
  */
 @Injectable()
-export class MeetingAutoCompleteSchedulerService
-  implements OnApplicationBootstrap
-{
-  private readonly logger = new Logger(MeetingAutoCompleteSchedulerService.name);
+export class MeetingAutoCompleteSchedulerService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(
+    MeetingAutoCompleteSchedulerService.name,
+  );
   private readonly jobName = 'meeting-auto-complete';
 
   constructor(
@@ -101,7 +101,9 @@ export class MeetingAutoCompleteSchedulerService
       );
 
       if (lock !== 'OK') {
-        this.logger.debug('Mot tien trinh khac dang chot cuoc hop, bo qua luot');
+        this.logger.debug(
+          'Mot tien trinh khac dang chot cuoc hop, bo qua luot',
+        );
         return result;
       }
 
@@ -161,7 +163,10 @@ export class MeetingAutoCompleteSchedulerService
 
   private getGraceMinutes() {
     const value = Number(
-      this.configService.get<string>('MEETING_AUTO_COMPLETE_GRACE_MINUTES', '15'),
+      this.configService.get<string>(
+        'MEETING_AUTO_COMPLETE_GRACE_MINUTES',
+        '15',
+      ),
     );
     return Number.isFinite(value) && value >= 0 ? Math.floor(value) : 15;
   }

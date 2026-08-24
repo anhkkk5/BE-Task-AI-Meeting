@@ -36,7 +36,10 @@ import { AiProviderService } from './ai-provider.service';
 import { AiReportAccessService } from './ai-report-access.service';
 import { AiReportEventsService } from './ai-report-events.service';
 import { AiTeamReportDataBuilderService } from './ai-team-report-data-builder.service';
-import { buildReportCitations, buildReportClaims } from '../utils/report-citations';
+import {
+  buildReportCitations,
+  buildReportClaims,
+} from '../utils/report-citations';
 import { PromptBuilderService } from './prompt-builder.service';
 
 type AiReportWithTimestamps = AiReportDocument & {
@@ -337,7 +340,8 @@ export class AiTeamReportService {
 
     if (dto.summary !== undefined) patch.summary = dto.summary;
     if (dto.teamProgress !== undefined) patch.teamProgress = dto.teamProgress;
-    if (dto.completedWork !== undefined) patch.completedWork = dto.completedWork;
+    if (dto.completedWork !== undefined)
+      patch.completedWork = dto.completedWork;
     if (dto.todayFocus !== undefined) patch.todayFocus = dto.todayFocus;
     if (dto.blockers !== undefined) patch.blockers = dto.blockers;
     if (dto.risks !== undefined) patch.risks = dto.risks;
@@ -392,7 +396,9 @@ export class AiTeamReportService {
     }
 
     if (currentStatus === AiReportReviewStatus.Cancelled) {
-      throw new ConflictException('Phiên giao ban đã bị hủy nên không thể duyệt');
+      throw new ConflictException(
+        'Phiên giao ban đã bị hủy nên không thể duyệt',
+      );
     }
 
     report.reviewStatus = AiReportReviewStatus.Published;
@@ -721,7 +727,13 @@ export class AiTeamReportService {
       approvedBy: report.approvedBy ?? null,
       approvedAt: report.approvedAt ?? null,
       createdBy: report.createdBy,
-      ...(includeInputData ? { inputData: report.inputData, citations: buildReportCitations(report.inputData), claims: buildReportClaims(report.aiOutput, report.inputData) } : {}),
+      ...(includeInputData
+        ? {
+            inputData: report.inputData,
+            citations: buildReportCitations(report.inputData),
+            claims: buildReportClaims(report.aiOutput, report.inputData),
+          }
+        : {}),
       createdAt: stampedReport.createdAt,
       updatedAt: stampedReport.updatedAt,
     };

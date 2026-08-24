@@ -1,0 +1,34 @@
+{
+  "baseUrl": "http://localhost:3002/api/v1",
+  "timeoutMs": 45000,
+  "scenarios": [
+    {
+      "name": "Lay thong tin nguoi dung",
+      "category": "API",
+      "method": "GET",
+      "path": "/auth/me",
+      "requests": 50,
+      "concurrency": 5,
+      "warmup": 3
+    },
+    {
+      "name": "Danh sach Workspace",
+      "category": "API",
+      "method": "GET",
+      "path": "/workspaces",
+      "requests": 50,
+      "concurrency": 10,
+      "warmup": 3
+    },
+    {
+      "name": "Project AI Assistant",
+      "category": "AI",
+      "method": "POST",
+      "path": "/workspaces/${WORKSPACE_ID}/projects/${PROJECT_ID}/ai/assistant/ask",
+      "body": { "question": "Tom tat tien do va rui ro quan trong cua du an." },
+      "requests": 3,
+      "concurrency": 1,
+      "warmup": 0
+    }
+  ]
+}

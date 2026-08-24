@@ -82,7 +82,12 @@ __decorate([
 ], DailyUpdate.prototype, "blockers", void 0);
 __decorate([
     (0, typeorm_1.Index)(),
-    (0, typeorm_1.Column)({ name: 'need_help_from_id', type: 'varchar', length: 36, nullable: true }),
+    (0, typeorm_1.Column)({
+        name: 'need_help_from_id',
+        type: 'varchar',
+        length: 36,
+        nullable: true,
+    }),
     __metadata("design:type", Object)
 ], DailyUpdate.prototype, "needHelpFromId", void 0);
 __decorate([

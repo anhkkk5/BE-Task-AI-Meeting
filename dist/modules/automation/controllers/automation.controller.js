@@ -21,19 +21,37 @@ const workspace_roles_guard_1 = require("../../../common/guards/workspace-roles.
 const access_token_guard_1 = require("../../auth/guards/access-token.guard");
 const save_automation_rule_dto_1 = require("../dto/save-automation-rule.dto");
 const automation_service_1 = require("../services/automation.service");
-const roles = [workspace_role_enum_1.WorkspaceRole.Owner, workspace_role_enum_1.WorkspaceRole.ProjectManager, workspace_role_enum_1.WorkspaceRole.ScrumMaster];
+const roles = [
+    workspace_role_enum_1.WorkspaceRole.Owner,
+    workspace_role_enum_1.WorkspaceRole.ProjectManager,
+    workspace_role_enum_1.WorkspaceRole.ScrumMaster,
+];
 let AutomationController = class AutomationController {
     service;
     constructor(service) {
         this.service = service;
     }
-    list(u, w, p) { return this.service.list(u.id, w, p); }
-    create(u, w, p, dto) { return this.service.save(u.id, w, p, dto); }
-    update(u, w, p, id, dto) { return this.service.save(u.id, w, p, dto, id); }
-    remove(u, w, p, id) { return this.service.remove(u.id, w, p, id); }
-    preview(u, w, p, id) { return this.service.preview(u.id, w, p, id); }
-    history(u, w, p, id) { return this.service.history(u.id, w, p, id); }
-    retry(u, w, p, id) { return this.service.retry(u.id, w, p, id); }
+    list(u, w, p) {
+        return this.service.list(u.id, w, p);
+    }
+    create(u, w, p, dto) {
+        return this.service.save(u.id, w, p, dto);
+    }
+    update(u, w, p, id, dto) {
+        return this.service.save(u.id, w, p, dto, id);
+    }
+    remove(u, w, p, id) {
+        return this.service.remove(u.id, w, p, id);
+    }
+    preview(u, w, p, id) {
+        return this.service.preview(u.id, w, p, id);
+    }
+    history(u, w, p, id) {
+        return this.service.history(u.id, w, p, id);
+    }
+    retry(u, w, p, id) {
+        return this.service.retry(u.id, w, p, id);
+    }
 };
 exports.AutomationController = AutomationController;
 __decorate([

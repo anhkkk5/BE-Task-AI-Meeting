@@ -17,7 +17,9 @@ class CreateTaskCommentDto {
 }
 exports.CreateTaskCommentDto = CreateTaskCommentDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Đã xử lý xong API. Nhờ @member@example.com kiểm tra.' }),
+    (0, swagger_1.ApiProperty)({
+        example: 'Đã xử lý xong API. Nhờ @member@example.com kiểm tra.',
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(1),
     (0, class_validator_1.MaxLength)(5000),

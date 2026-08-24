@@ -18,21 +18,38 @@ import { TaskPriority } from '../../../common/enums/task-priority.enum';
 
 export class CreateTaskDto {
   @ApiPropertyOptional({ type: [String], example: ['frontend', 'urgent'] })
-  @IsOptional() @IsArray() @IsString({ each: true }) @MaxLength(40, { each: true }) labels?: string[];
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(40, { each: true })
+  labels?: string[];
 
   @ApiPropertyOptional({ maxLength: 4000 })
-  @IsOptional() @IsString() @MaxLength(4000) acceptanceCriteria?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  acceptanceCriteria?: string;
 
-  @ApiPropertyOptional({ description: 'User báo cáo Task; mặc định là người tạo.' })
-  @IsOptional() @IsUUID() reporterId?: string;
+  @ApiPropertyOptional({
+    description: 'User báo cáo Task; mặc định là người tạo.',
+  })
+  @IsOptional()
+  @IsUUID()
+  reporterId?: string;
   @ApiPropertyOptional({ enum: TaskType, default: TaskType.Task })
-  @IsOptional() @IsEnum(TaskType) taskType?: TaskType;
+  @IsOptional()
+  @IsEnum(TaskType)
+  taskType?: TaskType;
 
   @ApiPropertyOptional({ enum: TaskPriority, default: TaskPriority.Medium })
-  @IsOptional() @IsEnum(TaskPriority) priority?: TaskPriority;
+  @IsOptional()
+  @IsEnum(TaskPriority)
+  priority?: TaskPriority;
 
   @ApiPropertyOptional({ description: 'Task cha trong cùng Project.' })
-  @IsOptional() @IsUUID() parentId?: string;
+  @IsOptional()
+  @IsUUID()
+  parentId?: string;
   @ApiProperty({
     example: 'Code API tao task',
     description: 'Tieu de task, tu 2 den 200 ky tu.',

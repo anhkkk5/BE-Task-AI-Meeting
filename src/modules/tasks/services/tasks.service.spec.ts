@@ -405,9 +405,13 @@ describe('TasksService', () => {
 
   it('rejects deleting a parent task that still has children', async () => {
     taskAccessService.assertTaskInProject.mockResolvedValue(task);
-    tasksRepository.findChildren.mockResolvedValue([{ id: 'child-id', taskCode: 'AGILEAI-2', title: 'Child' } as Task]);
+    tasksRepository.findChildren.mockResolvedValue([
+      { id: 'child-id', taskCode: 'AGILEAI-2', title: 'Child' } as Task,
+    ]);
 
-    await expect(service.deleteTask('owner-id', 'workspace-id', 'project-id', 'task-id')).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      service.deleteTask('owner-id', 'workspace-id', 'project-id', 'task-id'),
+    ).rejects.toBeInstanceOf(BadRequestException);
     expect(tasksRepository.softDelete).not.toHaveBeenCalled();
   });
 

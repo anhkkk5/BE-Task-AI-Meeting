@@ -11,7 +11,10 @@ import { Model } from 'mongoose';
 import { MeetingActionItemReviewStatus } from '../../../common/enums/meeting-action-item-review-status.enum';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
 import { MeetingAccessService } from '../../meetings/services/meeting-access.service';
-import { MeetingTranscript, MeetingTranscriptDocument } from '../../meetings/schemas/meeting-transcript.schema';
+import {
+  MeetingTranscript,
+  MeetingTranscriptDocument,
+} from '../../meetings/schemas/meeting-transcript.schema';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { TasksService } from '../../tasks/services/tasks.service';
 import { TasksRepository } from '../../tasks/repositories/tasks.repository';
@@ -44,7 +47,8 @@ export class AiMeetingActionItemReviewService {
     private readonly meetingAccessService: MeetingAccessService,
     private readonly tasksService: TasksService,
     @Optional() private readonly tasksRepository?: TasksRepository,
-    @Optional() @InjectModel(MeetingTranscript.name)
+    @Optional()
+    @InjectModel(MeetingTranscript.name)
     private readonly meetingTranscriptModel?: Model<MeetingTranscriptDocument> | null,
   ) {}
 
@@ -71,9 +75,17 @@ export class AiMeetingActionItemReviewService {
       message: 'Lấy danh sách việc cần làm thành công',
       data: {
         canReview: managerRoles.some((managerRole) => managerRole === role),
-        items: await Promise.all((summary.actionItems ?? []).map(async (item, index) =>
-          this.toActionItemResponse(index, item, reviewsByIndex.get(index), await this.findDuplicates(projectId, item.text), await this.findCitation(summary.meetingId, item.text)),
-        )),
+        items: await Promise.all(
+          (summary.actionItems ?? []).map(async (item, index) =>
+            this.toActionItemResponse(
+              index,
+              item,
+              reviewsByIndex.get(index),
+              await this.findDuplicates(projectId, item.text),
+              await this.findCitation(summary.meetingId, item.text),
+            ),
+          ),
+        ),
       },
     };
   }
@@ -99,10 +111,14 @@ export class AiMeetingActionItemReviewService {
       actionItemIndex,
     );
     this.assertPending(existing);
-    const duplicateCandidates = await this.findDuplicates(projectId, dto.title?.trim() || item.text);
+    const duplicateCandidates = await this.findDuplicates(
+      projectId,
+      dto.title?.trim() || item.text,
+    );
     if (duplicateCandidates.length && !dto.allowDuplicate) {
       throw new ConflictException({
-        message: 'Phát hiện task tương tự. Hãy kiểm tra trước khi xác nhận tạo trùng.',
+        message:
+          'Phát hiện task tương tự. Hãy kiểm tra trước khi xác nhận tạo trùng.',
         duplicateCandidates,
         allowDuplicateRequired: true,
       });
@@ -161,7 +177,13 @@ export class AiMeetingActionItemReviewService {
       success: true,
       message: 'Đã duyệt và tạo task thành công',
       data: {
-        actionItem: this.toActionItemResponse(actionItemIndex, item, review, [], await this.findCitation(summary.meetingId, item.text)),
+        actionItem: this.toActionItemResponse(
+          actionItemIndex,
+          item,
+          review,
+          [],
+          await this.findCitation(summary.meetingId, item.text),
+        ),
         task,
       },
     };
@@ -316,8 +338,19 @@ export class AiMeetingActionItemReviewService {
     index: number,
     item: MeetingSummaryActionItem,
     review?: MeetingActionItemReview,
-    duplicateCandidates: Array<{ id: string; taskCode: string; title: string; status: string }> = [],
-    citation: { speakerName: string | null; text: string; startedAt: Date; endedAt: Date | null; confidence: number | null } | null = null,
+    duplicateCandidates: Array<{
+      id: string;
+      taskCode: string;
+      title: string;
+      status: string;
+    }> = [],
+    citation: {
+      speakerName: string | null;
+      text: string;
+      startedAt: Date;
+      endedAt: Date | null;
+      confidence: number | null;
+    } | null = null,
   ) {
     return {
       index,
@@ -333,39 +366,93 @@ export class AiMeetingActionItemReviewService {
       reviewedAt: review?.reviewedAt ?? null,
       duplicateCandidates,
       confidence: citation?.confidence ?? null,
-      citation: citation ? { ...citation, startedAt: citation.startedAt.toISOString(), endedAt: citation.endedAt?.toISOString() ?? null } : null,
+      citation: citation
+        ? {
+            ...citation,
+            startedAt: citation.startedAt.toISOString(),
+            endedAt: citation.endedAt?.toISOString() ?? null,
+          }
+        : null,
     };
   }
 
   private async findDuplicates(projectId: string, title: string) {
     if (!this.tasksRepository) return [];
-    const candidates = await this.tasksRepository.findDuplicateCandidates(projectId, title);
+    const candidates = await this.tasksRepository.findDuplicateCandidates(
+      projectId,
+      title,
+    );
     const normalized = this.normalizeText(title);
-    return candidates.map((task) => {
-      const candidate = this.normalizeText(task.title);
-      const sourceTokens = new Set(normalized.split(' ').filter(Boolean));
-      const candidateTokens = new Set(candidate.split(' ').filter(Boolean));
-      const overlap = [...sourceTokens].filter((token) => candidateTokens.has(token)).length;
-      const similarity = Math.round((overlap / Math.max(1, Math.min(sourceTokens.size, candidateTokens.size))) * 100);
-      return { id: task.id, taskCode: task.taskCode, title: task.title, status: task.status, similarity };
-    }).filter((item) => item.similarity >= 50).sort((a, b) => b.similarity - a.similarity);
+    return candidates
+      .map((task) => {
+        const candidate = this.normalizeText(task.title);
+        const sourceTokens = new Set(normalized.split(' ').filter(Boolean));
+        const candidateTokens = new Set(candidate.split(' ').filter(Boolean));
+        const overlap = [...sourceTokens].filter((token) =>
+          candidateTokens.has(token),
+        ).length;
+        const similarity = Math.round(
+          (overlap /
+            Math.max(1, Math.min(sourceTokens.size, candidateTokens.size))) *
+            100,
+        );
+        return {
+          id: task.id,
+          taskCode: task.taskCode,
+          title: task.title,
+          status: task.status,
+          similarity,
+        };
+      })
+      .filter((item) => item.similarity >= 50)
+      .sort((a, b) => b.similarity - a.similarity);
   }
 
   private normalizeText(value: string) {
-    return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+    return value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
   }
 
   async findCitation(meetingId: string, actionText: string) {
     if (!this.meetingTranscriptModel) return null;
-    const transcript = await this.meetingTranscriptModel.findOne({ meetingId }).lean().exec();
-    const actionTokens = new Set(this.normalizeText(actionText).split(' ').filter((token) => token.length >= 4));
-    const ranked = (transcript?.liveSegments ?? []).map((segment) => {
-      const segmentTokens = new Set(this.normalizeText(segment.text).split(' ').filter((token) => token.length >= 4));
-      const overlap = [...actionTokens].filter((token) => segmentTokens.has(token)).length;
-      return { segment, score: overlap / Math.max(1, actionTokens.size) };
-    }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
+    const transcript = await this.meetingTranscriptModel
+      .findOne({ meetingId })
+      .lean()
+      .exec();
+    const actionTokens = new Set(
+      this.normalizeText(actionText)
+        .split(' ')
+        .filter((token) => token.length >= 4),
+    );
+    const ranked = (transcript?.liveSegments ?? [])
+      .map((segment) => {
+        const segmentTokens = new Set(
+          this.normalizeText(segment.text)
+            .split(' ')
+            .filter((token) => token.length >= 4),
+        );
+        const overlap = [...actionTokens].filter((token) =>
+          segmentTokens.has(token),
+        ).length;
+        return { segment, score: overlap / Math.max(1, actionTokens.size) };
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score);
     const best = ranked[0]?.segment;
-    return best ? { segmentId: best.chunkId ?? null, speakerName: best.speakerName ?? null, text: best.text, startedAt: new Date(best.startedAt), endedAt: best.endedAt ? new Date(best.endedAt) : null, confidence: best.confidence ?? null } : null;
+    return best
+      ? {
+          segmentId: best.chunkId ?? null,
+          speakerName: best.speakerName ?? null,
+          text: best.text,
+          startedAt: new Date(best.startedAt),
+          endedAt: best.endedAt ? new Date(best.endedAt) : null,
+          confidence: best.confidence ?? null,
+        }
+      : null;
   }
 
   private getSummaryModel() {

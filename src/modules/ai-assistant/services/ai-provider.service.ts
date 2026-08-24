@@ -700,38 +700,45 @@ export class AiProviderService {
       provider === 'openai'
         ? 'https://api.openai.com/v1/chat/completions'
         : 'https://api.groq.com/openai/v1/chat/completions';
-    const response = await fetch(
-      endpoint,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${params.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: params.model,
-          messages: [
-            {
-              role: 'system',
-              content: params.system,
-            },
-            {
-              role: 'user',
-              content: params.user,
-            },
-          ],
-          response_format: {
-            type: 'json_object',
-          },
-          max_completion_tokens: 2048,
-        }),
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${params.apiKey}`,
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({
+        model: params.model,
+        messages: [
+          {
+            role: 'system',
+            content: params.system,
+          },
+          {
+            role: 'user',
+            content: params.user,
+          },
+        ],
+        response_format: {
+          type: 'json_object',
+        },
+        max_completion_tokens: 2048,
+      }),
+    });
 
     const rawText = await response.text();
 
     if (!response.ok) {
-      await this.observability?.record({ kind: 'AI', status: 'FAILED', operation: `${provider}.${params.model}`, durationMs: Date.now() - started, inputTokens: null, outputTokens: null, estimatedCostUsd: null, error: `HTTP ${response.status}: ${rawText.slice(0, 500)}`, metadata: null });
+      await this.observability?.record({
+        kind: 'AI',
+        status: 'FAILED',
+        operation: `${provider}.${params.model}`,
+        durationMs: Date.now() - started,
+        inputTokens: null,
+        outputTokens: null,
+        estimatedCostUsd: null,
+        error: `HTTP ${response.status}: ${rawText.slice(0, 500)}`,
+        metadata: null,
+      });
       throw new Error(`${provider} API failed: ${response.status} ${rawText}`);
     }
 
@@ -746,7 +753,18 @@ export class AiProviderService {
     const outputTokens = groqResponse.usage?.completion_tokens ?? 0;
     const inputRate = Number(process.env.AI_INPUT_COST_PER_MILLION_USD ?? 0);
     const outputRate = Number(process.env.AI_OUTPUT_COST_PER_MILLION_USD ?? 0);
-    await this.observability?.record({ kind: 'AI', status: 'SUCCESS', operation: `${provider}.${params.model}`, durationMs: Date.now() - started, inputTokens, outputTokens, estimatedCostUsd: (inputTokens * inputRate + outputTokens * outputRate) / 1_000_000, error: null, metadata: { model: groqResponse.model ?? params.model, provider } });
+    await this.observability?.record({
+      kind: 'AI',
+      status: 'SUCCESS',
+      operation: `${provider}.${params.model}`,
+      durationMs: Date.now() - started,
+      inputTokens,
+      outputTokens,
+      estimatedCostUsd:
+        (inputTokens * inputRate + outputTokens * outputRate) / 1_000_000,
+      error: null,
+      metadata: { model: groqResponse.model ?? params.model, provider },
+    });
 
     return this.parseJsonContent<TOutput>(content);
   }

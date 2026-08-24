@@ -59,8 +59,12 @@ export class ShiftHandoversRepository {
       builder.andWhere(
         new Brackets((where) => {
           where
-            .where('handover.senderId = :memberId', { memberId: query.memberId })
-            .orWhere('handover.receiverId = :memberId', { memberId: query.memberId });
+            .where('handover.senderId = :memberId', {
+              memberId: query.memberId,
+            })
+            .orWhere('handover.receiverId = :memberId', {
+              memberId: query.memberId,
+            });
         }),
       );
     }

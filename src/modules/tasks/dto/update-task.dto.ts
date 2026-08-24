@@ -18,21 +18,39 @@ import { TaskPriority } from '../../../common/enums/task-priority.enum';
 
 export class UpdateTaskDto {
   @ApiPropertyOptional({ type: [String] })
-  @IsOptional() @IsArray() @IsString({ each: true }) @MaxLength(40, { each: true }) labels?: string[];
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(40, { each: true })
+  labels?: string[];
 
   @ApiPropertyOptional({ maxLength: 4000 })
-  @IsOptional() @IsString() @MaxLength(4000) acceptanceCriteria?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  acceptanceCriteria?: string;
 
   @ApiPropertyOptional({ nullable: true })
-  @IsOptional() @IsUUID() reporterId?: string | null;
+  @IsOptional()
+  @IsUUID()
+  reporterId?: string | null;
   @ApiPropertyOptional({ enum: TaskType })
-  @IsOptional() @IsEnum(TaskType) taskType?: TaskType;
+  @IsOptional()
+  @IsEnum(TaskType)
+  taskType?: TaskType;
 
   @ApiPropertyOptional({ enum: TaskPriority })
-  @IsOptional() @IsEnum(TaskPriority) priority?: TaskPriority;
+  @IsOptional()
+  @IsEnum(TaskPriority)
+  priority?: TaskPriority;
 
-  @ApiPropertyOptional({ nullable: true, description: 'UUID Task cha; null để bỏ liên kết.' })
-  @IsOptional() @IsUUID() parentId?: string | null;
+  @ApiPropertyOptional({
+    nullable: true,
+    description: 'UUID Task cha; null để bỏ liên kết.',
+  })
+  @IsOptional()
+  @IsUUID()
+  parentId?: string | null;
   @ApiPropertyOptional({
     example: 'Code API tao va cap nhat task',
     description: 'Tieu de task moi, tu 2 den 200 ky tu.',

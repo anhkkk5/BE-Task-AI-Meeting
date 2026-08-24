@@ -22,7 +22,11 @@ const workspace_roles_guard_1 = require("../../../common/guards/workspace-roles.
 const access_token_guard_1 = require("../../auth/guards/access-token.guard");
 const create_task_dependency_dto_1 = require("../dto/create-task-dependency.dto");
 const task_dependencies_service_1 = require("../services/task-dependencies.service");
-const managerRoles = [workspace_role_enum_1.WorkspaceRole.Owner, workspace_role_enum_1.WorkspaceRole.ScrumMaster, workspace_role_enum_1.WorkspaceRole.ProjectManager];
+const managerRoles = [
+    workspace_role_enum_1.WorkspaceRole.Owner,
+    workspace_role_enum_1.WorkspaceRole.ScrumMaster,
+    workspace_role_enum_1.WorkspaceRole.ProjectManager,
+];
 let TaskDependenciesController = class TaskDependenciesController {
     service;
     constructor(service) {

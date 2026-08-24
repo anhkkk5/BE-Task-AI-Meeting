@@ -35,11 +35,21 @@ let ProjectsController = class ProjectsController {
     constructor(projectsService) {
         this.projectsService = projectsService;
     }
-    listWorkflowTemplates(user, workspaceId) { return this.projectsService.listWorkflowTemplates(user.id, workspaceId); }
-    createWorkflowTemplate(user, workspaceId, dto) { return this.projectsService.createWorkflowTemplate(user.id, workspaceId, dto); }
-    updateWorkflowTemplate(user, workspaceId, templateId, dto) { return this.projectsService.updateWorkflowTemplate(user.id, workspaceId, templateId, dto); }
-    deleteWorkflowTemplate(user, workspaceId, templateId) { return this.projectsService.deleteWorkflowTemplate(user.id, workspaceId, templateId); }
-    applyWorkflowTemplate(user, workspaceId, projectId, templateId) { return this.projectsService.applyWorkflowTemplate(user.id, workspaceId, projectId, templateId); }
+    listWorkflowTemplates(user, workspaceId) {
+        return this.projectsService.listWorkflowTemplates(user.id, workspaceId);
+    }
+    createWorkflowTemplate(user, workspaceId, dto) {
+        return this.projectsService.createWorkflowTemplate(user.id, workspaceId, dto);
+    }
+    updateWorkflowTemplate(user, workspaceId, templateId, dto) {
+        return this.projectsService.updateWorkflowTemplate(user.id, workspaceId, templateId, dto);
+    }
+    deleteWorkflowTemplate(user, workspaceId, templateId) {
+        return this.projectsService.deleteWorkflowTemplate(user.id, workspaceId, templateId);
+    }
+    applyWorkflowTemplate(user, workspaceId, projectId, templateId) {
+        return this.projectsService.applyWorkflowTemplate(user.id, workspaceId, projectId, templateId);
+    }
     createProject(user, workspaceId, dto) {
         return this.projectsService.createProject(user.id, workspaceId, dto);
     }

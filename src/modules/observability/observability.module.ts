@@ -7,5 +7,12 @@ import { ApiObservabilityInterceptor } from './api-observability.interceptor';
 import { ObservabilityService } from './observability.service';
 
 @Global()
-@Module({ imports: [TypeOrmModule.forFeature([AdminAuditLog, ObservabilityEvent])], providers: [ObservabilityService, { provide: APP_INTERCEPTOR, useClass: ApiObservabilityInterceptor }], exports: [ObservabilityService] })
+@Module({
+  imports: [TypeOrmModule.forFeature([AdminAuditLog, ObservabilityEvent])],
+  providers: [
+    ObservabilityService,
+    { provide: APP_INTERCEPTOR, useClass: ApiObservabilityInterceptor },
+  ],
+  exports: [ObservabilityService],
+})
 export class ObservabilityModule {}

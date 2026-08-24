@@ -81,7 +81,9 @@ let TasksRepository = class TasksRepository {
             });
         }
         if (query.status) {
-            builder.andWhere('workflowStatus.status_key = :status', { status: query.status });
+            builder.andWhere('workflowStatus.status_key = :status', {
+                status: query.status,
+            });
         }
         if (query.assigneeId) {
             builder.andWhere('task.assigneeId = :assigneeId', {
@@ -89,11 +91,17 @@ let TasksRepository = class TasksRepository {
             });
         }
         if (query.taskType)
-            builder.andWhere('task.taskType = :taskType', { taskType: query.taskType });
+            builder.andWhere('task.taskType = :taskType', {
+                taskType: query.taskType,
+            });
         if (query.priority)
-            builder.andWhere('task.priority = :priority', { priority: query.priority });
+            builder.andWhere('task.priority = :priority', {
+                priority: query.priority,
+            });
         if (query.parentId)
-            builder.andWhere('task.parentId = :parentId', { parentId: query.parentId });
+            builder.andWhere('task.parentId = :parentId', {
+                parentId: query.parentId,
+            });
         if (query.keyword?.trim()) {
             const keyword = `%${query.keyword.trim()}%`;
             builder.andWhere('(task.title LIKE :keyword OR task.taskCode LIKE :keyword)', { keyword });
@@ -115,21 +123,35 @@ let TasksRepository = class TasksRepository {
     }
     async findBacklogByProject(projectId) {
         const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
-            .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator').leftJoinAndSelect('task.reporter', 'reporter')
+            .leftJoinAndSelect('task.assignee', 'assignee')
+            .leftJoinAndSelect('task.creator', 'creator')
+            .leftJoinAndSelect('task.reporter', 'reporter')
             .leftJoinAndSelect('task.parent', 'parent')
-            .leftJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id').addSelect('workflowStatus.status_key', 'task_workflowStatusKey')
-            .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId IS NULL')
-            .andWhere('workflowStatus.status_key != :cancelled', { cancelled: task_status_enum_1.TaskStatus.Cancelled }).andWhere('task.deletedAt IS NULL')
-            .orderBy('task.createdAt', 'DESC').getRawAndEntities();
+            .leftJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
+            .addSelect('workflowStatus.status_key', 'task_workflowStatusKey')
+            .where('task.projectId = :projectId', { projectId })
+            .andWhere('task.sprintId IS NULL')
+            .andWhere('workflowStatus.status_key != :cancelled', {
+            cancelled: task_status_enum_1.TaskStatus.Cancelled,
+        })
+            .andWhere('task.deletedAt IS NULL')
+            .orderBy('task.createdAt', 'DESC')
+            .getRawAndEntities();
         return this.attachDependencyState(result.entities, result.raw);
     }
     async findBySprint(projectId, sprintId) {
         const result = await this.withDependencyState(this.repository.createQueryBuilder('task'))
-            .leftJoinAndSelect('task.assignee', 'assignee').leftJoinAndSelect('task.creator', 'creator').leftJoinAndSelect('task.reporter', 'reporter')
+            .leftJoinAndSelect('task.assignee', 'assignee')
+            .leftJoinAndSelect('task.creator', 'creator')
+            .leftJoinAndSelect('task.reporter', 'reporter')
             .leftJoinAndSelect('task.parent', 'parent')
-            .leftJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id').addSelect('workflowStatus.status_key', 'task_workflowStatusKey')
-            .where('task.projectId = :projectId', { projectId }).andWhere('task.sprintId = :sprintId', { sprintId })
-            .andWhere('task.deletedAt IS NULL').orderBy('task.createdAt', 'DESC').getRawAndEntities();
+            .leftJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
+            .addSelect('workflowStatus.status_key', 'task_workflowStatusKey')
+            .where('task.projectId = :projectId', { projectId })
+            .andWhere('task.sprintId = :sprintId', { sprintId })
+            .andWhere('task.deletedAt IS NULL')
+            .orderBy('task.createdAt', 'DESC')
+            .getRawAndEntities();
         return this.attachDependencyState(result.entities, result.raw);
     }
     async update(task, data) {
@@ -137,57 +159,75 @@ let TasksRepository = class TasksRepository {
         return this.repository.save(task);
     }
     async findIncompleteChildren(parentId) {
-        const tasks = await this.repository.createQueryBuilder('task')
+        const tasks = await this.repository
+            .createQueryBuilder('task')
             .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
             .where('task.parentId = :parentId', { parentId })
             .andWhere('task.deletedAt IS NULL')
-            .andWhere('workflowStatus.category != :doneCategory', { doneCategory: 'DONE' })
+            .andWhere('workflowStatus.category != :doneCategory', {
+            doneCategory: 'DONE',
+        })
             .getMany();
         return Promise.all(tasks.map((task) => this.hydrateCanonicalStatus(task)));
     }
     async findChildren(parentId) {
-        const tasks = await this.repository.find({ where: { parentId, deletedAt: (0, typeorm_2.IsNull)() } });
+        const tasks = await this.repository.find({
+            where: { parentId, deletedAt: (0, typeorm_2.IsNull)() },
+        });
         return Promise.all(tasks.map((task) => this.hydrateCanonicalStatus(task)));
     }
     async findDuplicateCandidates(projectId, title, limit = 5) {
-        const tokens = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((token) => token.length >= 4).slice(0, 6);
+        const tokens = title
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9\s]/g, ' ')
+            .split(/\s+/)
+            .filter((token) => token.length >= 4)
+            .slice(0, 6);
         if (!tokens.length)
             return [];
-        const builder = this.repository.createQueryBuilder('task')
+        const builder = this.repository
+            .createQueryBuilder('task')
             .where('task.projectId = :projectId', { projectId })
             .andWhere('task.deletedAt IS NULL');
         builder.andWhere(`(${tokens.map((_, index) => `LOWER(task.title) LIKE :token${index}`).join(' OR ')})`, Object.fromEntries(tokens.map((token, index) => [`token${index}`, `%${token}%`])));
-        const tasks = await builder.orderBy('task.updatedAt', 'DESC').take(limit).getMany();
+        const tasks = await builder
+            .orderBy('task.updatedAt', 'DESC')
+            .take(limit)
+            .getMany();
         return Promise.all(tasks.map((task) => this.hydrateCanonicalStatus(task)));
     }
     async findWorkflowStatusId(templateId, status) {
         if (!templateId)
             return null;
-        const rows = await this.repository.manager.query('SELECT `id` FROM `workflow_statuses` WHERE `template_id` = ? AND `status_key` = ? AND `enabled`=1 LIMIT 1', [templateId, status]);
+        const rows = (await this.repository.manager.query('SELECT `id` FROM `workflow_statuses` WHERE `template_id` = ? AND `status_key` = ? AND `enabled`=1 LIMIT 1', [templateId, status]));
         return rows[0]?.id ?? null;
     }
     async findWorkflowStatus(templateId, workflowStatusId) {
         if (!templateId)
             return null;
-        const rows = await this.repository.manager.query('SELECT `id`,`status_key` `key`,`label`,`category`,`enabled` FROM `workflow_statuses` WHERE `id`=? AND `template_id`=? LIMIT 1', [workflowStatusId, templateId]);
+        const rows = (await this.repository.manager.query('SELECT `id`,`status_key` `key`,`label`,`category`,`enabled` FROM `workflow_statuses` WHERE `id`=? AND `template_id`=? LIMIT 1', [workflowStatusId, templateId]));
         return rows[0] ?? null;
     }
     async findWorkflowStatusById(workflowStatusId) {
         if (!workflowStatusId)
             return null;
-        const rows = await this.repository.manager.query('SELECT `id`,`status_key` `key`,`label`,`category`,`enabled` FROM `workflow_statuses` WHERE `id`=? LIMIT 1', [workflowStatusId]);
+        const rows = (await this.repository.manager.query('SELECT `id`,`status_key` `key`,`label`,`category`,`enabled` FROM `workflow_statuses` WHERE `id`=? LIMIT 1', [workflowStatusId]));
         return rows[0] ?? null;
     }
     findDueNotificationCandidates(throughDate) {
-        return this.repository.createQueryBuilder('task')
+        return this.repository
+            .createQueryBuilder('task')
             .innerJoinAndSelect('task.project', 'project')
             .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
             .where('task.deletedAt IS NULL')
             .andWhere('task.assigneeId IS NOT NULL')
             .andWhere('task.dueDate IS NOT NULL')
             .andWhere('task.dueDate <= :throughDate', { throughDate })
-            .andWhere('workflowStatus.category != :doneCategory', { doneCategory: 'DONE' })
+            .andWhere('workflowStatus.category != :doneCategory', {
+            doneCategory: 'DONE',
+        })
             .getMany();
     }
     softDelete(task) {

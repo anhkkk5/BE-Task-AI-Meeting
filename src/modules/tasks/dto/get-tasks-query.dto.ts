@@ -57,13 +57,19 @@ export class GetTasksQueryDto {
   dependencyState?: TaskDependencyStateFilter;
 
   @ApiPropertyOptional({ enum: TaskType })
-  @IsOptional() @IsEnum(TaskType) taskType?: TaskType;
+  @IsOptional()
+  @IsEnum(TaskType)
+  taskType?: TaskType;
 
   @ApiPropertyOptional({ enum: TaskPriority })
-  @IsOptional() @IsEnum(TaskPriority) priority?: TaskPriority;
+  @IsOptional()
+  @IsEnum(TaskPriority)
+  priority?: TaskPriority;
 
   @ApiPropertyOptional({ description: 'Lọc các Task con trực tiếp.' })
-  @IsOptional() @IsUUID() parentId?: string;
+  @IsOptional()
+  @IsUUID()
+  parentId?: string;
 
   @ApiPropertyOptional({ example: 1, minimum: 1 })
   @IsOptional()

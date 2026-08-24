@@ -1,10 +1,7 @@
 import { ShiftHandover } from '../entities/shift-handover.entity';
 
 export type HandoverEventType =
-  | 'submitted'
-  | 'accepted'
-  | 'rejected'
-  | 'changes_requested';
+  'submitted' | 'accepted' | 'rejected' | 'changes_requested';
 
 /**
  * Su kien vong doi ban giao cong viec.

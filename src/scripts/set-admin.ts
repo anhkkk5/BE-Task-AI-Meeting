@@ -21,7 +21,10 @@ async function main() {
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE,
-    ssl: process.env.MYSQL_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+    ssl:
+      process.env.MYSQL_SSL === 'true'
+        ? { rejectUnauthorized: false }
+        : undefined,
   });
 
   const [rows] = await conn.execute(
@@ -29,7 +32,12 @@ async function main() {
     [email],
   );
 
-  const users = rows as { id: string; email: string; full_name: string; is_system_admin: number }[];
+  const users = rows as {
+    id: string;
+    email: string;
+    full_name: string;
+    is_system_admin: number;
+  }[];
 
   if (users.length === 0) {
     console.error(`❌ Không tìm thấy user với email: ${email}`);
@@ -45,12 +53,14 @@ async function main() {
   console.log(`  - Admin hiện tại: ${user.is_system_admin ? 'CÓ' : 'KHÔNG'}`);
 
   const newValue = user.is_system_admin ? 0 : 1;
-  await conn.execute(
-    'UPDATE users SET is_system_admin = ? WHERE email = ?',
-    [newValue, email],
-  );
+  await conn.execute('UPDATE users SET is_system_admin = ? WHERE email = ?', [
+    newValue,
+    email,
+  ]);
 
-  console.log(`\n🎉 Đã ${newValue ? 'CẤP' : 'THU HỒI'} quyền System Admin cho ${user.email}!`);
+  console.log(
+    `\n🎉 Đã ${newValue ? 'CẤP' : 'THU HỒI'} quyền System Admin cho ${user.email}!`,
+  );
   await conn.end();
 }
 

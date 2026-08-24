@@ -426,7 +426,13 @@ let AiTeamReportService = class AiTeamReportService {
             approvedBy: report.approvedBy ?? null,
             approvedAt: report.approvedAt ?? null,
             createdBy: report.createdBy,
-            ...(includeInputData ? { inputData: report.inputData, citations: (0, report_citations_1.buildReportCitations)(report.inputData), claims: (0, report_citations_1.buildReportClaims)(report.aiOutput, report.inputData) } : {}),
+            ...(includeInputData
+                ? {
+                    inputData: report.inputData,
+                    citations: (0, report_citations_1.buildReportCitations)(report.inputData),
+                    claims: (0, report_citations_1.buildReportClaims)(report.aiOutput, report.inputData),
+                }
+                : {}),
             createdAt: stampedReport.createdAt,
             updatedAt: stampedReport.updatedAt,
         };

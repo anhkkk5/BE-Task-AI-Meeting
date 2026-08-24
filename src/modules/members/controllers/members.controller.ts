@@ -143,7 +143,17 @@ export class MembersController {
 
   @Patch(':memberId/capacity')
   @UseGuards(WorkspaceMemberGuard)
-  updateCapacity(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('memberId') memberId: string, @Body() dto: UpdateMemberCapacityDto) {
-    return this.membersService.updateCapacity(user.id, workspaceId, memberId, dto);
+  updateCapacity(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('memberId') memberId: string,
+    @Body() dto: UpdateMemberCapacityDto,
+  ) {
+    return this.membersService.updateCapacity(
+      user.id,
+      workspaceId,
+      memberId,
+      dto,
+    );
   }
 }

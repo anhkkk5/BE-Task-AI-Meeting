@@ -132,7 +132,11 @@ export class StatsRepository {
     return this.tasksRepository
       .createQueryBuilder('task')
       .innerJoin('task.project', 'project')
-      .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
+      .innerJoin(
+        'workflow_statuses',
+        'workflowStatus',
+        'workflowStatus.id = task.workflow_status_id',
+      )
       .select('workflowStatus.status_key', 'status')
       .addSelect('COUNT(task.id)', 'total')
       .where('project.workspaceId = :workspaceId', { workspaceId })
@@ -159,7 +163,11 @@ export class StatsRepository {
   countSprintTasksByStatus(sprintId: string) {
     return this.tasksRepository
       .createQueryBuilder('task')
-      .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
+      .innerJoin(
+        'workflow_statuses',
+        'workflowStatus',
+        'workflowStatus.id = task.workflow_status_id',
+      )
       .select('workflowStatus.status_key', 'status')
       .addSelect('COUNT(task.id)', 'total')
       .where('task.sprintId = :sprintId', { sprintId })
@@ -176,11 +184,17 @@ export class StatsRepository {
     return this.tasksRepository
       .createQueryBuilder('task')
       .innerJoinAndSelect('task.project', 'project')
-      .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
+      .innerJoin(
+        'workflow_statuses',
+        'workflowStatus',
+        'workflowStatus.id = task.workflow_status_id',
+      )
       .leftJoinAndSelect('task.assignee', 'assignee')
       .where('project.workspaceId = :workspaceId', { workspaceId })
       .andWhere('task.dueDate IS NOT NULL')
-      .andWhere('workflowStatus.category != :doneCategory', { doneCategory: 'DONE' })
+      .andWhere('workflowStatus.category != :doneCategory', {
+        doneCategory: 'DONE',
+      })
       .andWhere('task.deletedAt IS NULL')
       .andWhere('project.deletedAt IS NULL')
       .orderBy('task.dueDate', 'ASC')
@@ -197,11 +211,17 @@ export class StatsRepository {
     return this.tasksRepository
       .createQueryBuilder('task')
       .innerJoin('task.project', 'project')
-      .innerJoin('workflow_statuses', 'workflowStatus', 'workflowStatus.id = task.workflow_status_id')
+      .innerJoin(
+        'workflow_statuses',
+        'workflowStatus',
+        'workflowStatus.id = task.workflow_status_id',
+      )
       .select('DATE(task.updated_at)', 'day')
       .addSelect('COUNT(task.id)', 'total')
       .where('project.workspace_id = :workspaceId', { workspaceId })
-      .andWhere('workflowStatus.category = :doneCategory', { doneCategory: 'DONE' })
+      .andWhere('workflowStatus.category = :doneCategory', {
+        doneCategory: 'DONE',
+      })
       .andWhere('task.updated_at >= :fromDate', { fromDate })
       .andWhere('task.deletedAt IS NULL')
       .andWhere('project.deletedAt IS NULL')

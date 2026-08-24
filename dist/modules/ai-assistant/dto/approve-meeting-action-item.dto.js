@@ -68,7 +68,9 @@ __decorate([
     __metadata("design:type", String)
 ], ApproveMeetingActionItemDto.prototype, "dueDate", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Cho phép tạo dù hệ thống phát hiện task tương tự.' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Cho phép tạo dù hệ thống phát hiện task tương tự.',
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)

@@ -6,9 +6,13 @@ import { SprintsRepository } from '../../sprints/repositories/sprints.repository
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
 import { AskAgileFlowAssistantDto } from '../dto/ask-agileflow-assistant.dto';
 import { AiProjectAssistantService } from './ai-project-assistant.service';
-import { AiProviderService, ProjectAssistantOutput } from './ai-provider.service';
+import {
+  AiProviderService,
+  ProjectAssistantOutput,
+} from './ai-provider.service';
 
-type ContextState = 'GLOBAL' | 'NEED_WORKSPACE' | 'NEED_PROJECT' | 'NEED_SPRINT' | 'READY';
+type ContextState =
+  'GLOBAL' | 'NEED_WORKSPACE' | 'NEED_PROJECT' | 'NEED_SPRINT' | 'READY';
 type ContextChoice = { id: string; label: string; description?: string };
 
 const PRODUCT_KNOWLEDGE = `
@@ -31,10 +35,15 @@ export class AiAgileFlowAssistantService {
   ) {}
 
   async ask(userId: string, dto: AskAgileFlowAssistantDto) {
-    if (this.isFeatureQuestion(dto.question)) return this.answerFeatureQuestion(dto.question);
+    if (this.isFeatureQuestion(dto.question))
+      return this.answerFeatureQuestion(dto.question);
 
     if (!dto.workspaceId) {
-      const memberships = await this.workspaceMembersRepository.findActiveByUser(userId, 'ACTIVE');
+      const memberships =
+        await this.workspaceMembersRepository.findActiveByUser(
+          userId,
+          'ACTIVE',
+        );
       return this.choiceResponse(
         'NEED_WORKSPACE',
         'Bạn muốn tra cứu dữ liệu trong Workspace nào?',
@@ -48,11 +57,14 @@ export class AiAgileFlowAssistantService {
 
     await this.assertWorkspaceMembership(userId, dto.workspaceId);
     if (!dto.projectId) {
-      const projects = await this.projectsRepository.findByWorkspace(dto.workspaceId, {
-        status: ProjectStatus.Active,
-        page: 1,
-        limit: 100,
-      });
+      const projects = await this.projectsRepository.findByWorkspace(
+        dto.workspaceId,
+        {
+          status: ProjectStatus.Active,
+          page: 1,
+          limit: 100,
+        },
+      );
       return this.choiceResponse(
         'NEED_PROJECT',
         'Bạn muốn tra cứu trong dự án nào?',
@@ -64,13 +76,24 @@ export class AiAgileFlowAssistantService {
       );
     }
 
-    const project = await this.projectsRepository.findByIdAndWorkspace(dto.projectId, dto.workspaceId);
-    if (!project) throw new ForbiddenException('Dự án không thuộc Workspace đã chọn');
+    const project = await this.projectsRepository.findByIdAndWorkspace(
+      dto.projectId,
+      dto.workspaceId,
+    );
+    if (!project)
+      throw new ForbiddenException('Dự án không thuộc Workspace đã chọn');
 
     if (this.needsSprint(dto.question) && !dto.sprintId) {
-      const sprints = await this.sprintsRepository.findByProject(dto.projectId, { page: 1, limit: 100 });
+      const sprints = await this.sprintsRepository.findByProject(
+        dto.projectId,
+        { page: 1, limit: 100 },
+      );
       const visible = sprints.items.filter((sprint) =>
-        [SprintStatus.Active, SprintStatus.Planned, SprintStatus.Completed].includes(sprint.status),
+        [
+          SprintStatus.Active,
+          SprintStatus.Planned,
+          SprintStatus.Completed,
+        ].includes(sprint.status),
       );
       return this.choiceResponse(
         'NEED_SPRINT',
@@ -83,60 +106,122 @@ export class AiAgileFlowAssistantService {
       );
     }
 
-    const result = await this.projectAssistantService.ask(userId, dto.workspaceId, dto.projectId, {
-      question: dto.question,
-      ...(dto.sprintId ? { sprintId: dto.sprintId } : {}),
-    });
+    const result = await this.projectAssistantService.ask(
+      userId,
+      dto.workspaceId,
+      dto.projectId,
+      {
+        question: dto.question,
+        ...(dto.sprintId ? { sprintId: dto.sprintId } : {}),
+      },
+    );
     return {
       ...result,
-      data: { ...result.data, state: 'READY' as ContextState, choices: [] as ContextChoice[] },
+      data: {
+        ...result.data,
+        state: 'READY' as ContextState,
+        choices: [] as ContextChoice[],
+      },
     };
   }
 
   private async answerFeatureQuestion(question: string) {
     const fallback: ProjectAssistantOutput = {
-      answer: 'Tôi có thể hướng dẫn bạn sử dụng Workspace, Project, Backlog, Sprint, Task, cuộc họp, bàn giao và báo cáo AI trong AgileFlow.',
-      suggestedQuestions: ['Backlog là gì?', 'Cách tạo Sprint?', 'Cách mời thành viên vào Workspace?'],
+      answer:
+        'Tôi có thể hướng dẫn bạn sử dụng Workspace, Project, Backlog, Sprint, Task, cuộc họp, bàn giao và báo cáo AI trong AgileFlow.',
+      suggestedQuestions: [
+        'Backlog là gì?',
+        'Cách tạo Sprint?',
+        'Cách mời thành viên vào Workspace?',
+      ],
     };
     const prompt = `${PRODUCT_KNOWLEDGE}\nCâu hỏi: ${question}\nHãy trả lời ngắn gọn bằng tiếng Việt và nêu các bước thao tác nếu phù hợp.`;
     let output = fallback;
     try {
-      output = (await this.aiProviderService.generateProjectAssistantAnswer(prompt, fallback)).output;
+      output = (
+        await this.aiProviderService.generateProjectAssistantAnswer(
+          prompt,
+          fallback,
+        )
+      ).output;
     } catch {
       // Dùng câu trả lời an toàn khi provider tạm thời không khả dụng.
     }
     return {
       success: true,
       message: 'Hỏi trợ lý AgileFlow thành công',
-      data: { answer: output.answer, suggestedQuestions: output.suggestedQuestions, sources: [], state: 'GLOBAL' as ContextState, choices: [] as ContextChoice[], scope: { workspaceId: null, projectId: null, sprintId: null } },
+      data: {
+        answer: output.answer,
+        suggestedQuestions: output.suggestedQuestions,
+        sources: [],
+        state: 'GLOBAL' as ContextState,
+        choices: [] as ContextChoice[],
+        scope: { workspaceId: null, projectId: null, sprintId: null },
+      },
     };
   }
 
-  private choiceResponse(state: ContextState, answer: string, choices: ContextChoice[]) {
+  private choiceResponse(
+    state: ContextState,
+    answer: string,
+    choices: ContextChoice[],
+  ) {
     return {
       success: true,
       message: 'Cần bổ sung phạm vi tra cứu',
-      data: { answer: choices.length ? answer : 'Không có dữ liệu phù hợp mà tài khoản của bạn được phép truy cập.', suggestedQuestions: [], sources: [], state, choices, scope: {} },
+      data: {
+        answer: choices.length
+          ? answer
+          : 'Không có dữ liệu phù hợp mà tài khoản của bạn được phép truy cập.',
+        suggestedQuestions: [],
+        sources: [],
+        state,
+        choices,
+        scope: {},
+      },
     };
   }
 
   private isFeatureQuestion(question: string) {
     const normalized = this.normalize(question);
-    return ['la gi', 'cach ', 'lam sao', 'huong dan', 'tinh nang', 'quyen gi', 'co tac dung gi'].some((term) => normalized.includes(term));
+    return [
+      'la gi',
+      'cach ',
+      'lam sao',
+      'huong dan',
+      'tinh nang',
+      'quyen gi',
+      'co tac dung gi',
+    ].some((term) => normalized.includes(term));
   }
 
   private needsSprint(question: string) {
     const normalized = this.normalize(question);
-    return ['sprint', 'backlog', 'tien do', 'qua han', 'cong viec', 'task'].some((term) => normalized.includes(term));
+    return [
+      'sprint',
+      'backlog',
+      'tien do',
+      'qua han',
+      'cong viec',
+      'task',
+    ].some((term) => normalized.includes(term));
   }
 
   private normalize(value: string) {
-    return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 
   private async assertWorkspaceMembership(userId: string, workspaceId: string) {
-    const membership = await this.workspaceMembersRepository.findActiveByWorkspaceAndUser(workspaceId, userId);
-    if (!membership) throw new ForbiddenException('Bạn không có quyền truy cập Workspace này');
+    const membership =
+      await this.workspaceMembersRepository.findActiveByWorkspaceAndUser(
+        workspaceId,
+        userId,
+      );
+    if (!membership)
+      throw new ForbiddenException('Bạn không có quyền truy cập Workspace này');
   }
 
   private sprintStatusLabel(status: SprintStatus) {

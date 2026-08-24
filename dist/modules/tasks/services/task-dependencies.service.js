@@ -30,7 +30,11 @@ let TaskDependenciesService = class TaskDependenciesService {
     async list(userId, workspaceId, projectId, taskId) {
         await this.assertAccess(userId, workspaceId, projectId, taskId);
         const items = await this.repository.findByTask(taskId);
-        return { success: true, message: 'Get task dependencies successfully', data: { items } };
+        return {
+            success: true,
+            message: 'Get task dependencies successfully',
+            data: { items },
+        };
     }
     async create(userId, workspaceId, projectId, sourceTaskId, dto) {
         await this.assertAccess(userId, workspaceId, projectId, sourceTaskId);
@@ -42,8 +46,17 @@ let TaskDependenciesService = class TaskDependenciesService {
         if ([task_dependency_type_enum_1.TaskDependencyType.Blocks, task_dependency_type_enum_1.TaskDependencyType.DependsOn].includes(dto.type)) {
             await this.assertNoCycle(projectId, sourceTaskId, dto.targetTaskId, dto.type);
         }
-        const dependency = await this.repository.create({ sourceTaskId, targetTaskId: dto.targetTaskId, type: dto.type, createdBy: userId });
-        return { success: true, message: 'Create task dependency successfully', data: { dependency } };
+        const dependency = await this.repository.create({
+            sourceTaskId,
+            targetTaskId: dto.targetTaskId,
+            type: dto.type,
+            createdBy: userId,
+        });
+        return {
+            success: true,
+            message: 'Create task dependency successfully',
+            data: { dependency },
+        };
     }
     async remove(userId, workspaceId, projectId, taskId, dependencyId) {
         await this.assertAccess(userId, workspaceId, projectId, taskId);
@@ -51,7 +64,11 @@ let TaskDependenciesService = class TaskDependenciesService {
         if (!item || (item.sourceTaskId !== taskId && item.targetTaskId !== taskId))
             throw new common_1.NotFoundException('Task dependency not found');
         await this.repository.remove(item);
-        return { success: true, message: 'Delete task dependency successfully', data: null };
+        return {
+            success: true,
+            message: 'Delete task dependency successfully',
+            data: null,
+        };
     }
     async assertAccess(userId, workspaceId, projectId, taskId) {
         await this.workspaceAccessService.assertWorkspaceMember(userId, workspaceId);
@@ -62,11 +79,15 @@ let TaskDependenciesService = class TaskDependenciesService {
         const edges = (await this.repository.findByProject(projectId)).filter((item) => [task_dependency_type_enum_1.TaskDependencyType.Blocks, task_dependency_type_enum_1.TaskDependencyType.DependsOn].includes(item.type));
         const graph = new Map();
         const add = (from, to) => graph.set(from, [...(graph.get(from) ?? []), to]);
-        edges.forEach((item) => item.type === task_dependency_type_enum_1.TaskDependencyType.Blocks ? add(item.sourceTaskId, item.targetTaskId) : add(item.targetTaskId, item.sourceTaskId));
+        edges.forEach((item) => item.type === task_dependency_type_enum_1.TaskDependencyType.Blocks
+            ? add(item.sourceTaskId, item.targetTaskId)
+            : add(item.targetTaskId, item.sourceTaskId));
         const from = type === task_dependency_type_enum_1.TaskDependencyType.Blocks ? source : target;
         const to = type === task_dependency_type_enum_1.TaskDependencyType.Blocks ? target : source;
         const seen = new Set();
-        const reaches = (node) => node === from || (!seen.has(node) && (seen.add(node), (graph.get(node) ?? []).some(reaches)));
+        const reaches = (node) => node === from ||
+            (!seen.has(node) &&
+                (seen.add(node), (graph.get(node) ?? []).some(reaches)));
         if (reaches(to))
             throw new common_1.BadRequestException('This dependency would create a cycle');
     }

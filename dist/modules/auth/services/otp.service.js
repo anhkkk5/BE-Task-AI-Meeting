@@ -168,7 +168,10 @@ let OtpService = OtpService_1 = class OtpService {
             return { status: 'TOO_MANY_ATTEMPTS' };
         }
         await this.redis.set(key, JSON.stringify(stored), 'EX', Math.max(1, ttl));
-        return { status: 'INVALID', remainingAttempts: exports.OTP_MAX_ATTEMPTS - stored.attempts };
+        return {
+            status: 'INVALID',
+            remainingAttempts: exports.OTP_MAX_ATTEMPTS - stored.attempts,
+        };
     }
     registrationKey(email) {
         return `auth:register:otp:${email.toLowerCase()}`;

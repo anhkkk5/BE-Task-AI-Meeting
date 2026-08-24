@@ -92,7 +92,10 @@ export class StatsService {
 
   /** So lieu chi tiet cho dashboard cua 1 workspace. */
   async getWorkspaceDashboard(userId: string, workspaceId: string) {
-    await this.workspaceAccessService.assertWorkspaceMember(userId, workspaceId);
+    await this.workspaceAccessService.assertWorkspaceMember(
+      userId,
+      workspaceId,
+    );
 
     const today = new Date();
     const fromDate = new Date(today);

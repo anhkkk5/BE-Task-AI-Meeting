@@ -68,7 +68,11 @@ let AiAgileFlowAssistantService = class AiAgileFlowAssistantService {
             throw new common_1.ForbiddenException('Dự án không thuộc Workspace đã chọn');
         if (this.needsSprint(dto.question) && !dto.sprintId) {
             const sprints = await this.sprintsRepository.findByProject(dto.projectId, { page: 1, limit: 100 });
-            const visible = sprints.items.filter((sprint) => [sprint_status_enum_1.SprintStatus.Active, sprint_status_enum_1.SprintStatus.Planned, sprint_status_enum_1.SprintStatus.Completed].includes(sprint.status));
+            const visible = sprints.items.filter((sprint) => [
+                sprint_status_enum_1.SprintStatus.Active,
+                sprint_status_enum_1.SprintStatus.Planned,
+                sprint_status_enum_1.SprintStatus.Completed,
+            ].includes(sprint.status));
             return this.choiceResponse('NEED_SPRINT', 'Bạn muốn xem Sprint nào?', visible.map((sprint) => ({
                 id: sprint.id,
                 label: sprint.name,
@@ -81,13 +85,21 @@ let AiAgileFlowAssistantService = class AiAgileFlowAssistantService {
         });
         return {
             ...result,
-            data: { ...result.data, state: 'READY', choices: [] },
+            data: {
+                ...result.data,
+                state: 'READY',
+                choices: [],
+            },
         };
     }
     async answerFeatureQuestion(question) {
         const fallback = {
             answer: 'Tôi có thể hướng dẫn bạn sử dụng Workspace, Project, Backlog, Sprint, Task, cuộc họp, bàn giao và báo cáo AI trong AgileFlow.',
-            suggestedQuestions: ['Backlog là gì?', 'Cách tạo Sprint?', 'Cách mời thành viên vào Workspace?'],
+            suggestedQuestions: [
+                'Backlog là gì?',
+                'Cách tạo Sprint?',
+                'Cách mời thành viên vào Workspace?',
+            ],
         };
         const prompt = `${PRODUCT_KNOWLEDGE}\nCâu hỏi: ${question}\nHãy trả lời ngắn gọn bằng tiếng Việt và nêu các bước thao tác nếu phù hợp.`;
         let output = fallback;
@@ -99,26 +111,60 @@ let AiAgileFlowAssistantService = class AiAgileFlowAssistantService {
         return {
             success: true,
             message: 'Hỏi trợ lý AgileFlow thành công',
-            data: { answer: output.answer, suggestedQuestions: output.suggestedQuestions, sources: [], state: 'GLOBAL', choices: [], scope: { workspaceId: null, projectId: null, sprintId: null } },
+            data: {
+                answer: output.answer,
+                suggestedQuestions: output.suggestedQuestions,
+                sources: [],
+                state: 'GLOBAL',
+                choices: [],
+                scope: { workspaceId: null, projectId: null, sprintId: null },
+            },
         };
     }
     choiceResponse(state, answer, choices) {
         return {
             success: true,
             message: 'Cần bổ sung phạm vi tra cứu',
-            data: { answer: choices.length ? answer : 'Không có dữ liệu phù hợp mà tài khoản của bạn được phép truy cập.', suggestedQuestions: [], sources: [], state, choices, scope: {} },
+            data: {
+                answer: choices.length
+                    ? answer
+                    : 'Không có dữ liệu phù hợp mà tài khoản của bạn được phép truy cập.',
+                suggestedQuestions: [],
+                sources: [],
+                state,
+                choices,
+                scope: {},
+            },
         };
     }
     isFeatureQuestion(question) {
         const normalized = this.normalize(question);
-        return ['la gi', 'cach ', 'lam sao', 'huong dan', 'tinh nang', 'quyen gi', 'co tac dung gi'].some((term) => normalized.includes(term));
+        return [
+            'la gi',
+            'cach ',
+            'lam sao',
+            'huong dan',
+            'tinh nang',
+            'quyen gi',
+            'co tac dung gi',
+        ].some((term) => normalized.includes(term));
     }
     needsSprint(question) {
         const normalized = this.normalize(question);
-        return ['sprint', 'backlog', 'tien do', 'qua han', 'cong viec', 'task'].some((term) => normalized.includes(term));
+        return [
+            'sprint',
+            'backlog',
+            'tien do',
+            'qua han',
+            'cong viec',
+            'task',
+        ].some((term) => normalized.includes(term));
     }
     normalize(value) {
-        return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return value
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
     }
     async assertWorkspaceMembership(userId, workspaceId) {
         const membership = await this.workspaceMembersRepository.findActiveByWorkspaceAndUser(workspaceId, userId);

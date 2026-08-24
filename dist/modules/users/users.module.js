@@ -23,7 +23,12 @@ exports.UsersModule = UsersModule = __decorate([
     (0, common_1.Module)({
         imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, ai_user_preference_entity_1.AiUserPreference])],
         controllers: [users_controller_1.UsersController],
-        providers: [users_repository_1.UsersRepository, users_service_1.UsersService, ai_user_preferences_service_1.AiUserPreferencesService, avatar_upload_service_1.AvatarUploadService],
+        providers: [
+            users_repository_1.UsersRepository,
+            users_service_1.UsersService,
+            ai_user_preferences_service_1.AiUserPreferencesService,
+            avatar_upload_service_1.AvatarUploadService,
+        ],
         exports: [users_service_1.UsersService, ai_user_preferences_service_1.AiUserPreferencesService],
     })
 ], UsersModule);

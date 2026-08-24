@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateTeamReportActionItems1719700000000
-  implements MigrationInterface
-{
+export class CreateTeamReportActionItems1719700000000 implements MigrationInterface {
   name = 'CreateTeamReportActionItems1719700000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

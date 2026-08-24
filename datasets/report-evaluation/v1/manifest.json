@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "caseCount": 30,
+  "development": 6,
+  "test": 24,
+  "scenarios": {
+    "NORMAL_PROGRESS": 5,
+    "OVERDUE_TASKS": 5,
+    "TEAM_BLOCKERS": 5,
+    "MISSING_DAILY_UPDATES": 5,
+    "HANDOVER_RISK": 5,
+    "MEETING_DECISIONS": 5
+  }
+}

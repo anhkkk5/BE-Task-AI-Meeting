@@ -42,7 +42,11 @@ const NOISE_PATTERNS = [
     /nho like va share/,
     /nhan nut dang ky/,
 ];
-const URL_PATTERNS = [/https?:\/\//i, /www\./i, /\.(com|org|net|vn)\b/i];
+const URL_PATTERNS = [
+    /https?:\/\//i,
+    /www\./i,
+    /\.(com|org|net|vn)\b/i,
+];
 function stripDiacritics(value) {
     return value
         .normalize('NFD')

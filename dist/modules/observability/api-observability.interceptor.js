@@ -18,8 +18,35 @@ let ApiObservabilityInterceptor = class ApiObservabilityInterceptor {
     constructor(observability) {
         this.observability = observability;
     }
-    intercept(context, next) { const request = context.switchToHttp().getRequest(); const started = Date.now(); const operation = `${request.method} ${request.route?.path ?? request.url.split('?')[0]}`; return next.handle().pipe((0, rxjs_1.tap)(() => { const durationMs = Date.now() - started; if (durationMs >= 1000)
-        void this.observability.record({ kind: 'API', status: 'SLOW', operation, durationMs, error: null, metadata: null }); }), (0, rxjs_1.catchError)((error) => { void this.observability.record({ kind: 'API', status: 'FAILED', operation, durationMs: Date.now() - started, error: error instanceof Error ? error.message : String(error), metadata: null }); return (0, rxjs_1.throwError)(() => error); })); }
+    intercept(context, next) {
+        const request = context
+            .switchToHttp()
+            .getRequest();
+        const started = Date.now();
+        const operation = `${request.method} ${request.route?.path ?? request.url.split('?')[0]}`;
+        return next.handle().pipe((0, rxjs_1.tap)(() => {
+            const durationMs = Date.now() - started;
+            if (durationMs >= 1000)
+                void this.observability.record({
+                    kind: 'API',
+                    status: 'SLOW',
+                    operation,
+                    durationMs,
+                    error: null,
+                    metadata: null,
+                });
+        }), (0, rxjs_1.catchError)((error) => {
+            void this.observability.record({
+                kind: 'API',
+                status: 'FAILED',
+                operation,
+                durationMs: Date.now() - started,
+                error: error instanceof Error ? error.message : String(error),
+                metadata: null,
+            });
+            return (0, rxjs_1.throwError)(() => error);
+        }));
+    }
 };
 exports.ApiObservabilityInterceptor = ApiObservabilityInterceptor;
 exports.ApiObservabilityInterceptor = ApiObservabilityInterceptor = __decorate([

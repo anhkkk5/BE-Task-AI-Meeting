@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "caseCount": 42,
+  "development": 6,
+  "test": 36,
+  "categories": {
+    "TASK": 7,
+    "SPRINT": 7,
+    "MEETING": 7,
+    "ACTION_ITEM": 7,
+    "CROSS_SOURCE": 7,
+    "SUGGESTED_QUESTIONS": 7
+  }
+}

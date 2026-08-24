@@ -66,8 +66,12 @@ let ShiftHandoversRepository = class ShiftHandoversRepository {
         if (query.memberId) {
             builder.andWhere(new typeorm_2.Brackets((where) => {
                 where
-                    .where('handover.senderId = :memberId', { memberId: query.memberId })
-                    .orWhere('handover.receiverId = :memberId', { memberId: query.memberId });
+                    .where('handover.senderId = :memberId', {
+                    memberId: query.memberId,
+                })
+                    .orWhere('handover.receiverId = :memberId', {
+                    memberId: query.memberId,
+                });
             }));
         }
         if (query.taskId) {

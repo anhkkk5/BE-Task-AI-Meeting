@@ -47,12 +47,16 @@ export class ShiftHandoversService {
     await this.assertTaskCanBeHandedOver(task, userId);
 
     if (dto.receiverId === userId) {
-      throw new BadRequestException('Người nhận phải khác người đang phụ trách task');
+      throw new BadRequestException(
+        'Người nhận phải khác người đang phụ trách task',
+      );
     }
     await this.assertActiveMember(workspaceId, dto.receiverId);
 
     if (await this.repository.findOpenByTask(task.id)) {
-      throw new ConflictException('Task này đang có một yêu cầu bàn giao chưa hoàn tất');
+      throw new ConflictException(
+        'Task này đang có một yêu cầu bàn giao chưa hoàn tất',
+      );
     }
 
     const handover = await this.repository.createHandover({
@@ -122,7 +126,9 @@ export class ShiftHandoversService {
 
     if (dto.receiverId) {
       if (dto.receiverId === userId) {
-        throw new BadRequestException('Người nhận phải khác người đang phụ trách task');
+        throw new BadRequestException(
+          'Người nhận phải khác người đang phụ trách task',
+        );
       }
       await this.assertActiveMember(workspaceId, dto.receiverId);
     }
@@ -131,13 +137,24 @@ export class ShiftHandoversService {
       receiverId: dto.receiverId ?? handover.receiverId,
       completedWork: dto.completedWork?.trim() ?? handover.completedWork,
       remainingWork: dto.remainingWork?.trim() ?? handover.remainingWork,
-      blockers: dto.blockers === undefined ? handover.blockers : this.optionalText(dto.blockers),
-      nextSteps: dto.nextSteps === undefined ? handover.nextSteps : this.optionalText(dto.nextSteps),
+      blockers:
+        dto.blockers === undefined
+          ? handover.blockers
+          : this.optionalText(dto.blockers),
+      nextSteps:
+        dto.nextSteps === undefined
+          ? handover.nextSteps
+          : this.optionalText(dto.nextSteps),
       referenceLinks:
         dto.referenceLinks === undefined
           ? handover.referenceLinks
           : this.optionalText(dto.referenceLinks),
-      dueAt: dto.dueAt === undefined ? handover.dueAt : dto.dueAt ? new Date(dto.dueAt) : null,
+      dueAt:
+        dto.dueAt === undefined
+          ? handover.dueAt
+          : dto.dueAt
+            ? new Date(dto.dueAt)
+            : null,
       status: HandoverStatus.Draft,
       changeRequest: null,
       rejectionReason: null,
@@ -164,7 +181,9 @@ export class ShiftHandoversService {
     await this.assertTaskCanBeHandedOver(task, userId);
 
     if (!handover.completedWork?.trim() || !handover.remainingWork?.trim()) {
-      throw new BadRequestException('Cần nhập phần đã làm và phần còn lại trước khi gửi');
+      throw new BadRequestException(
+        'Cần nhập phần đã làm và phần còn lại trước khi gửi',
+      );
     }
 
     await this.repository.updateHandover(handover, {
@@ -275,22 +294,38 @@ export class ShiftHandoversService {
     return this.response('Xóa bàn giao công việc thành công', null);
   }
 
-  private async assertContext(userId: string, workspaceId: string, projectId: string) {
+  private async assertContext(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+  ) {
     await this.workspaceAccess.assertWorkspaceActive(workspaceId);
     await this.workspaceAccess.assertWorkspaceMember(userId, workspaceId);
     await this.projectAccess.assertProjectInWorkspace(projectId, workspaceId);
   }
 
   private async assertActiveMember(workspaceId: string, userId: string) {
-    const member = await this.workspaceMembers.findActiveByWorkspaceAndUser(workspaceId, userId);
+    const member = await this.workspaceMembers.findActiveByWorkspaceAndUser(
+      workspaceId,
+      userId,
+    );
     if (!member) {
-      throw new BadRequestException('Người nhận không phải thành viên đang hoạt động của workspace');
+      throw new BadRequestException(
+        'Người nhận không phải thành viên đang hoạt động của workspace',
+      );
     }
   }
 
-  private async assertCreatorOrManager(userId: string, workspaceId: string, creatorId: string) {
+  private async assertCreatorOrManager(
+    userId: string,
+    workspaceId: string,
+    creatorId: string,
+  ) {
     if (userId === creatorId) return;
-    const role = await this.workspaceAccess.getUserWorkspaceRole(userId, workspaceId);
+    const role = await this.workspaceAccess.getUserWorkspaceRole(
+      userId,
+      workspaceId,
+    );
     if (!role || !managerRoles.includes(role)) {
       throw new ForbiddenException('Bạn không có quyền xóa bản bàn giao này');
     }
@@ -298,7 +333,9 @@ export class ShiftHandoversService {
 
   private async assertTaskCanBeHandedOver(task: Task, senderId: string) {
     if (task.assigneeId !== senderId) {
-      throw new ForbiddenException('Chỉ người đang phụ trách task mới được bàn giao');
+      throw new ForbiddenException(
+        'Chỉ người đang phụ trách task mới được bàn giao',
+      );
     }
     const workflowStatus = this.tasksRepository.findWorkflowStatusById
       ? await this.tasksRepository.findWorkflowStatusById(task.workflowStatusId)
@@ -307,37 +344,56 @@ export class ShiftHandoversService {
       ? workflowStatus.category === 'IN_PROGRESS'
       : ['IN_PROGRESS', 'REVIEW'].includes(task.status);
     if (!isTransferable) {
-      throw new BadRequestException('Chỉ task đang thực hiện hoặc đang review mới được bàn giao');
+      throw new BadRequestException(
+        'Chỉ task đang thực hiện hoặc đang review mới được bàn giao',
+      );
     }
   }
 
   private async getTask(taskId: string, projectId: string) {
-    const task = await this.tasksRepository.findByIdAndProject(taskId, projectId);
+    const task = await this.tasksRepository.findByIdAndProject(
+      taskId,
+      projectId,
+    );
     if (!task) throw new NotFoundException('Không tìm thấy task trong project');
     return task;
   }
 
   private async getHandoverEntity(handoverId: string, projectId: string) {
-    const handover = await this.repository.findHandoverById(handoverId, projectId);
-    if (!handover?.taskId) throw new NotFoundException('Không tìm thấy bản bàn giao công việc');
+    const handover = await this.repository.findHandoverById(
+      handoverId,
+      projectId,
+    );
+    if (!handover?.taskId)
+      throw new NotFoundException('Không tìm thấy bản bàn giao công việc');
     return handover;
   }
 
   private assertSenderCanEdit(userId: string, handover: ShiftHandover) {
     if (handover.senderId !== userId) {
-      throw new ForbiddenException('Chỉ người giao công việc được chỉnh sửa bản bàn giao');
+      throw new ForbiddenException(
+        'Chỉ người giao công việc được chỉnh sửa bản bàn giao',
+      );
     }
-    if (![HandoverStatus.Draft, HandoverStatus.ChangesRequested].includes(handover.status)) {
+    if (
+      ![HandoverStatus.Draft, HandoverStatus.ChangesRequested].includes(
+        handover.status,
+      )
+    ) {
       throw new BadRequestException('Bản bàn giao hiện không thể chỉnh sửa');
     }
   }
 
   private assertReceiverPending(userId: string, handover: ShiftHandover) {
     if (handover.receiverId !== userId) {
-      throw new ForbiddenException('Chỉ người nhận được thực hiện thao tác này');
+      throw new ForbiddenException(
+        'Chỉ người nhận được thực hiện thao tác này',
+      );
     }
     if (handover.status !== HandoverStatus.Pending) {
-      throw new BadRequestException('Bản bàn giao không ở trạng thái chờ xác nhận');
+      throw new BadRequestException(
+        'Bản bàn giao không ở trạng thái chờ xác nhận',
+      );
     }
   }
 
@@ -346,9 +402,21 @@ export class ShiftHandoversService {
     return text || null;
   }
 
-  private mapUser(user?: { id: string; fullName: string; email: string; avatarUrl: string | null } | null) {
+  private mapUser(
+    user?: {
+      id: string;
+      fullName: string;
+      email: string;
+      avatarUrl: string | null;
+    } | null,
+  ) {
     return user
-      ? { id: user.id, fullName: user.fullName, email: user.email, avatarUrl: user.avatarUrl }
+      ? {
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          avatarUrl: user.avatarUrl,
+        }
       : null;
   }
 

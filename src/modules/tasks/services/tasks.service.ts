@@ -190,10 +190,17 @@ export class TasksService {
       );
     }
     if (dto.reporterId) {
-      await this.taskAccessService.assertAssignableUser(dto.reporterId, workspaceId);
+      await this.taskAccessService.assertAssignableUser(
+        dto.reporterId,
+        workspaceId,
+      );
     }
     const parent = dto.parentId
-      ? await this.assertValidParent(dto.parentId, projectId, dto.taskType ?? TaskType.Task)
+      ? await this.assertValidParent(
+          dto.parentId,
+          projectId,
+          dto.taskType ?? TaskType.Task,
+        )
       : null;
     if ((dto.taskType ?? TaskType.Task) === TaskType.Subtask && !parent) {
       throw new BadRequestException('SUBTASK must have a parent task');
@@ -201,7 +208,12 @@ export class TasksService {
 
     const taskCode = await this.taskCodeService.generateTaskCode(project);
     const initialStatus = dto.sprintId ? TaskStatus.Todo : TaskStatus.Backlog;
-    const workflowStatusId = this.tasksRepository.findWorkflowStatusId ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, initialStatus) : null;
+    const workflowStatusId = this.tasksRepository.findWorkflowStatusId
+      ? await this.tasksRepository.findWorkflowStatusId(
+          project.workflowTemplateId,
+          initialStatus,
+        )
+      : null;
     const task = await this.tasksRepository.create({
       projectId,
       sprintId: dto.sprintId ?? null,
@@ -467,9 +479,13 @@ export class TasksService {
     for (const row of checkedRows) {
       const item = row.data;
       const taskCode = await this.taskCodeService.generateTaskCode(project);
-      const initialStatus = item.status ?? (item.sprintId ? TaskStatus.Todo : TaskStatus.Backlog);
+      const initialStatus =
+        item.status ?? (item.sprintId ? TaskStatus.Todo : TaskStatus.Backlog);
       const workflowStatusId = this.tasksRepository.findWorkflowStatusId
-        ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, initialStatus)
+        ? await this.tasksRepository.findWorkflowStatusId(
+            project.workflowTemplateId,
+            initialStatus,
+          )
         : null;
       const task = await this.tasksRepository.create({
         projectId,
@@ -488,9 +504,14 @@ export class TasksService {
         priority: TaskPriority.Medium,
         parentId: null,
       });
-      await this.recordActivity(task, currentUserId, TaskActivityAction.Created, {
-        source: { from: null, to: 'IMPORT' },
-      });
+      await this.recordActivity(
+        task,
+        currentUserId,
+        TaskActivityAction.Created,
+        {
+          source: { from: null, to: 'IMPORT' },
+        },
+      );
       tasks.push(task);
     }
 
@@ -667,7 +688,12 @@ export class TasksService {
     projectId: string,
     taskId: string,
   ) {
-    await this.assertTaskReadable(currentUserId, workspaceId, projectId, taskId);
+    await this.assertTaskReadable(
+      currentUserId,
+      workspaceId,
+      projectId,
+      taskId,
+    );
     const items = this.taskCommentsRepository
       ? await this.taskCommentsRepository.findByTask(taskId)
       : [];
@@ -715,15 +741,27 @@ export class TasksService {
             title: 'Bạn được nhắc trong bình luận',
             body: `${task.taskCode} - ${task.title}`,
             link: `/workspaces/${workspaceId}/projects/${projectId}/tasks/${task.id}`,
-            metadata: { taskId: task.id, commentId: comment.id, actorId: currentUserId },
+            metadata: {
+              taskId: task.id,
+              commentId: comment.id,
+              actorId: currentUserId,
+            },
           }),
         ),
     );
-    await this.recordActivity(task, currentUserId, TaskActivityAction.Commented, {
-      commentId: { from: null, to: comment.id },
-      mentionedUserIds: { from: [], to: mentionedUserIds },
-    });
-    const saved = await this.taskCommentsRepository.findById(comment.id, taskId);
+    await this.recordActivity(
+      task,
+      currentUserId,
+      TaskActivityAction.Commented,
+      {
+        commentId: { from: null, to: comment.id },
+        mentionedUserIds: { from: [], to: mentionedUserIds },
+      },
+    );
+    const saved = await this.taskCommentsRepository.findById(
+      comment.id,
+      taskId,
+    );
     return {
       success: true,
       message: 'Create task comment successfully',
@@ -745,18 +783,30 @@ export class TasksService {
       projectId,
       taskId,
     );
-    const comment = await this.requireOwnComment(currentUserId, taskId, commentId);
+    const comment = await this.requireOwnComment(
+      currentUserId,
+      taskId,
+      commentId,
+    );
     const previousContent = comment.content;
     const content = dto.content.trim();
-    const mentionedUserIds = await this.resolveMentionedUserIds(content, workspaceId);
+    const mentionedUserIds = await this.resolveMentionedUserIds(
+      content,
+      workspaceId,
+    );
     const updated = await this.taskCommentsRepository!.update(comment, {
       content,
       mentionedUserIds,
     });
-    await this.recordActivity(task, currentUserId, TaskActivityAction.CommentUpdated, {
-      commentId: { from: commentId, to: commentId },
-      content: { from: previousContent, to: content },
-    });
+    await this.recordActivity(
+      task,
+      currentUserId,
+      TaskActivityAction.CommentUpdated,
+      {
+        commentId: { from: commentId, to: commentId },
+        content: { from: previousContent, to: content },
+      },
+    );
     return {
       success: true,
       message: 'Update task comment successfully',
@@ -777,12 +827,25 @@ export class TasksService {
       projectId,
       taskId,
     );
-    const comment = await this.requireOwnComment(currentUserId, taskId, commentId);
-    await this.recordActivity(task, currentUserId, TaskActivityAction.CommentDeleted, {
-      commentId: { from: comment.id, to: null },
-    });
+    const comment = await this.requireOwnComment(
+      currentUserId,
+      taskId,
+      commentId,
+    );
+    await this.recordActivity(
+      task,
+      currentUserId,
+      TaskActivityAction.CommentDeleted,
+      {
+        commentId: { from: comment.id, to: null },
+      },
+    );
     await this.taskCommentsRepository!.softDelete(comment);
-    return { success: true, message: 'Delete task comment successfully', data: null };
+    return {
+      success: true,
+      message: 'Delete task comment successfully',
+      data: null,
+    };
   }
 
   async updateTask(
@@ -817,15 +880,24 @@ export class TasksService {
     ]);
 
     const nextTaskType = dto.taskType ?? task.taskType;
-    const nextParentId = dto.parentId === undefined ? task.parentId : dto.parentId;
+    const nextParentId =
+      dto.parentId === undefined ? task.parentId : dto.parentId;
     const parent = nextParentId
-      ? await this.assertValidParent(nextParentId, projectId, nextTaskType, task.id)
+      ? await this.assertValidParent(
+          nextParentId,
+          projectId,
+          nextTaskType,
+          task.id,
+        )
       : null;
     if (nextTaskType === TaskType.Subtask && !parent) {
       throw new BadRequestException('SUBTASK must have a parent task');
     }
     if (dto.reporterId) {
-      await this.taskAccessService.assertAssignableUser(dto.reporterId, workspaceId);
+      await this.taskAccessService.assertAssignableUser(
+        dto.reporterId,
+        workspaceId,
+      );
     }
 
     const updatedTask = await this.tasksRepository.update(task, {
@@ -840,9 +912,16 @@ export class TasksService {
       taskType: nextTaskType,
       priority: dto.priority ?? task.priority,
       parentId: parent?.id ?? null,
-      labels: dto.labels === undefined ? task.labels : this.normalizeLabels(dto.labels),
-      acceptanceCriteria: dto.acceptanceCriteria === undefined ? task.acceptanceCriteria : dto.acceptanceCriteria.trim() || null,
-      reporterId: dto.reporterId === undefined ? task.reporterId : dto.reporterId,
+      labels:
+        dto.labels === undefined
+          ? task.labels
+          : this.normalizeLabels(dto.labels),
+      acceptanceCriteria:
+        dto.acceptanceCriteria === undefined
+          ? task.acceptanceCriteria
+          : dto.acceptanceCriteria.trim() || null,
+      reporterId:
+        dto.reporterId === undefined ? task.reporterId : dto.reporterId,
     });
     await this.recordActivity(
       updatedTask,
@@ -877,17 +956,24 @@ export class TasksService {
       projectId,
     );
     this.taskAccessService.assertTaskEditable(task);
-    const selectedWorkflowStatus = dto.workflowStatusId && this.tasksRepository.findWorkflowStatus
-      ? await this.tasksRepository.findWorkflowStatus(project.workflowTemplateId, dto.workflowStatusId)
-      : null;
+    const selectedWorkflowStatus =
+      dto.workflowStatusId && this.tasksRepository.findWorkflowStatus
+        ? await this.tasksRepository.findWorkflowStatus(
+            project.workflowTemplateId,
+            dto.workflowStatusId,
+          )
+        : null;
     if (dto.workflowStatusId && !selectedWorkflowStatus) {
-      throw new BadRequestException('Workflow status does not belong to the project template');
+      throw new BadRequestException(
+        'Workflow status does not belong to the project template',
+      );
     }
     if (selectedWorkflowStatus && !selectedWorkflowStatus.enabled) {
       throw new BadRequestException('Workflow status is disabled');
     }
     const targetStatus = selectedWorkflowStatus?.key ?? dto.status;
-    if (!targetStatus) throw new BadRequestException('A target workflow status is required');
+    if (!targetStatus)
+      throw new BadRequestException('A target workflow status is required');
     const role = await this.taskAccessService.assertUserCanUpdateTaskStatus(
       currentUserId,
       workspaceId,
@@ -895,9 +981,17 @@ export class TasksService {
       targetStatus,
     );
     if (task.status !== targetStatus && project.workflowTransitions) {
-      const transition = project.workflowTransitions.find((item) => item.from === task.status && item.to === targetStatus);
-      if (!transition) throw new BadRequestException(`Transition ${task.status} -> ${targetStatus} is not allowed by project workflow`);
-      if (transition.roles?.length && !transition.roles.includes(role)) throw new ForbiddenException('Your role is not allowed to perform this workflow transition');
+      const transition = project.workflowTransitions.find(
+        (item) => item.from === task.status && item.to === targetStatus,
+      );
+      if (!transition)
+        throw new BadRequestException(
+          `Transition ${task.status} -> ${targetStatus} is not allowed by project workflow`,
+        );
+      if (transition.roles?.length && !transition.roles.includes(role))
+        throw new ForbiddenException(
+          'Your role is not allowed to perform this workflow transition',
+        );
     }
     this.assertBacklogStatusMatchesTaskLocation(task, targetStatus);
 
@@ -906,23 +1000,42 @@ export class TasksService {
         ? await this.taskDependenciesRepository.findIncompleteBlockers(task.id)
         : [];
     if (targetStatus === TaskStatus.Done) {
-      const incompleteChildren = await this.tasksRepository.findIncompleteChildren(task.id);
+      const incompleteChildren =
+        await this.tasksRepository.findIncompleteChildren(task.id);
       if (incompleteChildren.length) {
         throw new BadRequestException({
           message: 'Complete all child tasks before closing the parent task',
-          children: incompleteChildren.map((child) => ({ id: child.id, taskCode: child.taskCode, title: child.title, status: child.status })),
+          children: incompleteChildren.map((child) => ({
+            id: child.id,
+            taskCode: child.taskCode,
+            title: child.title,
+            status: child.status,
+          })),
         });
       }
     }
     if (incompleteBlockers.length) {
-      const managerRoles = [WorkspaceRole.Owner, WorkspaceRole.ScrumMaster, WorkspaceRole.ProjectManager];
-      const canOverride = managerRoles.includes(role) && dto.overrideBlocked === true && Boolean(dto.overrideReason?.trim());
+      const managerRoles = [
+        WorkspaceRole.Owner,
+        WorkspaceRole.ScrumMaster,
+        WorkspaceRole.ProjectManager,
+      ];
+      const canOverride =
+        managerRoles.includes(role) &&
+        dto.overrideBlocked === true &&
+        Boolean(dto.overrideReason?.trim());
       if (!canOverride) {
         throw new BadRequestException({
           message: 'Task is blocked by incomplete dependencies',
           blockers: incompleteBlockers.map((item) => {
-            const blocker = item.sourceTaskId === task.id ? item.targetTask : item.sourceTask;
-            return { id: blocker.id, taskCode: blocker.taskCode, title: blocker.title, status: blocker.status };
+            const blocker =
+              item.sourceTaskId === task.id ? item.targetTask : item.sourceTask;
+            return {
+              id: blocker.id,
+              taskCode: blocker.taskCode,
+              title: blocker.title,
+              status: blocker.status,
+            };
           }),
           overrideRequired: managerRoles.includes(role),
         });
@@ -931,12 +1044,25 @@ export class TasksService {
 
     const previousStatus = task.status;
 
-    const workflowStatusId = selectedWorkflowStatus?.id ?? (this.tasksRepository.findWorkflowStatusId ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, targetStatus) : null);
+    const workflowStatusId =
+      selectedWorkflowStatus?.id ??
+      (this.tasksRepository.findWorkflowStatusId
+        ? await this.tasksRepository.findWorkflowStatusId(
+            project.workflowTemplateId,
+            targetStatus,
+          )
+        : null);
     const updatedTask = await this.tasksRepository.update(task, {
       status: targetStatus,
       workflowStatusId,
-      completedAt: targetStatus === TaskStatus.Done ? task.completedAt ?? new Date() : null,
-      startedAt: targetStatus === TaskStatus.InProgress ? task.startedAt ?? new Date() : task.startedAt,
+      completedAt:
+        targetStatus === TaskStatus.Done
+          ? (task.completedAt ?? new Date())
+          : null,
+      startedAt:
+        targetStatus === TaskStatus.InProgress
+          ? (task.startedAt ?? new Date())
+          : task.startedAt,
     });
     await this.recordActivity(
       updatedTask,
@@ -944,11 +1070,21 @@ export class TasksService {
       TaskActivityAction.StatusChanged,
       {
         status: { from: previousStatus, to: updatedTask.status },
-        ...(incompleteBlockers.length ? { dependencyOverrideReason: { from: null, to: dto.overrideReason!.trim() } } : {}),
+        ...(incompleteBlockers.length
+          ? {
+              dependencyOverrideReason: {
+                from: null,
+                to: dto.overrideReason!.trim(),
+              },
+            }
+          : {}),
       },
     );
 
-    if (targetStatus === TaskStatus.Done && previousStatus !== TaskStatus.Done) {
+    if (
+      targetStatus === TaskStatus.Done &&
+      previousStatus !== TaskStatus.Done
+    ) {
       await this.notifyNewlyUnblockedTasks(updatedTask, workspaceId, projectId);
     }
 
@@ -1137,7 +1273,11 @@ export class TasksService {
     if (children.length) {
       throw new BadRequestException({
         message: 'Move or delete child tasks before deleting the parent task',
-        children: children.map((child) => ({ id: child.id, taskCode: child.taskCode, title: child.title })),
+        children: children.map((child) => ({
+          id: child.id,
+          taskCode: child.taskCode,
+          title: child.title,
+        })),
       });
     }
     await this.recordActivity(task, currentUserId, TaskActivityAction.Deleted);
@@ -1575,13 +1715,19 @@ export class TasksService {
     projectId: string,
   ) {
     if (!this.taskDependenciesRepository || !this.notificationsService) return;
-    const relations = await this.taskDependenciesRepository.findTasksUnblockedBy(blocker.id);
+    const relations =
+      await this.taskDependenciesRepository.findTasksUnblockedBy(blocker.id);
     const dependents = relations.map((item) =>
       item.sourceTaskId === blocker.id ? item.targetTask : item.sourceTask,
     );
     for (const task of dependents) {
-      if (!task.assigneeId || [TaskStatus.Done, TaskStatus.Cancelled].includes(task.status)) continue;
-      const remaining = await this.taskDependenciesRepository.findIncompleteBlockers(task.id);
+      if (
+        !task.assigneeId ||
+        [TaskStatus.Done, TaskStatus.Cancelled].includes(task.status)
+      )
+        continue;
+      const remaining =
+        await this.taskDependenciesRepository.findIncompleteBlockers(task.id);
       if (remaining.length) continue;
       await this.notificationsService.create({
         recipientId: task.assigneeId,
@@ -1609,8 +1755,14 @@ export class TasksService {
     projectId: string,
     taskId: string,
   ) {
-    await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
-    await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
+    await this.workspaceAccessService.assertWorkspaceMember(
+      currentUserId,
+      workspaceId,
+    );
+    await this.projectAccessService.assertProjectInWorkspace(
+      projectId,
+      workspaceId,
+    );
     return this.taskAccessService.assertTaskInProject(taskId, projectId);
   }
 
@@ -1622,28 +1774,39 @@ export class TasksService {
     if (!this.taskCommentsRepository) {
       throw new BadRequestException('Task comments are unavailable');
     }
-    const comment = await this.taskCommentsRepository.findById(commentId, taskId);
+    const comment = await this.taskCommentsRepository.findById(
+      commentId,
+      taskId,
+    );
     if (!comment) throw new NotFoundException('Task comment not found');
     if (comment.authorId !== currentUserId) {
-      throw new ForbiddenException('You can only edit or delete your own comment');
+      throw new ForbiddenException(
+        'You can only edit or delete your own comment',
+      );
     }
     return comment;
   }
 
   private async resolveMentionedUserIds(content: string, workspaceId: string) {
     const emails = new Set(
-      Array.from(content.matchAll(/@([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/gi)).map(
-        (match) => match[1].toLowerCase(),
-      ),
+      Array.from(
+        content.matchAll(/@([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/gi),
+      ).map((match) => match[1].toLowerCase()),
     );
     if (emails.size === 0) return [];
-    const members = await this.workspaceMembersRepository.findActiveByWorkspace(workspaceId);
+    const members =
+      await this.workspaceMembersRepository.findActiveByWorkspace(workspaceId);
     return members
-      .filter((member) => member.user?.email && emails.has(member.user.email.toLowerCase()))
+      .filter(
+        (member) =>
+          member.user?.email && emails.has(member.user.email.toLowerCase()),
+      )
       .map((member) => member.userId);
   }
 
-  private toCommentResponse(comment: import('../entities/task-comment.entity').TaskComment) {
+  private toCommentResponse(
+    comment: import('../entities/task-comment.entity').TaskComment,
+  ) {
     return {
       id: comment.id,
       taskId: comment.taskId,
@@ -1718,27 +1881,44 @@ export class TasksService {
     childType: TaskType,
     currentTaskId?: string,
   ) {
-    if (parentId === currentTaskId) throw new BadRequestException('Task can not be its own parent');
-    if (childType === TaskType.Epic) throw new BadRequestException('EPIC can not have a parent');
-    const parent = await this.taskAccessService.assertTaskInProject(parentId, projectId);
-    if (parent.taskType === TaskType.Subtask) throw new BadRequestException('SUBTASK can not be a parent');
+    if (parentId === currentTaskId)
+      throw new BadRequestException('Task can not be its own parent');
+    if (childType === TaskType.Epic)
+      throw new BadRequestException('EPIC can not have a parent');
+    const parent = await this.taskAccessService.assertTaskInProject(
+      parentId,
+      projectId,
+    );
+    if (parent.taskType === TaskType.Subtask)
+      throw new BadRequestException('SUBTASK can not be a parent');
     if (childType === TaskType.Story && parent.taskType !== TaskType.Epic) {
       throw new BadRequestException('STORY parent must be an EPIC');
     }
     let ancestor = parent;
     const visited = new Set<string>();
     while (ancestor.parentId) {
-      if (ancestor.parentId === currentTaskId) throw new BadRequestException('Task hierarchy can not contain a cycle');
-      if (visited.has(ancestor.parentId)) throw new BadRequestException('Existing task hierarchy contains a cycle');
+      if (ancestor.parentId === currentTaskId)
+        throw new BadRequestException('Task hierarchy can not contain a cycle');
+      if (visited.has(ancestor.parentId))
+        throw new BadRequestException(
+          'Existing task hierarchy contains a cycle',
+        );
       visited.add(ancestor.parentId);
-      ancestor = await this.taskAccessService.assertTaskInProject(ancestor.parentId, projectId);
+      ancestor = await this.taskAccessService.assertTaskInProject(
+        ancestor.parentId,
+        projectId,
+      );
     }
     return parent;
   }
 
   private normalizeLabels(labels?: string[]) {
     if (!labels?.length) return null;
-    return [...new Set(labels.map((label) => label.trim().toLowerCase()).filter(Boolean))].slice(0, 20);
+    return [
+      ...new Set(
+        labels.map((label) => label.trim().toLowerCase()).filter(Boolean),
+      ),
+    ].slice(0, 20);
   }
 
   private toTaskResponse(task: Task) {
@@ -1757,13 +1937,36 @@ export class TasksService {
       taskType: task.taskType ?? TaskType.Task,
       priority: task.priority ?? TaskPriority.Medium,
       parentId: task.parentId ?? null,
-      parent: task.parent ? { id: task.parent.id, taskCode: task.parent.taskCode, title: task.parent.title, taskType: task.parent.taskType } : null,
-      children: task.children?.map((child) => ({ id: child.id, taskCode: child.taskCode, title: child.title, taskType: child.taskType, status: child.status })) ?? [],
-      childProgress: task.children?.length ? {
-        total: task.children.length,
-        done: task.children.filter((child) => child.status === TaskStatus.Done).length,
-        percent: Math.round((task.children.filter((child) => child.status === TaskStatus.Done).length / task.children.length) * 100),
-      } : null,
+      parent: task.parent
+        ? {
+            id: task.parent.id,
+            taskCode: task.parent.taskCode,
+            title: task.parent.title,
+            taskType: task.parent.taskType,
+          }
+        : null,
+      children:
+        task.children?.map((child) => ({
+          id: child.id,
+          taskCode: child.taskCode,
+          title: child.title,
+          taskType: child.taskType,
+          status: child.status,
+        })) ?? [],
+      childProgress: task.children?.length
+        ? {
+            total: task.children.length,
+            done: task.children.filter(
+              (child) => child.status === TaskStatus.Done,
+            ).length,
+            percent: Math.round(
+              (task.children.filter((child) => child.status === TaskStatus.Done)
+                .length /
+                task.children.length) *
+                100,
+            ),
+          }
+        : null,
       assigneeId: task.assigneeId,
       assignee: task.assignee
         ? {
@@ -1774,7 +1977,14 @@ export class TasksService {
           }
         : null,
       reporterId: task.reporterId,
-      reporter: task.reporter ? { id: task.reporter.id, fullName: task.reporter.fullName, email: task.reporter.email, avatarUrl: task.reporter.avatarUrl } : null,
+      reporter: task.reporter
+        ? {
+            id: task.reporter.id,
+            fullName: task.reporter.fullName,
+            email: task.reporter.email,
+            avatarUrl: task.reporter.avatarUrl,
+          }
+        : null,
       createdBy: task.createdBy,
       creator: task.creator
         ? {

@@ -38,7 +38,9 @@ let RefreshTokenStrategy = RefreshTokenStrategy_1 = class RefreshTokenStrategy e
         if (!user || user.status !== user_status_enum_1.UserStatus.Active) {
             throw new common_1.UnauthorizedException('Invalid refresh token');
         }
-        if (payload.sid && this.securityRepository && !(await this.securityRepository.findSession(payload.sid, user.id)))
+        if (payload.sid &&
+            this.securityRepository &&
+            !(await this.securityRepository.findSession(payload.sid, user.id)))
             throw new common_1.UnauthorizedException('Session has been revoked');
         return {
             id: user.id,
@@ -63,6 +65,7 @@ exports.RefreshTokenStrategy = RefreshTokenStrategy;
 exports.RefreshTokenStrategy = RefreshTokenStrategy = RefreshTokenStrategy_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(1, (0, common_1.Optional)()),
-    __metadata("design:paramtypes", [users_service_1.UsersService, auth_security_repository_1.AuthSecurityRepository])
+    __metadata("design:paramtypes", [users_service_1.UsersService,
+        auth_security_repository_1.AuthSecurityRepository])
 ], RefreshTokenStrategy);
 //# sourceMappingURL=refresh-token.strategy.js.map

@@ -24,7 +24,10 @@ describe('MeetingTranscriptsService', () => {
     Pick<MeetingsRepository, 'updateTranscriptId'>
   >;
   let meetingParticipantsRepository: jest.Mocked<
-    Pick<MeetingParticipantsRepository, 'findByMeetingAndUser' | 'findByMeeting'>
+    Pick<
+      MeetingParticipantsRepository,
+      'findByMeetingAndUser' | 'findByMeeting'
+    >
   >;
   let meetingAccessService: jest.Mocked<
     Pick<

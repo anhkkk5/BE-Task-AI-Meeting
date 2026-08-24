@@ -24,12 +24,24 @@ let NotificationsController = class NotificationsController {
     constructor(service) {
         this.service = service;
     }
-    list(user, query) { return this.service.list(user.id, query); }
-    markAllRead(user) { return this.service.markAllRead(user.id); }
-    getPreferences(user) { return this.service.getPreferences(user.id); }
-    updatePreferences(user, dto) { return this.service.updatePreferences(user.id, dto); }
-    markRead(user, id) { return this.service.markRead(user.id, id); }
-    archive(user, id) { return this.service.archive(user.id, id); }
+    list(user, query) {
+        return this.service.list(user.id, query);
+    }
+    markAllRead(user) {
+        return this.service.markAllRead(user.id);
+    }
+    getPreferences(user) {
+        return this.service.getPreferences(user.id);
+    }
+    updatePreferences(user, dto) {
+        return this.service.updatePreferences(user.id, dto);
+    }
+    markRead(user, id) {
+        return this.service.markRead(user.id, id);
+    }
+    archive(user, id) {
+        return this.service.archive(user.id, id);
+    }
 };
 exports.NotificationsController = NotificationsController;
 __decorate([

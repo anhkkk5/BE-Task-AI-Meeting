@@ -63,7 +63,10 @@ __decorate([
     __metadata("design:type", String)
 ], UpdateTaskDto.prototype, "priority", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ nullable: true, description: 'UUID Task cha; null để bỏ liên kết.' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        nullable: true,
+        description: 'UUID Task cha; null để bỏ liên kết.',
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", Object)

@@ -41,15 +41,39 @@ export class MembersService {
     };
   }
 
-  async updateCapacity(currentUserId: string, workspaceId: string, memberId: string, dto: UpdateMemberCapacityDto) {
-    const current = await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
-    const target = await this.workspaceMembersRepository.findByIdAndWorkspace(memberId, workspaceId);
-    if (!target || target.status !== WorkspaceMemberStatus.Active) throw new NotFoundException('Workspace member not found');
-    const managers = [WorkspaceRole.Owner, WorkspaceRole.ScrumMaster, WorkspaceRole.ProjectManager];
-    if (target.userId !== currentUserId && !managers.includes(current.role)) throw new BadRequestException('You can only update your own capacity');
+  async updateCapacity(
+    currentUserId: string,
+    workspaceId: string,
+    memberId: string,
+    dto: UpdateMemberCapacityDto,
+  ) {
+    const current = await this.workspaceAccessService.assertWorkspaceMember(
+      currentUserId,
+      workspaceId,
+    );
+    const target = await this.workspaceMembersRepository.findByIdAndWorkspace(
+      memberId,
+      workspaceId,
+    );
+    if (!target || target.status !== WorkspaceMemberStatus.Active)
+      throw new NotFoundException('Workspace member not found');
+    const managers = [
+      WorkspaceRole.Owner,
+      WorkspaceRole.ScrumMaster,
+      WorkspaceRole.ProjectManager,
+    ];
+    if (target.userId !== currentUserId && !managers.includes(current.role))
+      throw new BadRequestException('You can only update your own capacity');
     const unavailableDates = [...new Set(dto.unavailableDates ?? [])].sort();
-    const member = await this.workspaceMembersRepository.updateMember(target, { dailyCapacityHours: dto.dailyCapacityHours, unavailableDates });
-    return { success: true, message: 'Update member capacity successfully', data: { member: this.toMemberResponse(member) } };
+    const member = await this.workspaceMembersRepository.updateMember(target, {
+      dailyCapacityHours: dto.dailyCapacityHours,
+      unavailableDates,
+    });
+    return {
+      success: true,
+      message: 'Update member capacity successfully',
+      data: { member: this.toMemberResponse(member) },
+    };
   }
 
   async addMember(

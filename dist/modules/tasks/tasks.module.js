@@ -37,7 +37,12 @@ exports.TasksModule = TasksModule;
 exports.TasksModule = TasksModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([task_entity_1.Task, task_activity_log_entity_1.TaskActivityLog, task_comment_entity_1.TaskComment, task_dependency_entity_1.TaskDependency]),
+            typeorm_1.TypeOrmModule.forFeature([
+                task_entity_1.Task,
+                task_activity_log_entity_1.TaskActivityLog,
+                task_comment_entity_1.TaskComment,
+                task_dependency_entity_1.TaskDependency,
+            ]),
             projects_module_1.ProjectsModule,
             sprints_module_1.SprintsModule,
             workspaces_module_1.WorkspacesModule,

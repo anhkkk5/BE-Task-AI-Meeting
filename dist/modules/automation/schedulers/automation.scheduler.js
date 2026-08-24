@@ -24,15 +24,32 @@ let AutomationScheduler = class AutomationScheduler {
         this.service = service;
         this.observability = observability;
     }
-    async run() { const started = Date.now(); try {
-        const rules = await this.repo.enabledRules();
-        for (const rule of rules)
-            await this.service.runRule(rule);
-        await this.observability.record({ kind: 'SCHEDULER', status: 'SUCCESS', operation: 'automation.run', durationMs: Date.now() - started, error: null, metadata: { rules: rules.length } });
+    async run() {
+        const started = Date.now();
+        try {
+            const rules = await this.repo.enabledRules();
+            for (const rule of rules)
+                await this.service.runRule(rule);
+            await this.observability.record({
+                kind: 'SCHEDULER',
+                status: 'SUCCESS',
+                operation: 'automation.run',
+                durationMs: Date.now() - started,
+                error: null,
+                metadata: { rules: rules.length },
+            });
+        }
+        catch (error) {
+            await this.observability.record({
+                kind: 'SCHEDULER',
+                status: 'FAILED',
+                operation: 'automation.run',
+                durationMs: Date.now() - started,
+                error: error instanceof Error ? error.message : String(error),
+                metadata: null,
+            });
+        }
     }
-    catch (error) {
-        await this.observability.record({ kind: 'SCHEDULER', status: 'FAILED', operation: 'automation.run', durationMs: Date.now() - started, error: error instanceof Error ? error.message : String(error), metadata: null });
-    } }
 };
 exports.AutomationScheduler = AutomationScheduler;
 __decorate([
@@ -43,6 +60,8 @@ __decorate([
 ], AutomationScheduler.prototype, "run", null);
 exports.AutomationScheduler = AutomationScheduler = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [automation_repository_1.AutomationRepository, automation_service_1.AutomationService, observability_service_1.ObservabilityService])
+    __metadata("design:paramtypes", [automation_repository_1.AutomationRepository,
+        automation_service_1.AutomationService,
+        observability_service_1.ObservabilityService])
 ], AutomationScheduler);
 //# sourceMappingURL=automation.scheduler.js.map

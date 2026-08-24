@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "caseCount": 36,
+  "development": 6,
+  "test": 30,
+  "pairedPersonaCount": 18,
+  "features": {
+    "PERSONALIZED_SUMMARY": 12,
+    "PERSONALIZED_REPORT": 12,
+    "PERSONALIZED_QA": 12
+  },
+  "scenarios": {
+    "ROLE_RELEVANCE": 9,
+    "ASSIGNMENT_RELEVANCE": 9,
+    "PREFERENCE_ADAPTATION": 9,
+    "PRIVACY_ISOLATION": 9
+  }
+}

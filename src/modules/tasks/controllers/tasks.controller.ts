@@ -276,7 +276,12 @@ export class TasksController {
     @Param('projectId') projectId: string,
     @Param('taskId') taskId: string,
   ) {
-    return this.tasksService.getTaskComments(user.id, workspaceId, projectId, taskId);
+    return this.tasksService.getTaskComments(
+      user.id,
+      workspaceId,
+      projectId,
+      taskId,
+    );
   }
 
   @Post('tasks/:taskId/comments')
@@ -288,7 +293,13 @@ export class TasksController {
     @Param('taskId') taskId: string,
     @Body() dto: CreateTaskCommentDto,
   ) {
-    return this.tasksService.createTaskComment(user.id, workspaceId, projectId, taskId, dto);
+    return this.tasksService.createTaskComment(
+      user.id,
+      workspaceId,
+      projectId,
+      taskId,
+      dto,
+    );
   }
 
   @Patch('tasks/:taskId/comments/:commentId')
@@ -301,7 +312,14 @@ export class TasksController {
     @Param('commentId') commentId: string,
     @Body() dto: UpdateTaskCommentDto,
   ) {
-    return this.tasksService.updateTaskComment(user.id, workspaceId, projectId, taskId, commentId, dto);
+    return this.tasksService.updateTaskComment(
+      user.id,
+      workspaceId,
+      projectId,
+      taskId,
+      commentId,
+      dto,
+    );
   }
 
   @Delete('tasks/:taskId/comments/:commentId')
@@ -313,7 +331,13 @@ export class TasksController {
     @Param('taskId') taskId: string,
     @Param('commentId') commentId: string,
   ) {
-    return this.tasksService.deleteTaskComment(user.id, workspaceId, projectId, taskId, commentId);
+    return this.tasksService.deleteTaskComment(
+      user.id,
+      workspaceId,
+      projectId,
+      taskId,
+      commentId,
+    );
   }
 
   @Patch('tasks/:taskId')

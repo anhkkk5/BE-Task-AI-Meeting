@@ -27,7 +27,10 @@ describe('AiAgileFlowAssistantService', () => {
 
   it('answers product feature questions without requiring a workspace', async () => {
     provider.generateProjectAssistantAnswer.mockResolvedValue({
-      output: { answer: 'Backlog là danh sách công việc chưa vào Sprint.', suggestedQuestions: [] },
+      output: {
+        answer: 'Backlog là danh sách công việc chưa vào Sprint.',
+        suggestedQuestions: [],
+      },
     });
 
     const result = await service.ask('user-1', { question: 'Backlog là gì?' });
@@ -38,10 +41,14 @@ describe('AiAgileFlowAssistantService', () => {
 
   it('offers only workspaces accessible to the current user', async () => {
     memberships.findActiveByUser.mockResolvedValue([
-      { workspace: { id: 'workspace-1', name: 'Nhóm Alpha', description: null } },
+      {
+        workspace: { id: 'workspace-1', name: 'Nhóm Alpha', description: null },
+      },
     ]);
 
-    const result = await service.ask('user-1', { question: 'Backlog hiện có gì?' });
+    const result = await service.ask('user-1', {
+      question: 'Backlog hiện có gì?',
+    });
 
     expect(result.data.state).toBe('NEED_WORKSPACE');
     expect(result.data.choices).toEqual([
@@ -50,7 +57,9 @@ describe('AiAgileFlowAssistantService', () => {
   });
 
   it('continues from workspace to project selection', async () => {
-    memberships.findActiveByWorkspaceAndUser.mockResolvedValue({ id: 'member-1' });
+    memberships.findActiveByWorkspaceAndUser.mockResolvedValue({
+      id: 'member-1',
+    });
     projects.findByWorkspace.mockResolvedValue({
       items: [{ id: 'project-1', name: 'Website', keyCode: 'WEB' }],
     });

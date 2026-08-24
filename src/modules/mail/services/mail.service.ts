@@ -32,13 +32,38 @@ export class MailService {
     const started = Date.now();
     try {
       switch (config.provider) {
-        case 'smtp': await this.sendViaSmtp(input); break;
-        case 'brevo': await this.sendViaBrevo(input); break;
-        default: this.logToConsole(input);
+        case 'smtp':
+          await this.sendViaSmtp(input);
+          break;
+        case 'brevo':
+          await this.sendViaBrevo(input);
+          break;
+        default:
+          this.logToConsole(input);
       }
-      await this.observability?.record({ kind: 'EMAIL', status: 'SUCCESS', operation: `mail.${config.provider}`, durationMs: Date.now() - started, error: null, metadata: { subject: input.subject, recipientDomain: input.to.split('@')[1] ?? 'unknown' } });
+      await this.observability?.record({
+        kind: 'EMAIL',
+        status: 'SUCCESS',
+        operation: `mail.${config.provider}`,
+        durationMs: Date.now() - started,
+        error: null,
+        metadata: {
+          subject: input.subject,
+          recipientDomain: input.to.split('@')[1] ?? 'unknown',
+        },
+      });
     } catch (error) {
-      await this.observability?.record({ kind: 'EMAIL', status: 'FAILED', operation: `mail.${config.provider}`, durationMs: Date.now() - started, error: error instanceof Error ? error.message : String(error), metadata: { subject: input.subject, recipientDomain: input.to.split('@')[1] ?? 'unknown' } });
+      await this.observability?.record({
+        kind: 'EMAIL',
+        status: 'FAILED',
+        operation: `mail.${config.provider}`,
+        durationMs: Date.now() - started,
+        error: error instanceof Error ? error.message : String(error),
+        metadata: {
+          subject: input.subject,
+          recipientDomain: input.to.split('@')[1] ?? 'unknown',
+        },
+      });
       throw error;
     }
   }
@@ -124,7 +149,9 @@ export class MailService {
 
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
-        throw new Error(`Brevo tra ve ${response.status}: ${detail.slice(0, 200)}`);
+        throw new Error(
+          `Brevo tra ve ${response.status}: ${detail.slice(0, 200)}`,
+        );
       }
 
       this.logger.log(

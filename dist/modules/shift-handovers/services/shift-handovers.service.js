@@ -104,12 +104,20 @@ let ShiftHandoversService = class ShiftHandoversService {
             receiverId: dto.receiverId ?? handover.receiverId,
             completedWork: dto.completedWork?.trim() ?? handover.completedWork,
             remainingWork: dto.remainingWork?.trim() ?? handover.remainingWork,
-            blockers: dto.blockers === undefined ? handover.blockers : this.optionalText(dto.blockers),
-            nextSteps: dto.nextSteps === undefined ? handover.nextSteps : this.optionalText(dto.nextSteps),
+            blockers: dto.blockers === undefined
+                ? handover.blockers
+                : this.optionalText(dto.blockers),
+            nextSteps: dto.nextSteps === undefined
+                ? handover.nextSteps
+                : this.optionalText(dto.nextSteps),
             referenceLinks: dto.referenceLinks === undefined
                 ? handover.referenceLinks
                 : this.optionalText(dto.referenceLinks),
-            dueAt: dto.dueAt === undefined ? handover.dueAt : dto.dueAt ? new Date(dto.dueAt) : null,
+            dueAt: dto.dueAt === undefined
+                ? handover.dueAt
+                : dto.dueAt
+                    ? new Date(dto.dueAt)
+                    : null,
             status: handover_status_enum_1.HandoverStatus.Draft,
             changeRequest: null,
             rejectionReason: null,
@@ -266,7 +274,12 @@ let ShiftHandoversService = class ShiftHandoversService {
     }
     mapUser(user) {
         return user
-            ? { id: user.id, fullName: user.fullName, email: user.email, avatarUrl: user.avatarUrl }
+            ? {
+                id: user.id,
+                fullName: user.fullName,
+                email: user.email,
+                avatarUrl: user.avatarUrl,
+            }
             : null;
     }
     mapHandover(handover) {

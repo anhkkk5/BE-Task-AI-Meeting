@@ -58,11 +58,21 @@ export class Task {
   })
   status: TaskStatus;
 
-  @Column({ name: 'workflow_status_id', type: 'varchar', length: 36, nullable: true })
+  @Column({
+    name: 'workflow_status_id',
+    type: 'varchar',
+    length: 36,
+    nullable: true,
+  })
   workflowStatusId: string | null;
 
   @Index()
-  @Column({ name: 'task_type', type: 'enum', enum: TaskType, default: TaskType.Task })
+  @Column({
+    name: 'task_type',
+    type: 'enum',
+    enum: TaskType,
+    default: TaskType.Task,
+  })
   taskType: TaskType;
 
   @Index()
@@ -120,7 +130,10 @@ export class Task {
   @JoinColumn({ name: 'created_by' })
   creator: User;
 
-  @ManyToOne(() => Task, (task) => task.children, { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => Task, (task) => task.children, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'parent_id' })
   parent: Task | null;
 

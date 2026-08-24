@@ -126,10 +126,12 @@ describe('WorkspaceAccessService', () => {
     });
 
     it('doc lai DB sau khi cache bi xoa', async () => {
-      workspaceMembersRepository.findActiveByWorkspaceAndUser.mockResolvedValue({
-        role: WorkspaceRole.Owner,
-        status: WorkspaceMemberStatus.Active,
-      } as never);
+      workspaceMembersRepository.findActiveByWorkspaceAndUser.mockResolvedValue(
+        {
+          role: WorkspaceRole.Owner,
+          status: WorkspaceMemberStatus.Active,
+        } as never,
+      );
 
       await service.getMembershipSnapshot('user-id', 'workspace-id');
       service.invalidateMembership('user-id', 'workspace-id');
@@ -168,10 +170,12 @@ describe('WorkspaceAccessService', () => {
     });
 
     it('khong dung cache cho entity dung o luong ghi', async () => {
-      workspaceMembersRepository.findActiveByWorkspaceAndUser.mockResolvedValue({
-        role: WorkspaceRole.Owner,
-        status: WorkspaceMemberStatus.Active,
-      } as never);
+      workspaceMembersRepository.findActiveByWorkspaceAndUser.mockResolvedValue(
+        {
+          role: WorkspaceRole.Owner,
+          status: WorkspaceMemberStatus.Active,
+        } as never,
+      );
 
       await service.assertWorkspaceMember('user-id', 'workspace-id');
       await service.assertWorkspaceMember('user-id', 'workspace-id');

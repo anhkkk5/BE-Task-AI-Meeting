@@ -1,0 +1,472 @@
+{
+  "summary": {
+    "generatedAt": "2026-08-23T21:06:07.527Z",
+    "methodology": {
+      "unit": "File *.spec.ts trong src; dependency duoc mock/isolate.",
+      "integrationE2e": "File *.e2e-spec.ts trong test; khoi tao Nest TestingModule va kiem tra luong HTTP/module.",
+      "rbac": "File co guard, WorkspaceRole, ForbiddenException/RBAC/HTTP 403.",
+      "multiTenancy": "File co assertion ve bien workspace/tenant; danh sach file duoc cong khai de kiem tra thu cong."
+    },
+    "files": 55,
+    "suites": 61,
+    "testCases": 356,
+    "unit": {
+      "files": 41,
+      "testCases": 246
+    },
+    "integrationE2e": {
+      "files": 14,
+      "testCases": 110
+    },
+    "rbac": {
+      "files": 27,
+      "testCases": 222
+    },
+    "multiTenancy": {
+      "files": 2,
+      "testCases": 15
+    }
+  },
+  "files": [
+    {
+      "path": "src/app.controller.spec.ts",
+      "layer": "unit",
+      "testCases": 1,
+      "suites": 2,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/common/guards/workspace-roles.guard.spec.ts",
+      "layer": "unit",
+      "testCases": 4,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/common/utils/transcript-noise.util.spec.ts",
+      "layer": "unit",
+      "testCases": 4,
+      "suites": 3,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/listeners/auto-meeting-summary.listener.spec.ts",
+      "layer": "unit",
+      "testCases": 2,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/schedulers/ai-daily-report-scheduler.service.spec.ts",
+      "layer": "unit",
+      "testCases": 4,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/services/ai-agileflow-assistant.service.spec.ts",
+      "layer": "unit",
+      "testCases": 3,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/services/ai-meeting-action-item-review.service.spec.ts",
+      "layer": "unit",
+      "testCases": 4,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/services/ai-meeting-summary.service.spec.ts",
+      "layer": "unit",
+      "testCases": 6,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/services/ai-personal-report.service.spec.ts",
+      "layer": "unit",
+      "testCases": 6,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/services/ai-personalized-meeting-summary.service.spec.ts",
+      "layer": "unit",
+      "testCases": 5,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/services/ai-project-assistant.service.spec.ts",
+      "layer": "unit",
+      "testCases": 6,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/services/ai-provider.service.spec.ts",
+      "layer": "unit",
+      "testCases": 7,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/services/ai-report-access.service.spec.ts",
+      "layer": "unit",
+      "testCases": 4,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/services/ai-report-handover-data.spec.ts",
+      "layer": "unit",
+      "testCases": 6,
+      "suites": 3,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/services/ai-team-report-action-item.service.spec.ts",
+      "layer": "unit",
+      "testCases": 9,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/services/ai-team-report.service.spec.ts",
+      "layer": "unit",
+      "testCases": 11,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/ai-assistant/services/prompt-builder.service.spec.ts",
+      "layer": "unit",
+      "testCases": 3,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/auth/services/auth.service.spec.ts",
+      "layer": "unit",
+      "testCases": 7,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/automation/services/automation.service.spec.ts",
+      "layer": "unit",
+      "testCases": 2,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/daily-updates/services/daily-updates.service.spec.ts",
+      "layer": "unit",
+      "testCases": 9,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/meetings/gateways/meeting-signaling.gateway.spec.ts",
+      "layer": "unit",
+      "testCases": 6,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/meetings/schedulers/meeting-auto-complete-scheduler.service.spec.ts",
+      "layer": "unit",
+      "testCases": 6,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/meetings/services/groq-transcription.service.spec.ts",
+      "layer": "unit",
+      "testCases": 6,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/meetings/services/meeting-participants.service.spec.ts",
+      "layer": "unit",
+      "testCases": 4,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/meetings/services/meeting-transcripts.service.spec.ts",
+      "layer": "unit",
+      "testCases": 6,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/meetings/services/meetings.service.spec.ts",
+      "layer": "unit",
+      "testCases": 8,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/members/services/members.service.spec.ts",
+      "layer": "unit",
+      "testCases": 11,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/projects/services/project-access.service.spec.ts",
+      "layer": "unit",
+      "testCases": 4,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": true
+    },
+    {
+      "path": "src/modules/projects/services/project-key-code.service.spec.ts",
+      "layer": "unit",
+      "testCases": 10,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/projects/services/projects.service.spec.ts",
+      "layer": "unit",
+      "testCases": 8,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/shift-handovers/listeners/handover-notification.listener.spec.ts",
+      "layer": "unit",
+      "testCases": 6,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/shift-handovers/services/shift-handovers.service.spec.ts",
+      "layer": "unit",
+      "testCases": 11,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/sprints/services/sprints.service.spec.ts",
+      "layer": "unit",
+      "testCases": 12,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/tasks/schedulers/task-deadline-notification-scheduler.service.spec.ts",
+      "layer": "unit",
+      "testCases": 1,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/tasks/services/task-access.service.spec.ts",
+      "layer": "unit",
+      "testCases": 3,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/tasks/services/task-dependencies.service.spec.ts",
+      "layer": "unit",
+      "testCases": 3,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/tasks/services/tasks.service.spec.ts",
+      "layer": "unit",
+      "testCases": 13,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/users/services/ai-user-preferences.service.spec.ts",
+      "layer": "unit",
+      "testCases": 3,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/users/services/users.service.spec.ts",
+      "layer": "unit",
+      "testCases": 5,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "src/modules/workspaces/services/workspace-access.service.spec.ts",
+      "layer": "unit",
+      "testCases": 11,
+      "suites": 2,
+      "rbac": true,
+      "multiTenancy": true
+    },
+    {
+      "path": "src/modules/workspaces/services/workspaces.service.spec.ts",
+      "layer": "unit",
+      "testCases": 6,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/ai-meeting-summaries.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 6,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/ai-personal-reports.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 7,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/ai-personalized-meeting-summaries.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 9,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/ai-team-reports.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 7,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/app.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 1,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/auth.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 5,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/daily-updates.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 10,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/meetings.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 12,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/members.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 9,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/projects.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 10,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/sprints.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 10,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/tasks.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 13,
+      "suites": 1,
+      "rbac": true,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/users.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 4,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    },
+    {
+      "path": "test/workspaces.e2e-spec.ts",
+      "layer": "integration/e2e",
+      "testCases": 7,
+      "suites": 1,
+      "rbac": false,
+      "multiTenancy": false
+    }
+  ]
+}

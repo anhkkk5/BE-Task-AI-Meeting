@@ -54,7 +54,12 @@ __decorate([
     __metadata("design:type", Date)
 ], AuthSession.prototype, "expiresAt", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'revoked_at', type: 'datetime', precision: 6, nullable: true }),
+    (0, typeorm_1.Column)({
+        name: 'revoked_at',
+        type: 'datetime',
+        precision: 6,
+        nullable: true,
+    }),
     __metadata("design:type", Object)
 ], AuthSession.prototype, "revokedAt", void 0);
 __decorate([

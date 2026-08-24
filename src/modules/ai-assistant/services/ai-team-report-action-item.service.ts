@@ -381,7 +381,9 @@ export class AiTeamReportActionItemService {
       report.projectId !== projectId ||
       report.reportType !== AiReportType.TeamDailyReport
     ) {
-      throw new NotFoundException('Khong tim thay bao cao giao ban trong du an');
+      throw new NotFoundException(
+        'Khong tim thay bao cao giao ban trong du an',
+      );
     }
 
     return report;

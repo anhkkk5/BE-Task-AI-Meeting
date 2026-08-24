@@ -31,7 +31,10 @@ __decorate([
     __metadata("design:type", String)
 ], UpdateTaskStatusDto.prototype, "status", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ required: false, description: 'Workflow status UUID. Ưu tiên trường này cho workflow động.' }),
+    (0, swagger_1.ApiProperty)({
+        required: false,
+        description: 'Workflow status UUID. Ưu tiên trường này cho workflow động.',
+    }),
     (0, class_validator_1.ValidateIf)((value) => !value.status),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)

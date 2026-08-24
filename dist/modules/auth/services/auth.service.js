@@ -181,9 +181,23 @@ let AuthService = class AuthService {
         }
         if (user.mfaEnabled) {
             const otp = this.otpService.generateOtp();
-            await this.otpService.saveSecurityChallenge('mfa', user.email, otp, { userId: user.id, ...context });
+            await this.otpService.saveSecurityChallenge('mfa', user.email, otp, {
+                userId: user.id,
+                ...context,
+            });
             await this.sendSecurityOtp(user.email, user.fullName, otp, 'Mã xác thực đăng nhập');
-            return { mfaRequired: true, body: { success: true, message: 'Cần xác thực MFA', data: { mfaRequired: true, email: user.email, otpExpiresInSeconds: otp_service_1.OTP_TTL_SECONDS } } };
+            return {
+                mfaRequired: true,
+                body: {
+                    success: true,
+                    message: 'Cần xác thực MFA',
+                    data: {
+                        mfaRequired: true,
+                        email: user.email,
+                        otpExpiresInSeconds: otp_service_1.OTP_TTL_SECONDS,
+                    },
+                },
+            };
         }
         const tokens = await this.issueSessionTokens(user, context);
         await this.recordLoginAttempt(user.id, email, true, 'PASSWORD', context);
@@ -191,7 +205,9 @@ let AuthService = class AuthService {
     }
     async refreshTokens(authUser, refreshToken) {
         const user = await this.usersService.findById(authUser.id);
-        const session = authUser.sessionId && this.authSecurityRepository ? await this.authSecurityRepository.findSession(authUser.sessionId, authUser.id) : null;
+        const session = authUser.sessionId && this.authSecurityRepository
+            ? await this.authSecurityRepository.findSession(authUser.sessionId, authUser.id)
+            : null;
         if (!user || (!session && !user.refreshTokenHash)) {
             throw new common_1.UnauthorizedException('Invalid refresh token');
         }
@@ -201,7 +217,10 @@ let AuthService = class AuthService {
         }
         const tokens = await this.issueTokens(user, authUser.sessionId);
         if (session && this.authSecurityRepository)
-            await this.authSecurityRepository.updateSession(session.id, { refreshTokenHash: await bcrypt.hash(tokens.refreshToken, this.saltRounds), lastUsedAt: new Date() });
+            await this.authSecurityRepository.updateSession(session.id, {
+                refreshTokenHash: await bcrypt.hash(tokens.refreshToken, this.saltRounds),
+                lastUsedAt: new Date(),
+            });
         else
             await this.storeRefreshTokenHash(user.id, tokens.refreshToken);
         return this.authResponse('Refresh token successfully', user, tokens);
@@ -222,10 +241,16 @@ let AuthService = class AuthService {
         const user = await this.usersService.findByEmail(email);
         if (user?.status === user_status_enum_1.UserStatus.Active) {
             const otp = this.otpService.generateOtp();
-            await this.otpService.saveSecurityChallenge('reset', email, otp, { userId: user.id });
+            await this.otpService.saveSecurityChallenge('reset', email, otp, {
+                userId: user.id,
+            });
             await this.sendSecurityOtp(email, user.fullName, otp, 'Mã đặt lại mật khẩu');
         }
-        return { success: true, message: 'Nếu email tồn tại, mã đặt lại mật khẩu đã được gửi.', data: { email, otpExpiresInSeconds: otp_service_1.OTP_TTL_SECONDS } };
+        return {
+            success: true,
+            message: 'Nếu email tồn tại, mã đặt lại mật khẩu đã được gửi.',
+            data: { email, otpExpiresInSeconds: otp_service_1.OTP_TTL_SECONDS },
+        };
     }
     async resetPassword(dto) {
         const email = dto.email.trim().toLowerCase();
@@ -235,15 +260,29 @@ let AuthService = class AuthService {
         const user = await this.usersService.findByEmail(email);
         if (!user || result.data.userId !== user.id)
             throw new common_1.BadRequestException('Mã xác thực không hợp lệ');
-        await this.usersService.updateSecurity(user.id, { passwordHash: await bcrypt.hash(dto.newPassword, this.saltRounds), refreshTokenHash: null });
+        await this.usersService.updateSecurity(user.id, {
+            passwordHash: await bcrypt.hash(dto.newPassword, this.saltRounds),
+            refreshTokenHash: null,
+        });
         await this.authSecurityRepository?.revokeOtherSessions(user.id);
-        return { success: true, message: 'Đặt lại mật khẩu thành công', data: null };
+        return {
+            success: true,
+            message: 'Đặt lại mật khẩu thành công',
+            data: null,
+        };
     }
     async setMfa(authUser, enabled) {
-        const user = await this.usersService.updateSecurity(authUser.id, { mfaEnabled: enabled, refreshTokenHash: enabled ? null : undefined });
+        const user = await this.usersService.updateSecurity(authUser.id, {
+            mfaEnabled: enabled,
+            refreshTokenHash: enabled ? null : undefined,
+        });
         if (enabled)
             await this.authSecurityRepository?.revokeOtherSessions(authUser.id, authUser.sessionId);
-        return { success: true, message: enabled ? 'Đã bật MFA qua email' : 'Đã tắt MFA', data: user ? this.toPublicUser(user) : null };
+        return {
+            success: true,
+            message: enabled ? 'Đã bật MFA qua email' : 'Đã tắt MFA',
+            data: user ? this.toPublicUser(user) : null,
+        };
     }
     async verifyMfa(dto) {
         const email = dto.email.trim().toLowerCase();
@@ -253,13 +292,21 @@ let AuthService = class AuthService {
         const user = await this.usersService.findByEmail(email);
         if (!user || result.data.userId !== user.id || !user.mfaEnabled)
             throw new common_1.UnauthorizedException('Mã MFA không hợp lệ');
-        const context = { ipAddress: result.data.ipAddress, userAgent: result.data.userAgent };
+        const context = {
+            ipAddress: result.data.ipAddress,
+            userAgent: result.data.userAgent,
+        };
         const tokens = await this.issueSessionTokens(user, context);
         await this.recordLoginAttempt(user.id, email, true, 'MFA', context);
         return this.authResponse('Xác thực MFA thành công', user, tokens);
     }
     sendSecurityOtp(email, fullName, otp, subject) {
-        return this.mailService.sendMail({ to: email, subject, html: `<p>Xin chào ${fullName},</p><p>Mã xác thực của bạn là <strong>${otp}</strong>. Mã hết hạn sau 10 phút.</p>`, text: `Mã xác thực của bạn là ${otp}. Mã hết hạn sau 10 phút.` });
+        return this.mailService.sendMail({
+            to: email,
+            subject,
+            html: `<p>Xin chào ${fullName},</p><p>Mã xác thực của bạn là <strong>${otp}</strong>. Mã hết hạn sau 10 phút.</p>`,
+            text: `Mã xác thực của bạn là ${otp}. Mã hết hạn sau 10 phút.`,
+        });
     }
     async getMe(authUser) {
         const user = await this.usersService.findById(authUser.id);
@@ -273,11 +320,34 @@ let AuthService = class AuthService {
         };
     }
     async getSessions(authUser) {
-        const items = this.authSecurityRepository ? await this.authSecurityRepository.listSessions(authUser.id) : [];
-        return { success: true, message: 'Get sessions successfully', data: { items: items.map((item) => ({ id: item.id, current: item.id === authUser.sessionId, userAgent: item.userAgent, ipAddress: item.ipAddress, lastUsedAt: item.lastUsedAt, createdAt: item.createdAt, expiresAt: item.expiresAt, revokedAt: item.revokedAt })) } };
+        const items = this.authSecurityRepository
+            ? await this.authSecurityRepository.listSessions(authUser.id)
+            : [];
+        return {
+            success: true,
+            message: 'Get sessions successfully',
+            data: {
+                items: items.map((item) => ({
+                    id: item.id,
+                    current: item.id === authUser.sessionId,
+                    userAgent: item.userAgent,
+                    ipAddress: item.ipAddress,
+                    lastUsedAt: item.lastUsedAt,
+                    createdAt: item.createdAt,
+                    expiresAt: item.expiresAt,
+                    revokedAt: item.revokedAt,
+                })),
+            },
+        };
     }
-    async revokeSession(authUser, sessionId) { await this.authSecurityRepository?.revokeSession(sessionId, authUser.id); return { success: true, message: 'Session revoked', data: null }; }
-    async revokeOtherSessions(authUser) { await this.authSecurityRepository?.revokeOtherSessions(authUser.id, authUser.sessionId); return { success: true, message: 'Other sessions revoked', data: null }; }
+    async revokeSession(authUser, sessionId) {
+        await this.authSecurityRepository?.revokeSession(sessionId, authUser.id);
+        return { success: true, message: 'Session revoked', data: null };
+    }
+    async revokeOtherSessions(authUser) {
+        await this.authSecurityRepository?.revokeOtherSessions(authUser.id, authUser.sessionId);
+        return { success: true, message: 'Other sessions revoked', data: null };
+    }
     async issueTokens(user, sessionId) {
         const payload = {
             sub: user.id,
@@ -309,10 +379,28 @@ let AuthService = class AuthService {
         const sessionId = (0, crypto_1.randomUUID)();
         const tokens = await this.issueTokens(user, sessionId);
         const now = new Date();
-        await this.authSecurityRepository.createSession({ id: sessionId, userId: user.id, refreshTokenHash: await bcrypt.hash(tokens.refreshToken, this.saltRounds), ipAddress: context.ipAddress ?? null, userAgent: context.userAgent?.slice(0, 500) ?? null, lastUsedAt: now, expiresAt: new Date(now.getTime() + 7 * 86400000), revokedAt: null });
+        await this.authSecurityRepository.createSession({
+            id: sessionId,
+            userId: user.id,
+            refreshTokenHash: await bcrypt.hash(tokens.refreshToken, this.saltRounds),
+            ipAddress: context.ipAddress ?? null,
+            userAgent: context.userAgent?.slice(0, 500) ?? null,
+            lastUsedAt: now,
+            expiresAt: new Date(now.getTime() + 7 * 86400000),
+            revokedAt: null,
+        });
         return tokens;
     }
-    recordLoginAttempt(userId, email, success, reason, context) { return this.authSecurityRepository?.recordAttempt({ userId, email, success, reason, ipAddress: context.ipAddress ?? null, userAgent: context.userAgent?.slice(0, 500) ?? null }) ?? Promise.resolve(); }
+    recordLoginAttempt(userId, email, success, reason, context) {
+        return (this.authSecurityRepository?.recordAttempt({
+            userId,
+            email,
+            success,
+            reason,
+            ipAddress: context.ipAddress ?? null,
+            userAgent: context.userAgent?.slice(0, 500) ?? null,
+        }) ?? Promise.resolve());
+    }
     async storeRefreshTokenHash(userId, refreshToken) {
         const refreshTokenHash = await bcrypt.hash(refreshToken, this.saltRounds);
         await this.usersService.updateRefreshTokenHash(userId, refreshTokenHash);

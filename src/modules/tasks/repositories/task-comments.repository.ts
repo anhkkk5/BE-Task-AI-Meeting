@@ -10,7 +10,12 @@ export class TaskCommentsRepository {
     private readonly repository: Repository<TaskComment>,
   ) {}
 
-  create(data: Pick<TaskComment, 'taskId' | 'authorId' | 'content' | 'mentionedUserIds'>) {
+  create(
+    data: Pick<
+      TaskComment,
+      'taskId' | 'authorId' | 'content' | 'mentionedUserIds'
+    >,
+  ) {
     return this.repository.save(this.repository.create(data));
   }
 

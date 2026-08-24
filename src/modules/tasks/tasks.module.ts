@@ -25,7 +25,12 @@ import { WorkflowShadowMonitorScheduler } from './schedulers/workflow-shadow-mon
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Task, TaskActivityLog, TaskComment, TaskDependency]),
+    TypeOrmModule.forFeature([
+      Task,
+      TaskActivityLog,
+      TaskComment,
+      TaskDependency,
+    ]),
     ProjectsModule,
     SprintsModule,
     WorkspacesModule,

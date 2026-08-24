@@ -12,13 +12,7 @@ import { StatsService } from './services/stats.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      WorkspaceMember,
-      Project,
-      Task,
-      Sprint,
-      Meeting,
-    ]),
+    TypeOrmModule.forFeature([WorkspaceMember, Project, Task, Sprint, Meeting]),
     // WorkspacesModule export WorkspaceAccessService va WorkspaceMembersRepository,
     // dung lai de dam bao chi dem du lieu cua workspace ma user co quyen.
     WorkspacesModule,

@@ -23,6 +23,16 @@ let AutomationModule = class AutomationModule {
 };
 exports.AutomationModule = AutomationModule;
 exports.AutomationModule = AutomationModule = __decorate([
-    (0, common_1.Module)({ imports: [typeorm_1.TypeOrmModule.forFeature([automation_rule_entity_1.AutomationRule, automation_run_entity_1.AutomationRun]), tasks_module_1.TasksModule, notifications_module_1.NotificationsModule, projects_module_1.ProjectsModule, workspaces_module_1.WorkspacesModule], controllers: [automation_controller_1.AutomationController], providers: [automation_repository_1.AutomationRepository, automation_service_1.AutomationService, automation_scheduler_1.AutomationScheduler] })
+    (0, common_1.Module)({
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([automation_rule_entity_1.AutomationRule, automation_run_entity_1.AutomationRun]),
+            tasks_module_1.TasksModule,
+            notifications_module_1.NotificationsModule,
+            projects_module_1.ProjectsModule,
+            workspaces_module_1.WorkspacesModule,
+        ],
+        controllers: [automation_controller_1.AutomationController],
+        providers: [automation_repository_1.AutomationRepository, automation_service_1.AutomationService, automation_scheduler_1.AutomationScheduler],
+    })
 ], AutomationModule);
 //# sourceMappingURL=automation.module.js.map

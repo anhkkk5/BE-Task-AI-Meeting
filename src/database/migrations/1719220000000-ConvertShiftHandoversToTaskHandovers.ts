@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class ConvertShiftHandoversToTaskHandovers1719220000000
-  implements MigrationInterface
-{
+export class ConvertShiftHandoversToTaskHandovers1719220000000 implements MigrationInterface {
   name = 'ConvertShiftHandoversToTaskHandovers1719220000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

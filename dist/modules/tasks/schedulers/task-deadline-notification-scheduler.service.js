@@ -36,7 +36,14 @@ let TaskDeadlineNotificationSchedulerService = TaskDeadlineNotificationScheduler
             return;
         const cronTime = this.configService.get('TASK_DEADLINE_NOTIFICATION_CRON', '0 0 * * * *');
         const timeZone = this.configService.get('AI_DAILY_REPORT_TIMEZONE', 'Asia/Bangkok');
-        const job = cron_1.CronJob.from({ cronTime, timeZone, start: false, waitForCompletion: true, onTick: () => void this.run(), errorHandler: (error) => this.logger.error('Task deadline scheduler failed', error) });
+        const job = cron_1.CronJob.from({
+            cronTime,
+            timeZone,
+            start: false,
+            waitForCompletion: true,
+            onTick: () => void this.run(),
+            errorHandler: (error) => this.logger.error('Task deadline scheduler failed', error),
+        });
         this.schedulerRegistry.addCronJob(this.jobName, job);
         job.start();
     }
@@ -51,14 +58,21 @@ let TaskDeadlineNotificationSchedulerService = TaskDeadlineNotificationScheduler
             if (!task.assigneeId || !task.dueDate)
                 continue;
             const overdue = task.dueDate < today;
-            const type = overdue ? notification_entity_1.NotificationType.TaskOverdue : notification_entity_1.NotificationType.TaskDueSoon;
+            const type = overdue
+                ? notification_entity_1.NotificationType.TaskOverdue
+                : notification_entity_1.NotificationType.TaskDueSoon;
             await this.notificationsService.create({
                 recipientId: task.assigneeId,
                 type,
                 title: overdue ? 'Công việc đã quá hạn' : 'Công việc sắp đến hạn',
                 body: `${task.taskCode} · ${task.title} · Hạn ${task.dueDate}`,
                 link: `/workspaces/${task.project.workspaceId}/projects/${task.projectId}/tasks/${task.id}`,
-                metadata: { taskId: task.id, projectId: task.projectId, workspaceId: task.project.workspaceId, dueDate: task.dueDate },
+                metadata: {
+                    taskId: task.id,
+                    projectId: task.projectId,
+                    workspaceId: task.project.workspaceId,
+                    dueDate: task.dueDate,
+                },
                 idempotencyKey: `${type}:${task.id}:${task.dueDate}`,
             });
             sent += 1;
@@ -67,10 +81,17 @@ let TaskDeadlineNotificationSchedulerService = TaskDeadlineNotificationScheduler
     }
     enabled() {
         const value = this.configService.get('TASK_DEADLINE_NOTIFICATION_ENABLED');
-        return value === undefined || value === true || ['true', '1', 'yes'].includes(String(value).toLowerCase());
+        return (value === undefined ||
+            value === true ||
+            ['true', '1', 'yes'].includes(String(value).toLowerCase()));
     }
     formatDate(date) {
-        const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: this.configService.get('AI_DAILY_REPORT_TIMEZONE', 'Asia/Bangkok'), year: 'numeric', month: '2-digit', day: '2-digit' });
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: this.configService.get('AI_DAILY_REPORT_TIMEZONE', 'Asia/Bangkok'),
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        });
         const parts = formatter.formatToParts(date);
         const part = (type) => parts.find((item) => item.type === type)?.value ?? '';
         return `${part('year')}-${part('month')}-${part('day')}`;

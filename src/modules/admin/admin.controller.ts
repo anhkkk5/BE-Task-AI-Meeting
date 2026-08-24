@@ -27,7 +27,10 @@ import { ObservabilityService } from '../observability/observability.service';
 @ApiBearerAuth()
 @UseGuards(AccessTokenGuard, SystemAdminGuard)
 export class AdminController {
-  constructor(private readonly adminService: AdminService, private readonly observability: ObservabilityService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly observability: ObservabilityService,
+  ) {}
 
   // ===== SYSTEM STATS =====
   @Get('stats')
@@ -40,10 +43,21 @@ export class AdminController {
   }
 
   @Get('observability')
-  getObservability(@Query('hours') hours?: string) { return this.observability.summary(Math.min(168, Math.max(1, Number(hours) || 24))).then((data) => ({ success: true, message: 'Success', data })); }
+  getObservability(@Query('hours') hours?: string) {
+    return this.observability
+      .summary(Math.min(168, Math.max(1, Number(hours) || 24)))
+      .then((data) => ({ success: true, message: 'Success', data }));
+  }
 
   @Get('audit-logs')
-  getAuditLogs(@Query('page') page?: string, @Query('limit') limit?: string) { return this.observability.auditLogs(Math.max(1, Number(page) || 1), Math.min(100, Math.max(1, Number(limit) || 50))).then((data) => ({ success: true, message: 'Success', data })); }
+  getAuditLogs(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.observability
+      .auditLogs(
+        Math.max(1, Number(page) || 1),
+        Math.min(100, Math.max(1, Number(limit) || 50)),
+      )
+      .then((data) => ({ success: true, message: 'Success', data }));
+  }
 
   // ===== USER MANAGEMENT =====
   @Get('users')
@@ -121,7 +135,9 @@ export class AdminController {
   }
 
   @Get('workspaces/:workspaceId')
-  @ApiOperation({ summary: '[ADMIN] Xem chủ sở hữu, thành viên, dự án và thống kê workspace' })
+  @ApiOperation({
+    summary: '[ADMIN] Xem chủ sở hữu, thành viên, dự án và thống kê workspace',
+  })
   @ApiParam({ name: 'workspaceId' })
   getWorkspaceDetail(@Param('workspaceId') workspaceId: string) {
     return this.adminService.getWorkspaceDetail(workspaceId);
@@ -141,7 +157,10 @@ export class AdminController {
   @Patch('workspaces/:workspaceId/status')
   @ApiOperation({ summary: '[ADMIN] Bật / Archive workspace' })
   @ApiParam({ name: 'workspaceId' })
-  toggleWorkspaceStatus(@CurrentUser() admin: AuthUser, @Param('workspaceId') workspaceId: string) {
+  toggleWorkspaceStatus(
+    @CurrentUser() admin: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+  ) {
     return this.adminService.toggleWorkspaceStatus(admin.id, workspaceId);
   }
 }

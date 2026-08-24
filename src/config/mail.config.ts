@@ -47,7 +47,8 @@ export const mailConfig = () => {
     brevoApiKey: process.env.BREVO_API_KEY?.trim() || undefined,
     // Nhieu SMTP (nhu Gmail) bat buoc From phai trung tai khoan dang nhap,
     // nen lay SMTP_USER lam mac dinh khi EMAIL_FROM de trong.
-    from: process.env.EMAIL_FROM?.trim() || smtpUser || 'no-reply@agile-ai.local',
+    from:
+      process.env.EMAIL_FROM?.trim() || smtpUser || 'no-reply@agile-ai.local',
     fromName: process.env.EMAIL_FROM_NAME?.trim() || 'Agile AI',
     /** Dung de dung link trong email tro ve dung moi truong dang chay. */
     appUrl: process.env.APP_WEB_URL?.trim() || 'http://localhost:3000',

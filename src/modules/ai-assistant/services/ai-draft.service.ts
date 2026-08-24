@@ -51,15 +51,14 @@ export class AiDraftService {
       workspaceId,
     );
 
-    const inputData = await this.dataBuilderService.buildPersonalDailyReportInput(
-      {
+    const inputData =
+      await this.dataBuilderService.buildPersonalDailyReportInput({
         workspaceId,
         projectId,
         targetUserId: currentUserId,
         reportDate: dto.updateDate,
         sprintId: dto.sprintId ?? undefined,
-      },
-    );
+      });
     const preferences =
       await this.aiUserPreferencesService.getResolvedPreferences(currentUserId);
     const prompt = this.promptBuilderService.buildDailyUpdateDraftPrompt(

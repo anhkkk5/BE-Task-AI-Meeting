@@ -11,7 +11,12 @@ import { AvatarUploadService } from './services/avatar-upload.service';
 @Module({
   imports: [TypeOrmModule.forFeature([User, AiUserPreference])],
   controllers: [UsersController],
-  providers: [UsersRepository, UsersService, AiUserPreferencesService, AvatarUploadService],
+  providers: [
+    UsersRepository,
+    UsersService,
+    AiUserPreferencesService,
+    AvatarUploadService,
+  ],
   exports: [UsersService, AiUserPreferencesService],
 })
 export class UsersModule {}

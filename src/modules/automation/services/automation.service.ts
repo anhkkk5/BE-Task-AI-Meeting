@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { NotificationType } from '../../notifications/entities/notification.entity';
 import { NotificationsService } from '../../notifications/notifications.service';
@@ -12,17 +16,249 @@ import { AutomationRepository } from '../repositories/automation.repository';
 
 @Injectable()
 export class AutomationService {
-  constructor(private repo: AutomationRepository, private tasksRepo: TasksRepository, private tasks: TasksService, private notifications: NotificationsService, private projects: ProjectAccessService, private workspaces: WorkspaceAccessService) {}
-  async list(userId: string, workspaceId: string, projectId: string) { await this.access(userId, workspaceId, projectId); return { success: true, message: 'Success', data: { items: await this.repo.listRules(projectId) } }; }
-  async save(userId: string, workspaceId: string, projectId: string, dto: SaveAutomationRuleDto, id?: string) { await this.access(userId, workspaceId, projectId); this.validate(dto); const current = id ? await this.requireRule(id, projectId) : null; const changed = !current || JSON.stringify([current.trigger, current.conditions, current.actions]) !== JSON.stringify([dto.trigger, dto.conditions, dto.actions]); const dryRunAt = changed ? null : current.dryRunAt; const enabled = dto.enabled ?? current?.enabled ?? false; if (enabled && !dryRunAt) throw new BadRequestException('Run a dry-run before enabling this rule'); const rule = await this.repo.saveRule({ ...current, workspaceId, projectId, name: dto.name.trim(), enabled, trigger: dto.trigger, conditions: dto.conditions, actions: dto.actions, dryRunAt, createdBy: current?.createdBy ?? userId }); return { success: true, message: 'Automation rule saved', data: { rule } }; }
-  async remove(userId: string, workspaceId: string, projectId: string, id: string) { await this.access(userId, workspaceId, projectId); await this.repo.deleteRule(await this.requireRule(id, projectId)); return { success: true, message: 'Deleted', data: null }; }
-  async preview(userId: string, workspaceId: string, projectId: string, id: string) { await this.access(userId, workspaceId, projectId); const rule = await this.requireRule(id, projectId); const matches = await this.matches(rule); rule.dryRunAt = new Date(); await this.repo.saveRule(rule); await this.repo.saveRun({ ruleId: rule.id, taskId: null, executionKey: `dry:${rule.id}:${Date.now()}`, status: 'DRY_RUN', result: { count: matches.length, taskIds: matches.map((task) => task.id), actions: rule.actions }, error: null, retryCount: 0 }); return { success: true, message: 'Dry run completed', data: { matchedTasks: matches.map((task) => ({ id: task.id, taskCode: task.taskCode, title: task.title })), plannedActions: rule.actions, count: matches.length } }; }
-  async history(userId: string, workspaceId: string, projectId: string, id: string) { await this.access(userId, workspaceId, projectId); await this.requireRule(id, projectId); return { success: true, message: 'Success', data: { items: await this.repo.listRuns(id) } }; }
-  async runRule(rule: AutomationRule, forceRetry = 0) { const matches = await this.matches(rule); const results = []; for (const task of matches) results.push(await this.execute(rule, task, forceRetry)); return results; }
-  async retry(userId: string, workspaceId: string, projectId: string, runId: string) { await this.access(userId, workspaceId, projectId); const previous = await this.repo.findRun(runId); if (!previous || previous.status !== 'FAILED') throw new BadRequestException('Only failed runs can be retried'); const rule = await this.requireRule(previous.ruleId, projectId); const task = previous.taskId ? await this.tasksRepo.findByIdAndProject(previous.taskId, projectId) : null; if (!task) throw new NotFoundException('Task not found'); return { success: true, message: 'Retry completed', data: { run: await this.execute(rule, task, previous.retryCount + 1) } }; }
-  private async execute(rule: AutomationRule, task: any, retry: number) { const day = new Date().toISOString().slice(0, 10); const key = `${rule.id}:${task.id}:${day}:r${retry}`; if (await this.repo.findExecution(key)) return this.repo.saveRun({ ruleId: rule.id, taskId: task.id, executionKey: `${key}:skip:${Date.now()}`, status: 'SKIPPED', result: { reason: 'DUPLICATE' }, error: null, retryCount: retry }); try { const output = []; for (const action of rule.actions) { if (action.type === 'NOTIFY_ASSIGNEE' && task.assigneeId) { await this.notifications.create({ recipientId: task.assigneeId, type: NotificationType.TaskDueSoon, title: 'Nhắc việc tự động', body: action.message || `${task.taskCode} - ${task.title} sắp đến hạn`, link: `/workspaces/${rule.workspaceId}/projects/${rule.projectId}/tasks/${task.id}`, idempotencyKey: key }); output.push(action.type); } else if (action.type === 'CHANGE_STATUS' && action.value) { await this.tasks.updateTaskStatus(rule.createdBy, rule.workspaceId, rule.projectId, task.id, { status: action.value as TaskStatus }); output.push(action.type); } else if (action.type === 'ASSIGN_USER' && action.value) { await this.tasks.assignTask(rule.createdBy, rule.workspaceId, rule.projectId, task.id, { assigneeId: action.value }); output.push(action.type); } } return await this.repo.saveRun({ ruleId: rule.id, taskId: task.id, executionKey: key, status: 'SUCCESS', result: { actions: output }, error: null, retryCount: retry }); } catch (error) { return this.repo.saveRun({ ruleId: rule.id, taskId: task.id, executionKey: key, status: 'FAILED', result: null, error: error instanceof Error ? error.message : String(error), retryCount: retry }); } }
-  private async matches(rule: AutomationRule) { const date = new Date(Date.now() + Math.max(0, Number(rule.trigger.daysBefore ?? 0)) * 86400000).toISOString().slice(0, 10); const candidates = await this.tasksRepo.findDueNotificationCandidates(date); return candidates.filter((task) => task.projectId === rule.projectId && rule.conditions.every((condition) => { const value = (task as any)[condition.field]; if (condition.operator === 'EQUALS') return value === condition.value; if (condition.operator === 'NOT_EQUALS') return value !== condition.value; if (condition.operator === 'IS_EMPTY') return value == null || value === ''; return true; })); }
-  private validate(dto: SaveAutomationRuleDto) { if (dto.trigger.type !== 'DUE_DATE') throw new BadRequestException('Only DUE_DATE trigger is supported'); if (!dto.actions.length || dto.actions.length > 5) throw new BadRequestException('Rule must contain 1-5 actions'); const allowed = ['NOTIFY_ASSIGNEE', 'CHANGE_STATUS', 'ASSIGN_USER']; if (dto.actions.some((action) => !allowed.includes(action.type))) throw new BadRequestException('Unsupported action'); }
-  private async requireRule(id: string, projectId: string) { const rule = await this.repo.findRule(id, projectId); if (!rule) throw new NotFoundException('Automation rule not found'); return rule; }
-  private async access(userId: string, workspaceId: string, projectId: string) { await this.workspaces.assertWorkspaceMember(userId, workspaceId); await this.projects.assertProjectInWorkspace(projectId, workspaceId); }
+  constructor(
+    private repo: AutomationRepository,
+    private tasksRepo: TasksRepository,
+    private tasks: TasksService,
+    private notifications: NotificationsService,
+    private projects: ProjectAccessService,
+    private workspaces: WorkspaceAccessService,
+  ) {}
+  async list(userId: string, workspaceId: string, projectId: string) {
+    await this.access(userId, workspaceId, projectId);
+    return {
+      success: true,
+      message: 'Success',
+      data: { items: await this.repo.listRules(projectId) },
+    };
+  }
+  async save(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    dto: SaveAutomationRuleDto,
+    id?: string,
+  ) {
+    await this.access(userId, workspaceId, projectId);
+    this.validate(dto);
+    const current = id ? await this.requireRule(id, projectId) : null;
+    const changed =
+      !current ||
+      JSON.stringify([current.trigger, current.conditions, current.actions]) !==
+        JSON.stringify([dto.trigger, dto.conditions, dto.actions]);
+    const dryRunAt = changed ? null : current.dryRunAt;
+    const enabled = dto.enabled ?? current?.enabled ?? false;
+    if (enabled && !dryRunAt)
+      throw new BadRequestException('Run a dry-run before enabling this rule');
+    const rule = await this.repo.saveRule({
+      ...current,
+      workspaceId,
+      projectId,
+      name: dto.name.trim(),
+      enabled,
+      trigger: dto.trigger,
+      conditions: dto.conditions,
+      actions: dto.actions,
+      dryRunAt,
+      createdBy: current?.createdBy ?? userId,
+    });
+    return { success: true, message: 'Automation rule saved', data: { rule } };
+  }
+  async remove(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    id: string,
+  ) {
+    await this.access(userId, workspaceId, projectId);
+    await this.repo.deleteRule(await this.requireRule(id, projectId));
+    return { success: true, message: 'Deleted', data: null };
+  }
+  async preview(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    id: string,
+  ) {
+    await this.access(userId, workspaceId, projectId);
+    const rule = await this.requireRule(id, projectId);
+    const matches = await this.matches(rule);
+    rule.dryRunAt = new Date();
+    await this.repo.saveRule(rule);
+    await this.repo.saveRun({
+      ruleId: rule.id,
+      taskId: null,
+      executionKey: `dry:${rule.id}:${Date.now()}`,
+      status: 'DRY_RUN',
+      result: {
+        count: matches.length,
+        taskIds: matches.map((task) => task.id),
+        actions: rule.actions,
+      },
+      error: null,
+      retryCount: 0,
+    });
+    return {
+      success: true,
+      message: 'Dry run completed',
+      data: {
+        matchedTasks: matches.map((task) => ({
+          id: task.id,
+          taskCode: task.taskCode,
+          title: task.title,
+        })),
+        plannedActions: rule.actions,
+        count: matches.length,
+      },
+    };
+  }
+  async history(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    id: string,
+  ) {
+    await this.access(userId, workspaceId, projectId);
+    await this.requireRule(id, projectId);
+    return {
+      success: true,
+      message: 'Success',
+      data: { items: await this.repo.listRuns(id) },
+    };
+  }
+  async runRule(rule: AutomationRule, forceRetry = 0) {
+    const matches = await this.matches(rule);
+    const results = [];
+    for (const task of matches)
+      results.push(await this.execute(rule, task, forceRetry));
+    return results;
+  }
+  async retry(
+    userId: string,
+    workspaceId: string,
+    projectId: string,
+    runId: string,
+  ) {
+    await this.access(userId, workspaceId, projectId);
+    const previous = await this.repo.findRun(runId);
+    if (!previous || previous.status !== 'FAILED')
+      throw new BadRequestException('Only failed runs can be retried');
+    const rule = await this.requireRule(previous.ruleId, projectId);
+    const task = previous.taskId
+      ? await this.tasksRepo.findByIdAndProject(previous.taskId, projectId)
+      : null;
+    if (!task) throw new NotFoundException('Task not found');
+    return {
+      success: true,
+      message: 'Retry completed',
+      data: { run: await this.execute(rule, task, previous.retryCount + 1) },
+    };
+  }
+  private async execute(rule: AutomationRule, task: any, retry: number) {
+    const day = new Date().toISOString().slice(0, 10);
+    const key = `${rule.id}:${task.id}:${day}:r${retry}`;
+    if (await this.repo.findExecution(key))
+      return this.repo.saveRun({
+        ruleId: rule.id,
+        taskId: task.id,
+        executionKey: `${key}:skip:${Date.now()}`,
+        status: 'SKIPPED',
+        result: { reason: 'DUPLICATE' },
+        error: null,
+        retryCount: retry,
+      });
+    try {
+      const output = [];
+      for (const action of rule.actions) {
+        if (action.type === 'NOTIFY_ASSIGNEE' && task.assigneeId) {
+          await this.notifications.create({
+            recipientId: task.assigneeId,
+            type: NotificationType.TaskDueSoon,
+            title: 'Nhắc việc tự động',
+            body:
+              action.message || `${task.taskCode} - ${task.title} sắp đến hạn`,
+            link: `/workspaces/${rule.workspaceId}/projects/${rule.projectId}/tasks/${task.id}`,
+            idempotencyKey: key,
+          });
+          output.push(action.type);
+        } else if (action.type === 'CHANGE_STATUS' && action.value) {
+          await this.tasks.updateTaskStatus(
+            rule.createdBy,
+            rule.workspaceId,
+            rule.projectId,
+            task.id,
+            { status: action.value as TaskStatus },
+          );
+          output.push(action.type);
+        } else if (action.type === 'ASSIGN_USER' && action.value) {
+          await this.tasks.assignTask(
+            rule.createdBy,
+            rule.workspaceId,
+            rule.projectId,
+            task.id,
+            { assigneeId: action.value },
+          );
+          output.push(action.type);
+        }
+      }
+      return await this.repo.saveRun({
+        ruleId: rule.id,
+        taskId: task.id,
+        executionKey: key,
+        status: 'SUCCESS',
+        result: { actions: output },
+        error: null,
+        retryCount: retry,
+      });
+    } catch (error) {
+      return this.repo.saveRun({
+        ruleId: rule.id,
+        taskId: task.id,
+        executionKey: key,
+        status: 'FAILED',
+        result: null,
+        error: error instanceof Error ? error.message : String(error),
+        retryCount: retry,
+      });
+    }
+  }
+  private async matches(rule: AutomationRule) {
+    const date = new Date(
+      Date.now() + Math.max(0, Number(rule.trigger.daysBefore ?? 0)) * 86400000,
+    )
+      .toISOString()
+      .slice(0, 10);
+    const candidates = await this.tasksRepo.findDueNotificationCandidates(date);
+    return candidates.filter(
+      (task) =>
+        task.projectId === rule.projectId &&
+        rule.conditions.every((condition) => {
+          const value = (task as any)[condition.field];
+          if (condition.operator === 'EQUALS') return value === condition.value;
+          if (condition.operator === 'NOT_EQUALS')
+            return value !== condition.value;
+          if (condition.operator === 'IS_EMPTY')
+            return value == null || value === '';
+          return true;
+        }),
+    );
+  }
+  private validate(dto: SaveAutomationRuleDto) {
+    if (dto.trigger.type !== 'DUE_DATE')
+      throw new BadRequestException('Only DUE_DATE trigger is supported');
+    if (!dto.actions.length || dto.actions.length > 5)
+      throw new BadRequestException('Rule must contain 1-5 actions');
+    const allowed = ['NOTIFY_ASSIGNEE', 'CHANGE_STATUS', 'ASSIGN_USER'];
+    if (dto.actions.some((action) => !allowed.includes(action.type)))
+      throw new BadRequestException('Unsupported action');
+  }
+  private async requireRule(id: string, projectId: string) {
+    const rule = await this.repo.findRule(id, projectId);
+    if (!rule) throw new NotFoundException('Automation rule not found');
+    return rule;
+  }
+  private async access(userId: string, workspaceId: string, projectId: string) {
+    await this.workspaces.assertWorkspaceMember(userId, workspaceId);
+    await this.projects.assertProjectInWorkspace(projectId, workspaceId);
+  }
 }

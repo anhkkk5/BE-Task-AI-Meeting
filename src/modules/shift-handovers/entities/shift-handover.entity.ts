@@ -68,10 +68,20 @@ export class ShiftHandover {
   @Column({ type: 'enum', enum: HandoverStatus, default: HandoverStatus.Draft })
   status: HandoverStatus;
 
-  @Column({ name: 'change_request', type: 'varchar', length: 1000, nullable: true })
+  @Column({
+    name: 'change_request',
+    type: 'varchar',
+    length: 1000,
+    nullable: true,
+  })
   changeRequest: string | null;
 
-  @Column({ name: 'rejection_reason', type: 'varchar', length: 1000, nullable: true })
+  @Column({
+    name: 'rejection_reason',
+    type: 'varchar',
+    length: 1000,
+    nullable: true,
+  })
   rejectionReason: string | null;
 
   @Column({ name: 'submitted_at', type: 'datetime', nullable: true })

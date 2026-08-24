@@ -10,5 +10,15 @@ import { AutomationRun } from './entities/automation-run.entity';
 import { AutomationRepository } from './repositories/automation.repository';
 import { AutomationScheduler } from './schedulers/automation.scheduler';
 import { AutomationService } from './services/automation.service';
-@Module({ imports: [TypeOrmModule.forFeature([AutomationRule, AutomationRun]), TasksModule, NotificationsModule, ProjectsModule, WorkspacesModule], controllers: [AutomationController], providers: [AutomationRepository, AutomationService, AutomationScheduler] })
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([AutomationRule, AutomationRun]),
+    TasksModule,
+    NotificationsModule,
+    ProjectsModule,
+    WorkspacesModule,
+  ],
+  controllers: [AutomationController],
+  providers: [AutomationRepository, AutomationService, AutomationScheduler],
+})
 export class AutomationModule {}

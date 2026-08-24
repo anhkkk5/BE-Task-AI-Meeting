@@ -19,6 +19,13 @@ let ObservabilityModule = class ObservabilityModule {
 exports.ObservabilityModule = ObservabilityModule;
 exports.ObservabilityModule = ObservabilityModule = __decorate([
     (0, common_1.Global)(),
-    (0, common_1.Module)({ imports: [typeorm_1.TypeOrmModule.forFeature([admin_audit_log_entity_1.AdminAuditLog, observability_event_entity_1.ObservabilityEvent])], providers: [observability_service_1.ObservabilityService, { provide: core_1.APP_INTERCEPTOR, useClass: api_observability_interceptor_1.ApiObservabilityInterceptor }], exports: [observability_service_1.ObservabilityService] })
+    (0, common_1.Module)({
+        imports: [typeorm_1.TypeOrmModule.forFeature([admin_audit_log_entity_1.AdminAuditLog, observability_event_entity_1.ObservabilityEvent])],
+        providers: [
+            observability_service_1.ObservabilityService,
+            { provide: core_1.APP_INTERCEPTOR, useClass: api_observability_interceptor_1.ApiObservabilityInterceptor },
+        ],
+        exports: [observability_service_1.ObservabilityService],
+    })
 ], ObservabilityModule);
 //# sourceMappingURL=observability.module.js.map

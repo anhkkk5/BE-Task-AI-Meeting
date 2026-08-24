@@ -1,0 +1,22 @@
+{
+  "datasetVersion": "1.0.0",
+  "generatedAt": "2026-08-24T00:00:00.000Z",
+  "language": "vi",
+  "transcriptCount": 60,
+  "actionItemCount": 300,
+  "split": {
+    "development": 12,
+    "test": 48
+  },
+  "coverage": {
+    "meetingTypes": 5,
+    "workspaces": 6,
+    "projects": 18,
+    "sprints": 36,
+    "missingAssignee": 15,
+    "missingDueDate": 20,
+    "noiseSegments": 60,
+    "nonActionIdeaSegments": 60
+  },
+  "annotationStatus": "SYNTHETIC_DRAFT"
+}

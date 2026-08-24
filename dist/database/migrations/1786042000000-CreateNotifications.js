@@ -14,7 +14,9 @@ class CreateNotifications1786042000000 {
       PRIMARY KEY (\`id\`), CONSTRAINT \`FK_notification_recipient\` FOREIGN KEY (\`recipient_id\`) REFERENCES \`users\`(\`id\`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin`);
     }
-    async down(queryRunner) { await queryRunner.query('DROP TABLE `notifications`'); }
+    async down(queryRunner) {
+        await queryRunner.query('DROP TABLE `notifications`');
+    }
 }
 exports.CreateNotifications1786042000000 = CreateNotifications1786042000000;
 //# sourceMappingURL=1786042000000-CreateNotifications.js.map

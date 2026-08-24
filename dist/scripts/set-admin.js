@@ -48,7 +48,9 @@ async function main() {
         user: process.env.MYSQL_USER,
         password: process.env.MYSQL_PASSWORD,
         database: process.env.MYSQL_DATABASE,
-        ssl: process.env.MYSQL_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+        ssl: process.env.MYSQL_SSL === 'true'
+            ? { rejectUnauthorized: false }
+            : undefined,
     });
     const [rows] = await conn.execute('SELECT id, email, full_name, is_system_admin FROM users WHERE email = ?', [email]);
     const users = rows;
@@ -64,7 +66,10 @@ async function main() {
     console.log(`  - Tên: ${user.full_name}`);
     console.log(`  - Admin hiện tại: ${user.is_system_admin ? 'CÓ' : 'KHÔNG'}`);
     const newValue = user.is_system_admin ? 0 : 1;
-    await conn.execute('UPDATE users SET is_system_admin = ? WHERE email = ?', [newValue, email]);
+    await conn.execute('UPDATE users SET is_system_admin = ? WHERE email = ?', [
+        newValue,
+        email,
+    ]);
     console.log(`\n🎉 Đã ${newValue ? 'CẤP' : 'THU HỒI'} quyền System Admin cho ${user.email}!`);
     await conn.end();
 }

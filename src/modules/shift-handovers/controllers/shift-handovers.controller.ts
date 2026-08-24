@@ -1,5 +1,21 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { WorkspaceRoles } from '../../../common/decorators/workspace-roles.decorator';
 import { WorkspaceRole } from '../../../common/enums/workspace-role.enum';
@@ -37,7 +53,10 @@ export class ShiftHandoversController {
       'Người đang phụ trách task tạo nội dung bàn giao cho một thành viên khác. Task chưa đổi người phụ trách ở bước này.',
   })
   @ApiResponse({ status: 201, description: 'Tạo bản nháp thành công.' })
-  @ApiResponse({ status: 409, description: 'Task đã có yêu cầu bàn giao chưa hoàn tất.' })
+  @ApiResponse({
+    status: 409,
+    description: 'Task đã có yêu cầu bàn giao chưa hoàn tất.',
+  })
   createHandover(
     @CurrentUser() user: AuthUser,
     @Param('workspaceId') workspaceId: string,
@@ -69,7 +88,12 @@ export class ShiftHandoversController {
     @Param('projectId') projectId: string,
     @Param('handoverId') handoverId: string,
   ) {
-    return this.service.getHandover(user.id, workspaceId, projectId, handoverId);
+    return this.service.getHandover(
+      user.id,
+      workspaceId,
+      projectId,
+      handoverId,
+    );
   }
 
   @Patch('handovers/:handoverId')
@@ -77,7 +101,8 @@ export class ShiftHandoversController {
   @UseGuards(WorkspaceRolesGuard)
   @ApiOperation({
     summary: 'Bổ sung bản bàn giao',
-    description: 'Người giao được sửa bản nháp hoặc bản đang bị yêu cầu bổ sung.',
+    description:
+      'Người giao được sửa bản nháp hoặc bản đang bị yêu cầu bổ sung.',
   })
   updateHandover(
     @CurrentUser() user: AuthUser,
@@ -86,7 +111,13 @@ export class ShiftHandoversController {
     @Param('handoverId') handoverId: string,
     @Body() dto: UpdateHandoverDto,
   ) {
-    return this.service.updateHandover(user.id, workspaceId, projectId, handoverId, dto);
+    return this.service.updateHandover(
+      user.id,
+      workspaceId,
+      projectId,
+      handoverId,
+      dto,
+    );
   }
 
   @Post('handovers/:handoverId/submit')
@@ -102,7 +133,12 @@ export class ShiftHandoversController {
     @Param('projectId') projectId: string,
     @Param('handoverId') handoverId: string,
   ) {
-    return this.service.submitHandover(user.id, workspaceId, projectId, handoverId);
+    return this.service.submitHandover(
+      user.id,
+      workspaceId,
+      projectId,
+      handoverId,
+    );
   }
 
   @Post('handovers/:handoverId/request-changes')
@@ -119,7 +155,13 @@ export class ShiftHandoversController {
     @Param('handoverId') handoverId: string,
     @Body() dto: RequestHandoverChangesDto,
   ) {
-    return this.service.requestChanges(user.id, workspaceId, projectId, handoverId, dto.reason);
+    return this.service.requestChanges(
+      user.id,
+      workspaceId,
+      projectId,
+      handoverId,
+      dto.reason,
+    );
   }
 
   @Post('handovers/:handoverId/reject')
@@ -127,7 +169,8 @@ export class ShiftHandoversController {
   @UseGuards(WorkspaceRolesGuard)
   @ApiOperation({
     summary: 'Từ chối nhận bàn giao',
-    description: 'Người nhận từ chối và bắt buộc nêu lý do. Task vẫn thuộc người giao.',
+    description:
+      'Người nhận từ chối và bắt buộc nêu lý do. Task vẫn thuộc người giao.',
   })
   reject(
     @CurrentUser() user: AuthUser,
@@ -136,7 +179,13 @@ export class ShiftHandoversController {
     @Param('handoverId') handoverId: string,
     @Body() dto: RejectHandoverDto,
   ) {
-    return this.service.reject(user.id, workspaceId, projectId, handoverId, dto.reason);
+    return this.service.reject(
+      user.id,
+      workspaceId,
+      projectId,
+      handoverId,
+      dto.reason,
+    );
   }
 
   @Post('handovers/:handoverId/accept')
@@ -168,6 +217,11 @@ export class ShiftHandoversController {
     @Param('projectId') projectId: string,
     @Param('handoverId') handoverId: string,
   ) {
-    return this.service.deleteHandover(user.id, workspaceId, projectId, handoverId);
+    return this.service.deleteHandover(
+      user.id,
+      workspaceId,
+      projectId,
+      handoverId,
+    );
   }
 }

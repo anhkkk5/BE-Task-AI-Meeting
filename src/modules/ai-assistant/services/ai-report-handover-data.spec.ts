@@ -111,9 +111,8 @@ describe('Ban giao cong viec trong du lieu bao cao AI', () => {
         }),
       ]);
 
-      const input = await buildService().buildPersonalDailyReportInput(
-        buildParams(),
-      );
+      const input =
+        await buildService().buildPersonalDailyReportInput(buildParams());
 
       expect(input.handovers.given).toHaveLength(1);
       expect(input.handovers.given[0]).toMatchObject({
@@ -140,9 +139,8 @@ describe('Ban giao cong viec trong du lieu bao cao AI', () => {
         }),
       ]);
 
-      const input = await buildService().buildPersonalDailyReportInput(
-        buildParams(),
-      );
+      const input =
+        await buildService().buildPersonalDailyReportInput(buildParams());
 
       expect(
         shiftHandoversRepository.findPendingByReceiver,
@@ -151,9 +149,8 @@ describe('Ban giao cong viec trong du lieu bao cao AI', () => {
     });
 
     it('tra ve danh sach rong khi trong ngay khong co ban giao', async () => {
-      const input = await buildService().buildPersonalDailyReportInput(
-        buildParams(),
-      );
+      const input =
+        await buildService().buildPersonalDailyReportInput(buildParams());
 
       expect(input.handovers).toEqual({
         given: [],

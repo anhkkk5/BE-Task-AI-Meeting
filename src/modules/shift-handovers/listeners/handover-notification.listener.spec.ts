@@ -1,5 +1,6 @@
 import { HandoverStatus } from '../../../common/enums/handover-status.enum';
 import { MailService } from '../../mail/services/mail.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 import { ShiftHandover } from '../entities/shift-handover.entity';
 import { HandoverEventsService } from '../services/handover-events.service';
 import { HandoverNotificationListener } from './handover-notification.listener';
@@ -42,8 +43,16 @@ describe('HandoverNotificationListener', () => {
   const setup = () => {
     const events = new HandoverEventsService();
     const sendMailSafely = jest.fn().mockResolvedValue(true);
+    const createNotification = jest.fn().mockResolvedValue({});
     const mailService = { sendMailSafely } as unknown as MailService;
-    const listener = new HandoverNotificationListener(events, mailService);
+    const notificationsService = {
+      create: createNotification,
+    } as unknown as NotificationsService;
+    const listener = new HandoverNotificationListener(
+      events,
+      mailService,
+      notificationsService,
+    );
 
     listener.onModuleInit();
 
@@ -126,7 +135,14 @@ describe('HandoverNotificationListener', () => {
     const events = new HandoverEventsService();
     const sendMailSafely = jest.fn().mockRejectedValue(new Error('SMTP chet'));
     const mailService = { sendMailSafely } as unknown as MailService;
-    const listener = new HandoverNotificationListener(events, mailService);
+    const notificationsService = {
+      create: jest.fn().mockResolvedValue({}),
+    } as unknown as NotificationsService;
+    const listener = new HandoverNotificationListener(
+      events,
+      mailService,
+      notificationsService,
+    );
     listener.onModuleInit();
 
     expect(() =>

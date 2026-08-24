@@ -14,11 +14,7 @@ describe('ProjectsService', () => {
   let projectsRepository: jest.Mocked<
     Pick<
       ProjectsRepository,
-      | 'archive'
-      | 'complete'
-      | 'create'
-      | 'findByWorkspace'
-      | 'update'
+      'archive' | 'complete' | 'create' | 'findByWorkspace' | 'update'
     >
   >;
   let projectAccessService: jest.Mocked<

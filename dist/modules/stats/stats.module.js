@@ -24,13 +24,7 @@ exports.StatsModule = StatsModule;
 exports.StatsModule = StatsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([
-                workspace_member_entity_1.WorkspaceMember,
-                project_entity_1.Project,
-                task_entity_1.Task,
-                sprint_entity_1.Sprint,
-                meeting_entity_1.Meeting,
-            ]),
+            typeorm_1.TypeOrmModule.forFeature([workspace_member_entity_1.WorkspaceMember, project_entity_1.Project, task_entity_1.Task, sprint_entity_1.Sprint, meeting_entity_1.Meeting]),
             workspaces_module_1.WorkspacesModule,
         ],
         controllers: [stats_controller_1.StatsController],

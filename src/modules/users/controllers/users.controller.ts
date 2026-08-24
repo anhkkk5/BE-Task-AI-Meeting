@@ -85,16 +85,26 @@ export class UsersController {
   }
 
   @Post('me/avatar')
-  @UseInterceptors(FileInterceptor('avatar', { limits: { fileSize: 5 * 1024 * 1024 } }))
+  @UseInterceptors(
+    FileInterceptor('avatar', { limits: { fileSize: 5 * 1024 * 1024 } }),
+  )
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', properties: { avatar: { type: 'string', format: 'binary' } }, required: ['avatar'] } })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { avatar: { type: 'string', format: 'binary' } },
+      required: ['avatar'],
+    },
+  })
   @ApiOperation({ summary: 'Tải ảnh đại diện lên Cloudinary' })
   async uploadAvatar(
     @CurrentUser() user: AuthUser,
     @UploadedFile() file: Express.Multer.File,
   ) {
     const uploaded = await this.avatarUploadService.upload(user.id, file);
-    return this.usersService.updateProfile(user.id, { avatarUrl: uploaded.secure_url });
+    return this.usersService.updateProfile(user.id, {
+      avatarUrl: uploaded.secure_url,
+    });
   }
 
   @Patch('me/password')

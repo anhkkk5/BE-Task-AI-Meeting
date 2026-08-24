@@ -55,7 +55,12 @@ export class DailyUpdate {
    * giao ban). Nullable vi khong phai ngay nao cung can ho tro.
    */
   @Index()
-  @Column({ name: 'need_help_from_id', type: 'varchar', length: 36, nullable: true })
+  @Column({
+    name: 'need_help_from_id',
+    type: 'varchar',
+    length: 36,
+    nullable: true,
+  })
   needHelpFromId: string | null;
 
   @Column({ type: 'text', nullable: true })

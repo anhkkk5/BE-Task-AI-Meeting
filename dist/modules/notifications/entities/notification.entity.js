@@ -71,7 +71,13 @@ __decorate([
     __metadata("design:type", Object)
 ], Notification.prototype, "metadata", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'idempotency_key', type: 'varchar', length: 200, nullable: true, unique: true }),
+    (0, typeorm_1.Column)({
+        name: 'idempotency_key',
+        type: 'varchar',
+        length: 200,
+        nullable: true,
+        unique: true,
+    }),
     __metadata("design:type", Object)
 ], Notification.prototype, "idempotencyKey", void 0);
 __decorate([
@@ -79,7 +85,12 @@ __decorate([
     __metadata("design:type", Object)
 ], Notification.prototype, "readAt", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'archived_at', type: 'datetime', precision: 6, nullable: true }),
+    (0, typeorm_1.Column)({
+        name: 'archived_at',
+        type: 'datetime',
+        precision: 6,
+        nullable: true,
+    }),
     __metadata("design:type", Object)
 ], Notification.prototype, "archivedAt", void 0);
 __decorate([

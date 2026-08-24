@@ -103,7 +103,9 @@ describe('ShiftHandoversService - bàn giao công việc', () => {
       getUserWorkspaceRole: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<WorkspaceAccessService>;
     workspaceMembers = {
-      findActiveByWorkspaceAndUser: jest.fn().mockResolvedValue({ id: 'member-id' }),
+      findActiveByWorkspaceAndUser: jest
+        .fn()
+        .mockResolvedValue({ id: 'member-id' }),
     } as unknown as jest.Mocked<WorkspaceMembersRepository>;
     tasksRepository = {
       findByIdAndProject: jest.fn().mockResolvedValue(task()),
@@ -173,7 +175,9 @@ describe('ShiftHandoversService - bàn giao công việc', () => {
   });
 
   it('chỉ cho bàn giao task đang thực hiện hoặc đang duyệt', async () => {
-    tasksRepository.findByIdAndProject.mockResolvedValue(task({ status: TaskStatus.Done }));
+    tasksRepository.findByIdAndProject.mockResolvedValue(
+      task({ status: TaskStatus.Done }),
+    );
 
     await expect(
       service.createHandover('sender-id', 'workspace-id', 'project-id', {
@@ -200,7 +204,10 @@ describe('ShiftHandoversService - bàn giao công việc', () => {
 
   it('gửi bản nháp sang trạng thái chờ người nhận xác nhận', async () => {
     const draft = handover();
-    const pending = handover({ status: HandoverStatus.Pending, submittedAt: new Date() });
+    const pending = handover({
+      status: HandoverStatus.Pending,
+      submittedAt: new Date(),
+    });
     repository.findHandoverById
       .mockResolvedValueOnce(draft)
       .mockResolvedValueOnce(pending);
@@ -339,7 +346,9 @@ describe('ShiftHandoversService - bàn giao công việc', () => {
   it('cho phép quản lý workspace xóa bản bàn giao', async () => {
     const draft = handover();
     repository.findHandoverById.mockResolvedValue(draft);
-    workspaceAccess.getUserWorkspaceRole.mockResolvedValue(WorkspaceRole.ProjectManager);
+    workspaceAccess.getUserWorkspaceRole.mockResolvedValue(
+      WorkspaceRole.ProjectManager,
+    );
 
     await service.deleteHandover(
       'manager-id',

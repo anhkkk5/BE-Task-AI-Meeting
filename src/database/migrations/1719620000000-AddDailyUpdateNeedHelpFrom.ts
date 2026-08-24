@@ -7,9 +7,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * khoi he thong thi bao cao cu van con gia tri lich su, chi mat thong tin nguoi
  * ho tro.
  */
-export class AddDailyUpdateNeedHelpFrom1719620000000
-  implements MigrationInterface
-{
+export class AddDailyUpdateNeedHelpFrom1719620000000 implements MigrationInterface {
   name = 'AddDailyUpdateNeedHelpFrom1719620000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

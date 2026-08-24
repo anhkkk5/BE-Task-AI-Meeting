@@ -138,7 +138,9 @@ let TasksService = class TasksService {
         }
         const taskCode = await this.taskCodeService.generateTaskCode(project);
         const initialStatus = dto.sprintId ? task_status_enum_1.TaskStatus.Todo : task_status_enum_1.TaskStatus.Backlog;
-        const workflowStatusId = this.tasksRepository.findWorkflowStatusId ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, initialStatus) : null;
+        const workflowStatusId = this.tasksRepository.findWorkflowStatusId
+            ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, initialStatus)
+            : null;
         const task = await this.tasksRepository.create({
             projectId,
             sprintId: dto.sprintId ?? null,
@@ -496,7 +498,11 @@ let TasksService = class TasksService {
             title: 'Bạn được nhắc trong bình luận',
             body: `${task.taskCode} - ${task.title}`,
             link: `/workspaces/${workspaceId}/projects/${projectId}/tasks/${task.id}`,
-            metadata: { taskId: task.id, commentId: comment.id, actorId: currentUserId },
+            metadata: {
+                taskId: task.id,
+                commentId: comment.id,
+                actorId: currentUserId,
+            },
         })));
         await this.recordActivity(task, currentUserId, task_activity_log_entity_1.TaskActivityAction.Commented, {
             commentId: { from: null, to: comment.id },
@@ -536,7 +542,11 @@ let TasksService = class TasksService {
             commentId: { from: comment.id, to: null },
         });
         await this.taskCommentsRepository.softDelete(comment);
-        return { success: true, message: 'Delete task comment successfully', data: null };
+        return {
+            success: true,
+            message: 'Delete task comment successfully',
+            data: null,
+        };
     }
     async updateTask(currentUserId, workspaceId, projectId, taskId, dto) {
         await this.assertWritableProject(workspaceId, projectId);
@@ -578,8 +588,12 @@ let TasksService = class TasksService {
             taskType: nextTaskType,
             priority: dto.priority ?? task.priority,
             parentId: parent?.id ?? null,
-            labels: dto.labels === undefined ? task.labels : this.normalizeLabels(dto.labels),
-            acceptanceCriteria: dto.acceptanceCriteria === undefined ? task.acceptanceCriteria : dto.acceptanceCriteria.trim() || null,
+            labels: dto.labels === undefined
+                ? task.labels
+                : this.normalizeLabels(dto.labels),
+            acceptanceCriteria: dto.acceptanceCriteria === undefined
+                ? task.acceptanceCriteria
+                : dto.acceptanceCriteria.trim() || null,
             reporterId: dto.reporterId === undefined ? task.reporterId : dto.reporterId,
         });
         await this.recordActivity(updatedTask, currentUserId, task_activity_log_entity_1.TaskActivityAction.Updated, this.buildChanges(previous, updatedTask));
@@ -625,37 +639,68 @@ let TasksService = class TasksService {
             if (incompleteChildren.length) {
                 throw new common_1.BadRequestException({
                     message: 'Complete all child tasks before closing the parent task',
-                    children: incompleteChildren.map((child) => ({ id: child.id, taskCode: child.taskCode, title: child.title, status: child.status })),
+                    children: incompleteChildren.map((child) => ({
+                        id: child.id,
+                        taskCode: child.taskCode,
+                        title: child.title,
+                        status: child.status,
+                    })),
                 });
             }
         }
         if (incompleteBlockers.length) {
-            const managerRoles = [workspace_role_enum_1.WorkspaceRole.Owner, workspace_role_enum_1.WorkspaceRole.ScrumMaster, workspace_role_enum_1.WorkspaceRole.ProjectManager];
-            const canOverride = managerRoles.includes(role) && dto.overrideBlocked === true && Boolean(dto.overrideReason?.trim());
+            const managerRoles = [
+                workspace_role_enum_1.WorkspaceRole.Owner,
+                workspace_role_enum_1.WorkspaceRole.ScrumMaster,
+                workspace_role_enum_1.WorkspaceRole.ProjectManager,
+            ];
+            const canOverride = managerRoles.includes(role) &&
+                dto.overrideBlocked === true &&
+                Boolean(dto.overrideReason?.trim());
             if (!canOverride) {
                 throw new common_1.BadRequestException({
                     message: 'Task is blocked by incomplete dependencies',
                     blockers: incompleteBlockers.map((item) => {
                         const blocker = item.sourceTaskId === task.id ? item.targetTask : item.sourceTask;
-                        return { id: blocker.id, taskCode: blocker.taskCode, title: blocker.title, status: blocker.status };
+                        return {
+                            id: blocker.id,
+                            taskCode: blocker.taskCode,
+                            title: blocker.title,
+                            status: blocker.status,
+                        };
                     }),
                     overrideRequired: managerRoles.includes(role),
                 });
             }
         }
         const previousStatus = task.status;
-        const workflowStatusId = selectedWorkflowStatus?.id ?? (this.tasksRepository.findWorkflowStatusId ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, targetStatus) : null);
+        const workflowStatusId = selectedWorkflowStatus?.id ??
+            (this.tasksRepository.findWorkflowStatusId
+                ? await this.tasksRepository.findWorkflowStatusId(project.workflowTemplateId, targetStatus)
+                : null);
         const updatedTask = await this.tasksRepository.update(task, {
             status: targetStatus,
             workflowStatusId,
-            completedAt: targetStatus === task_status_enum_1.TaskStatus.Done ? task.completedAt ?? new Date() : null,
-            startedAt: targetStatus === task_status_enum_1.TaskStatus.InProgress ? task.startedAt ?? new Date() : task.startedAt,
+            completedAt: targetStatus === task_status_enum_1.TaskStatus.Done
+                ? (task.completedAt ?? new Date())
+                : null,
+            startedAt: targetStatus === task_status_enum_1.TaskStatus.InProgress
+                ? (task.startedAt ?? new Date())
+                : task.startedAt,
         });
         await this.recordActivity(updatedTask, currentUserId, task_activity_log_entity_1.TaskActivityAction.StatusChanged, {
             status: { from: previousStatus, to: updatedTask.status },
-            ...(incompleteBlockers.length ? { dependencyOverrideReason: { from: null, to: dto.overrideReason.trim() } } : {}),
+            ...(incompleteBlockers.length
+                ? {
+                    dependencyOverrideReason: {
+                        from: null,
+                        to: dto.overrideReason.trim(),
+                    },
+                }
+                : {}),
         });
-        if (targetStatus === task_status_enum_1.TaskStatus.Done && previousStatus !== task_status_enum_1.TaskStatus.Done) {
+        if (targetStatus === task_status_enum_1.TaskStatus.Done &&
+            previousStatus !== task_status_enum_1.TaskStatus.Done) {
             await this.notifyNewlyUnblockedTasks(updatedTask, workspaceId, projectId);
         }
         return {
@@ -755,7 +800,11 @@ let TasksService = class TasksService {
         if (children.length) {
             throw new common_1.BadRequestException({
                 message: 'Move or delete child tasks before deleting the parent task',
-                children: children.map((child) => ({ id: child.id, taskCode: child.taskCode, title: child.title })),
+                children: children.map((child) => ({
+                    id: child.id,
+                    taskCode: child.taskCode,
+                    title: child.title,
+                })),
             });
         }
         await this.recordActivity(task, currentUserId, task_activity_log_entity_1.TaskActivityAction.Deleted);
@@ -1051,7 +1100,8 @@ let TasksService = class TasksService {
         const relations = await this.taskDependenciesRepository.findTasksUnblockedBy(blocker.id);
         const dependents = relations.map((item) => item.sourceTaskId === blocker.id ? item.targetTask : item.sourceTask);
         for (const task of dependents) {
-            if (!task.assigneeId || [task_status_enum_1.TaskStatus.Done, task_status_enum_1.TaskStatus.Cancelled].includes(task.status))
+            if (!task.assigneeId ||
+                [task_status_enum_1.TaskStatus.Done, task_status_enum_1.TaskStatus.Cancelled].includes(task.status))
                 continue;
             const remaining = await this.taskDependenciesRepository.findIncompleteBlockers(task.id);
             if (remaining.length)
@@ -1169,7 +1219,9 @@ let TasksService = class TasksService {
     normalizeLabels(labels) {
         if (!labels?.length)
             return null;
-        return [...new Set(labels.map((label) => label.trim().toLowerCase()).filter(Boolean))].slice(0, 20);
+        return [
+            ...new Set(labels.map((label) => label.trim().toLowerCase()).filter(Boolean)),
+        ].slice(0, 20);
     }
     toTaskResponse(task) {
         return {
@@ -1187,13 +1239,31 @@ let TasksService = class TasksService {
             taskType: task.taskType ?? task_type_enum_1.TaskType.Task,
             priority: task.priority ?? task_priority_enum_1.TaskPriority.Medium,
             parentId: task.parentId ?? null,
-            parent: task.parent ? { id: task.parent.id, taskCode: task.parent.taskCode, title: task.parent.title, taskType: task.parent.taskType } : null,
-            children: task.children?.map((child) => ({ id: child.id, taskCode: child.taskCode, title: child.title, taskType: child.taskType, status: child.status })) ?? [],
-            childProgress: task.children?.length ? {
-                total: task.children.length,
-                done: task.children.filter((child) => child.status === task_status_enum_1.TaskStatus.Done).length,
-                percent: Math.round((task.children.filter((child) => child.status === task_status_enum_1.TaskStatus.Done).length / task.children.length) * 100),
-            } : null,
+            parent: task.parent
+                ? {
+                    id: task.parent.id,
+                    taskCode: task.parent.taskCode,
+                    title: task.parent.title,
+                    taskType: task.parent.taskType,
+                }
+                : null,
+            children: task.children?.map((child) => ({
+                id: child.id,
+                taskCode: child.taskCode,
+                title: child.title,
+                taskType: child.taskType,
+                status: child.status,
+            })) ?? [],
+            childProgress: task.children?.length
+                ? {
+                    total: task.children.length,
+                    done: task.children.filter((child) => child.status === task_status_enum_1.TaskStatus.Done).length,
+                    percent: Math.round((task.children.filter((child) => child.status === task_status_enum_1.TaskStatus.Done)
+                        .length /
+                        task.children.length) *
+                        100),
+                }
+                : null,
             assigneeId: task.assigneeId,
             assignee: task.assignee
                 ? {
@@ -1204,7 +1274,14 @@ let TasksService = class TasksService {
                 }
                 : null,
             reporterId: task.reporterId,
-            reporter: task.reporter ? { id: task.reporter.id, fullName: task.reporter.fullName, email: task.reporter.email, avatarUrl: task.reporter.avatarUrl } : null,
+            reporter: task.reporter
+                ? {
+                    id: task.reporter.id,
+                    fullName: task.reporter.fullName,
+                    email: task.reporter.email,
+                    avatarUrl: task.reporter.avatarUrl,
+                }
+                : null,
             createdBy: task.createdBy,
             creator: task.creator
                 ? {

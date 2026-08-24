@@ -13,5 +13,7 @@ export class CreateTaskDependencies1786046000000 implements MigrationInterface {
       CONSTRAINT \`FK_task_dependency_creator\` FOREIGN KEY (\`created_by\`) REFERENCES \`users\`(\`id\`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin`);
   }
-  async down(queryRunner: QueryRunner): Promise<void> { await queryRunner.query('DROP TABLE `task_dependencies`'); }
+  async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query('DROP TABLE `task_dependencies`');
+  }
 }

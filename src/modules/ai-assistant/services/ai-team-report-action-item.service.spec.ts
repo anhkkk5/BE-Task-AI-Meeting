@@ -69,9 +69,7 @@ describe('AiTeamReportActionItemService', () => {
     };
     aiReportAccessService = {
       assertCanUseTeamReports: jest.fn().mockResolvedValue({} as never),
-      assertCanViewTeamReport: jest
-        .fn()
-        .mockResolvedValue(WorkspaceRole.Owner),
+      assertCanViewTeamReport: jest.fn().mockResolvedValue(WorkspaceRole.Owner),
       isManagerRole: jest.fn().mockReturnValue(true),
     };
     projectAccessService = {
@@ -150,7 +148,9 @@ describe('AiTeamReportActionItemService', () => {
 
     expect(result.data.items).toHaveLength(2);
     expect(result.data.canHandle).toBe(false);
-    expect(aiReportAccessService.assertCanUseTeamReports).not.toHaveBeenCalled();
+    expect(
+      aiReportAccessService.assertCanUseTeamReports,
+    ).not.toHaveBeenCalled();
   });
 
   it('an danh sach cua phien chua phat hanh voi thanh vien thuong', async () => {

@@ -43,7 +43,9 @@ async function main() {
         user: process.env.MYSQL_USER,
         password: process.env.MYSQL_PASSWORD,
         database: process.env.MYSQL_DATABASE,
-        ssl: process.env.MYSQL_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+        ssl: process.env.MYSQL_SSL === 'true'
+            ? { rejectUnauthorized: false }
+            : undefined,
     });
     const [rows] = await conn.execute('SELECT id, email, full_name, is_system_admin FROM users LIMIT 20');
     console.log('USERS LIST:', rows);

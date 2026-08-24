@@ -47,7 +47,16 @@ let AvatarUploadService = class AvatarUploadService {
                 overwrite: true,
                 invalidate: true,
                 resource_type: 'image',
-                transformation: [{ width: 512, height: 512, crop: 'fill', gravity: 'face', quality: 'auto', fetch_format: 'auto' }],
+                transformation: [
+                    {
+                        width: 512,
+                        height: 512,
+                        crop: 'fill',
+                        gravity: 'face',
+                        quality: 'auto',
+                        fetch_format: 'auto',
+                    },
+                ],
             }, (error, result) => {
                 if (error || !result)
                     return reject(new common_1.BadRequestException('Không thể tải ảnh lên Cloudinary'));

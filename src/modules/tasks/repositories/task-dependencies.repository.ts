@@ -6,39 +6,89 @@ import { TaskDependencyType } from '../../../common/enums/task-dependency-type.e
 
 @Injectable()
 export class TaskDependenciesRepository {
-  constructor(@InjectRepository(TaskDependency) private readonly repository: Repository<TaskDependency>) {}
-  create(data: Partial<TaskDependency>) { return this.repository.save(this.repository.create(data)); }
-  findDuplicate(sourceTaskId: string, targetTaskId: string, type: TaskDependency['type']) { return this.repository.findOne({ where: { sourceTaskId, targetTaskId, type } }); }
+  constructor(
+    @InjectRepository(TaskDependency)
+    private readonly repository: Repository<TaskDependency>,
+  ) {}
+  create(data: Partial<TaskDependency>) {
+    return this.repository.save(this.repository.create(data));
+  }
+  findDuplicate(
+    sourceTaskId: string,
+    targetTaskId: string,
+    type: TaskDependency['type'],
+  ) {
+    return this.repository.findOne({
+      where: { sourceTaskId, targetTaskId, type },
+    });
+  }
   findByTask(taskId: string) {
-    return this.repository.createQueryBuilder('dependency')
+    return this.repository
+      .createQueryBuilder('dependency')
       .leftJoinAndSelect('dependency.sourceTask', 'sourceTask')
       .leftJoinAndSelect('dependency.targetTask', 'targetTask')
-      .where('dependency.source_task_id = :taskId OR dependency.target_task_id = :taskId', { taskId })
-      .orderBy('dependency.created_at', 'DESC').getMany();
+      .where(
+        'dependency.source_task_id = :taskId OR dependency.target_task_id = :taskId',
+        { taskId },
+      )
+      .orderBy('dependency.created_at', 'DESC')
+      .getMany();
   }
   findByProject(projectId: string) {
-    return this.repository.createQueryBuilder('dependency')
+    return this.repository
+      .createQueryBuilder('dependency')
       .innerJoin('dependency.sourceTask', 'sourceTask')
-      .where('sourceTask.project_id = :projectId', { projectId }).getMany();
+      .where('sourceTask.project_id = :projectId', { projectId })
+      .getMany();
   }
-  findOwned(id: string) { return this.repository.findOne({ where: { id } }); }
-  remove(item: TaskDependency) { return this.repository.remove(item); }
+  findOwned(id: string) {
+    return this.repository.findOne({ where: { id } });
+  }
+  remove(item: TaskDependency) {
+    return this.repository.remove(item);
+  }
   findIncompleteBlockers(taskId: string) {
-    return this.repository.createQueryBuilder('dependency')
+    return this.repository
+      .createQueryBuilder('dependency')
       .leftJoinAndSelect('dependency.sourceTask', 'sourceTask')
       .leftJoinAndSelect('dependency.targetTask', 'targetTask')
-      .leftJoin('workflow_statuses', 'sourceStatus', 'sourceStatus.id = sourceTask.workflow_status_id')
-      .leftJoin('workflow_statuses', 'targetStatus', 'targetStatus.id = targetTask.workflow_status_id')
-      .where('(dependency.type = :dependsOn AND dependency.source_task_id = :taskId AND targetStatus.category != :doneCategory)', { dependsOn: TaskDependencyType.DependsOn, taskId, doneCategory: 'DONE' })
-      .orWhere('(dependency.type = :blocks AND dependency.target_task_id = :taskId AND sourceStatus.category != :doneCategory)', { blocks: TaskDependencyType.Blocks, taskId, doneCategory: 'DONE' })
+      .leftJoin(
+        'workflow_statuses',
+        'sourceStatus',
+        'sourceStatus.id = sourceTask.workflow_status_id',
+      )
+      .leftJoin(
+        'workflow_statuses',
+        'targetStatus',
+        'targetStatus.id = targetTask.workflow_status_id',
+      )
+      .where(
+        '(dependency.type = :dependsOn AND dependency.source_task_id = :taskId AND targetStatus.category != :doneCategory)',
+        {
+          dependsOn: TaskDependencyType.DependsOn,
+          taskId,
+          doneCategory: 'DONE',
+        },
+      )
+      .orWhere(
+        '(dependency.type = :blocks AND dependency.target_task_id = :taskId AND sourceStatus.category != :doneCategory)',
+        { blocks: TaskDependencyType.Blocks, taskId, doneCategory: 'DONE' },
+      )
       .getMany();
   }
   findTasksUnblockedBy(blockerTaskId: string) {
-    return this.repository.createQueryBuilder('dependency')
+    return this.repository
+      .createQueryBuilder('dependency')
       .leftJoinAndSelect('dependency.sourceTask', 'sourceTask')
       .leftJoinAndSelect('dependency.targetTask', 'targetTask')
-      .where('(dependency.type = :blocks AND dependency.source_task_id = :taskId)', { blocks: TaskDependencyType.Blocks, taskId: blockerTaskId })
-      .orWhere('(dependency.type = :dependsOn AND dependency.target_task_id = :taskId)', { dependsOn: TaskDependencyType.DependsOn, taskId: blockerTaskId })
+      .where(
+        '(dependency.type = :blocks AND dependency.source_task_id = :taskId)',
+        { blocks: TaskDependencyType.Blocks, taskId: blockerTaskId },
+      )
+      .orWhere(
+        '(dependency.type = :dependsOn AND dependency.target_task_id = :taskId)',
+        { dependsOn: TaskDependencyType.DependsOn, taskId: blockerTaskId },
+      )
       .getMany();
   }
 }

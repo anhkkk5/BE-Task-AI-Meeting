@@ -225,7 +225,13 @@ let AiMeetingActionItemReviewService = class AiMeetingActionItemReviewService {
             reviewedAt: review?.reviewedAt ?? null,
             duplicateCandidates,
             confidence: citation?.confidence ?? null,
-            citation: citation ? { ...citation, startedAt: citation.startedAt.toISOString(), endedAt: citation.endedAt?.toISOString() ?? null } : null,
+            citation: citation
+                ? {
+                    ...citation,
+                    startedAt: citation.startedAt.toISOString(),
+                    endedAt: citation.endedAt?.toISOString() ?? null,
+                }
+                : null,
         };
     }
     async findDuplicates(projectId, title) {
@@ -233,30 +239,65 @@ let AiMeetingActionItemReviewService = class AiMeetingActionItemReviewService {
             return [];
         const candidates = await this.tasksRepository.findDuplicateCandidates(projectId, title);
         const normalized = this.normalizeText(title);
-        return candidates.map((task) => {
+        return candidates
+            .map((task) => {
             const candidate = this.normalizeText(task.title);
             const sourceTokens = new Set(normalized.split(' ').filter(Boolean));
             const candidateTokens = new Set(candidate.split(' ').filter(Boolean));
             const overlap = [...sourceTokens].filter((token) => candidateTokens.has(token)).length;
-            const similarity = Math.round((overlap / Math.max(1, Math.min(sourceTokens.size, candidateTokens.size))) * 100);
-            return { id: task.id, taskCode: task.taskCode, title: task.title, status: task.status, similarity };
-        }).filter((item) => item.similarity >= 50).sort((a, b) => b.similarity - a.similarity);
+            const similarity = Math.round((overlap /
+                Math.max(1, Math.min(sourceTokens.size, candidateTokens.size))) *
+                100);
+            return {
+                id: task.id,
+                taskCode: task.taskCode,
+                title: task.title,
+                status: task.status,
+                similarity,
+            };
+        })
+            .filter((item) => item.similarity >= 50)
+            .sort((a, b) => b.similarity - a.similarity);
     }
     normalizeText(value) {
-        return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+        return value
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, ' ')
+            .trim();
     }
     async findCitation(meetingId, actionText) {
         if (!this.meetingTranscriptModel)
             return null;
-        const transcript = await this.meetingTranscriptModel.findOne({ meetingId }).lean().exec();
-        const actionTokens = new Set(this.normalizeText(actionText).split(' ').filter((token) => token.length >= 4));
-        const ranked = (transcript?.liveSegments ?? []).map((segment) => {
-            const segmentTokens = new Set(this.normalizeText(segment.text).split(' ').filter((token) => token.length >= 4));
+        const transcript = await this.meetingTranscriptModel
+            .findOne({ meetingId })
+            .lean()
+            .exec();
+        const actionTokens = new Set(this.normalizeText(actionText)
+            .split(' ')
+            .filter((token) => token.length >= 4));
+        const ranked = (transcript?.liveSegments ?? [])
+            .map((segment) => {
+            const segmentTokens = new Set(this.normalizeText(segment.text)
+                .split(' ')
+                .filter((token) => token.length >= 4));
             const overlap = [...actionTokens].filter((token) => segmentTokens.has(token)).length;
             return { segment, score: overlap / Math.max(1, actionTokens.size) };
-        }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
+        })
+            .filter((item) => item.score > 0)
+            .sort((a, b) => b.score - a.score);
         const best = ranked[0]?.segment;
-        return best ? { segmentId: best.chunkId ?? null, speakerName: best.speakerName ?? null, text: best.text, startedAt: new Date(best.startedAt), endedAt: best.endedAt ? new Date(best.endedAt) : null, confidence: best.confidence ?? null } : null;
+        return best
+            ? {
+                segmentId: best.chunkId ?? null,
+                speakerName: best.speakerName ?? null,
+                text: best.text,
+                startedAt: new Date(best.startedAt),
+                endedAt: best.endedAt ? new Date(best.endedAt) : null,
+                confidence: best.confidence ?? null,
+            }
+            : null;
     }
     getSummaryModel() {
         if (!this.meetingSummaryModel) {

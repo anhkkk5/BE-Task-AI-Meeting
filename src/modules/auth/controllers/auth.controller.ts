@@ -114,26 +114,47 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const result = await this.authService.login(dto, this.requestContext(request));
+    const result = await this.authService.login(
+      dto,
+      this.requestContext(request),
+    );
     if ('mfaRequired' in result) return result.body;
     this.setRefreshTokenCookie(response, result.refreshToken);
 
     return result.body;
   }
 
-  @Post('forgot-password') @UseGuards(ThrottlerGuard) @Throttle({ default: { limit: 3, ttl: 60_000 } })
-  forgotPassword(@Body() dto: ForgotPasswordDto) { return this.authService.forgotPassword(dto); }
-
-  @Post('reset-password') @UseGuards(ThrottlerGuard) @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  resetPassword(@Body() dto: ResetPasswordDto) { return this.authService.resetPassword(dto); }
-
-  @Post('mfa/verify') @UseGuards(ThrottlerGuard) @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  async verifyMfa(@Body() dto: VerifyMfaDto, @Res({ passthrough: true }) response: Response) {
-    const result = await this.authService.verifyMfa(dto); this.setRefreshTokenCookie(response, result.refreshToken); return result.body;
+  @Post('forgot-password')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
   }
 
-  @Patch('mfa') @UseGuards(AccessTokenGuard)
-  setMfa(@CurrentUser() user: AuthUser, @Body() dto: { enabled: boolean }) { return this.authService.setMfa(user, dto.enabled === true); }
+  @Post('reset-password')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
+  }
+
+  @Post('mfa/verify')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  async verifyMfa(
+    @Body() dto: VerifyMfaDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.authService.verifyMfa(dto);
+    this.setRefreshTokenCookie(response, result.refreshToken);
+    return result.body;
+  }
+
+  @Patch('mfa')
+  @UseGuards(AccessTokenGuard)
+  setMfa(@CurrentUser() user: AuthUser, @Body() dto: { enabled: boolean }) {
+    return this.authService.setMfa(user, dto.enabled === true);
+  }
 
   @Post('refresh')
   @UseGuards(ThrottlerGuard, RefreshTokenGuard)
@@ -193,16 +214,36 @@ export class AuthController {
     return this.authService.getMe(user);
   }
 
-  @Get('sessions') @UseGuards(AccessTokenGuard) @ApiBearerAuth()
-  sessions(@CurrentUser() user: AuthUser) { return this.authService.getSessions(user); }
+  @Get('sessions')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
+  sessions(@CurrentUser() user: AuthUser) {
+    return this.authService.getSessions(user);
+  }
 
-  @Delete('sessions/others') @UseGuards(AccessTokenGuard) @ApiBearerAuth()
-  revokeOthers(@CurrentUser() user: AuthUser) { return this.authService.revokeOtherSessions(user); }
+  @Delete('sessions/others')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
+  revokeOthers(@CurrentUser() user: AuthUser) {
+    return this.authService.revokeOtherSessions(user);
+  }
 
-  @Delete('sessions/:sessionId') @UseGuards(AccessTokenGuard) @ApiBearerAuth()
-  revokeSession(@CurrentUser() user: AuthUser, @Param('sessionId') sessionId: string) { return this.authService.revokeSession(user, sessionId); }
+  @Delete('sessions/:sessionId')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
+  revokeSession(
+    @CurrentUser() user: AuthUser,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.authService.revokeSession(user, sessionId);
+  }
 
-  private requestContext(request: Request) { return { ipAddress: request.ip ?? request.socket?.remoteAddress ?? null, userAgent: request.headers['user-agent'] ?? null }; }
+  private requestContext(request: Request) {
+    return {
+      ipAddress: request.ip ?? request.socket?.remoteAddress ?? null,
+      userAgent: request.headers['user-agent'] ?? null,
+    };
+  }
 
   private setRefreshTokenCookie(response: Response, refreshToken: string) {
     response.cookie(

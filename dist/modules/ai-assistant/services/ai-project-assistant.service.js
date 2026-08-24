@@ -80,8 +80,25 @@ let AiProjectAssistantService = class AiProjectAssistantService {
             output = fallback;
         }
         await this.messageModel?.create([
-            { workspaceId, projectId, userId, sprintId: sprint?.id ?? null, role: 'USER', content: dto.question, sources: [] },
-            { workspaceId, projectId, userId, sprintId: sprint?.id ?? null, role: 'ASSISTANT', content: output.answer, sources, actionDraft: actionDraft ?? null },
+            {
+                workspaceId,
+                projectId,
+                userId,
+                sprintId: sprint?.id ?? null,
+                role: 'USER',
+                content: dto.question,
+                sources: [],
+            },
+            {
+                workspaceId,
+                projectId,
+                userId,
+                sprintId: sprint?.id ?? null,
+                role: 'ASSISTANT',
+                content: output.answer,
+                sources,
+                actionDraft: actionDraft ?? null,
+            },
         ]);
         return {
             success: true,
@@ -108,14 +125,42 @@ let AiProjectAssistantService = class AiProjectAssistantService {
     async getHistory(userId, workspaceId, projectId) {
         await this.assertAccess(userId, workspaceId, projectId);
         if (!this.messageModel)
-            return { success: true, message: 'Get assistant history successfully', data: { items: [] } };
-        const items = await this.messageModel.find({ workspaceId, projectId, userId }).sort({ createdAt: 1 }).limit(100).lean().exec();
-        return { success: true, message: 'Get assistant history successfully', data: { items: items.map((item) => ({ id: item._id.toString(), role: item.role, content: item.content, sources: item.sources ?? [], actionDraft: item.actionDraft ?? undefined, createdAt: item.createdAt })) } };
+            return {
+                success: true,
+                message: 'Get assistant history successfully',
+                data: { items: [] },
+            };
+        const items = await this.messageModel
+            .find({ workspaceId, projectId, userId })
+            .sort({ createdAt: 1 })
+            .limit(100)
+            .lean()
+            .exec();
+        return {
+            success: true,
+            message: 'Get assistant history successfully',
+            data: {
+                items: items.map((item) => ({
+                    id: item._id.toString(),
+                    role: item.role,
+                    content: item.content,
+                    sources: item.sources ?? [],
+                    actionDraft: item.actionDraft ?? undefined,
+                    createdAt: item.createdAt,
+                })),
+            },
+        };
     }
     async clearHistory(userId, workspaceId, projectId) {
         await this.assertAccess(userId, workspaceId, projectId);
-        await this.messageModel?.deleteMany({ workspaceId, projectId, userId }).exec();
-        return { success: true, message: 'Clear assistant history successfully', data: null };
+        await this.messageModel
+            ?.deleteMany({ workspaceId, projectId, userId })
+            .exec();
+        return {
+            success: true,
+            message: 'Clear assistant history successfully',
+            data: null,
+        };
     }
     async getSprintRisk(userId, workspaceId, projectId, sprintId) {
         await this.assertAccess(userId, workspaceId, projectId);
@@ -297,20 +342,44 @@ let AiProjectAssistantService = class AiProjectAssistantService {
             taskLabel: `${referencedTask.taskCode} - ${referencedTask.title}`,
         };
         if (/\b(?:đổi|chuyển|cập nhật)\s+(?:trạng thái|status)/iu.test(normalized)) {
-            const status = /hoàn thành|done/iu.test(normalized) ? task_status_enum_1.TaskStatus.Done
-                : /đang (?:làm|xử lý)|in[_ ]?progress/iu.test(normalized) ? task_status_enum_1.TaskStatus.InProgress
-                    : /review|kiểm thử|duyệt/iu.test(normalized) ? task_status_enum_1.TaskStatus.Review
-                        : /backlog/iu.test(normalized) ? task_status_enum_1.TaskStatus.Backlog : task_status_enum_1.TaskStatus.Todo;
+            const status = /hoàn thành|done/iu.test(normalized)
+                ? task_status_enum_1.TaskStatus.Done
+                : /đang (?:làm|xử lý)|in[_ ]?progress/iu.test(normalized)
+                    ? task_status_enum_1.TaskStatus.InProgress
+                    : /review|kiểm thử|duyệt/iu.test(normalized)
+                        ? task_status_enum_1.TaskStatus.Review
+                        : /backlog/iu.test(normalized)
+                            ? task_status_enum_1.TaskStatus.Backlog
+                            : task_status_enum_1.TaskStatus.Todo;
             return { ...base, type: 'CHANGE_STATUS', payload: { priority, status } };
         }
         if (/\b(?:giao|gán|assign|đổi người phụ trách)/iu.test(normalized)) {
-            return { ...base, type: 'ASSIGN_TASK', payload: { priority, assigneeId: null } };
+            return {
+                ...base,
+                type: 'ASSIGN_TASK',
+                payload: { priority, assigneeId: null },
+            };
         }
         if (/\b(?:chuyển|đưa)\s+.*(?:sprint|backlog)/iu.test(normalized)) {
-            return { ...base, type: 'MOVE_TASK', payload: { priority, sprintId: /backlog/iu.test(normalized) ? undefined : sprint?.id } };
+            return {
+                ...base,
+                type: 'MOVE_TASK',
+                payload: {
+                    priority,
+                    sprintId: /backlog/iu.test(normalized) ? undefined : sprint?.id,
+                },
+            };
         }
         if (/\b(?:sửa|cập nhật|đổi)\s+(?:task|công việc|tiêu đề|mô tả)/iu.test(normalized)) {
-            return { ...base, type: 'UPDATE_TASK', payload: { priority, title: referencedTask.title, description: referencedTask.description ?? '' } };
+            return {
+                ...base,
+                type: 'UPDATE_TASK',
+                payload: {
+                    priority,
+                    title: referencedTask.title,
+                    description: referencedTask.description ?? '',
+                },
+            };
         }
         return undefined;
     }

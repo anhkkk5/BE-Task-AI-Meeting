@@ -1,4 +1,12 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum NotificationType {
@@ -20,16 +28,35 @@ export enum NotificationType {
 @Index(['recipientId', 'readAt', 'createdAt'])
 export class Notification {
   @PrimaryGeneratedColumn('uuid') id: string;
-  @Column({ name: 'recipient_id', type: 'varchar', length: 36 }) recipientId: string;
+  @Column({ name: 'recipient_id', type: 'varchar', length: 36 })
+  recipientId: string;
   @Column({ type: 'varchar', length: 50 }) type: NotificationType;
   @Column({ type: 'varchar', length: 200 }) title: string;
   @Column({ type: 'varchar', length: 1000 }) body: string;
   @Column({ type: 'varchar', length: 500 }) link: string;
-  @Column({ type: 'json', nullable: true }) metadata: Record<string, unknown> | null;
-  @Column({ name: 'idempotency_key', type: 'varchar', length: 200, nullable: true, unique: true }) idempotencyKey: string | null;
-  @Column({ name: 'read_at', type: 'datetime', precision: 6, nullable: true }) readAt: Date | null;
-  @Column({ name: 'archived_at', type: 'datetime', precision: 6, nullable: true }) archivedAt: Date | null;
+  @Column({ type: 'json', nullable: true }) metadata: Record<
+    string,
+    unknown
+  > | null;
+  @Column({
+    name: 'idempotency_key',
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+    unique: true,
+  })
+  idempotencyKey: string | null;
+  @Column({ name: 'read_at', type: 'datetime', precision: 6, nullable: true })
+  readAt: Date | null;
+  @Column({
+    name: 'archived_at',
+    type: 'datetime',
+    precision: 6,
+    nullable: true,
+  })
+  archivedAt: Date | null;
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'recipient_id' }) recipient: User;
+  @JoinColumn({ name: 'recipient_id' })
+  recipient: User;
   @CreateDateColumn({ name: 'created_at', precision: 6 }) createdAt: Date;
 }

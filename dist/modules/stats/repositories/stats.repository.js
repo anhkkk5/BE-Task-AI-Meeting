@@ -144,7 +144,9 @@ let StatsRepository = class StatsRepository {
             .leftJoinAndSelect('task.assignee', 'assignee')
             .where('project.workspaceId = :workspaceId', { workspaceId })
             .andWhere('task.dueDate IS NOT NULL')
-            .andWhere('workflowStatus.category != :doneCategory', { doneCategory: 'DONE' })
+            .andWhere('workflowStatus.category != :doneCategory', {
+            doneCategory: 'DONE',
+        })
             .andWhere('task.deletedAt IS NULL')
             .andWhere('project.deletedAt IS NULL')
             .orderBy('task.dueDate', 'ASC')
@@ -159,7 +161,9 @@ let StatsRepository = class StatsRepository {
             .select('DATE(task.updated_at)', 'day')
             .addSelect('COUNT(task.id)', 'total')
             .where('project.workspace_id = :workspaceId', { workspaceId })
-            .andWhere('workflowStatus.category = :doneCategory', { doneCategory: 'DONE' })
+            .andWhere('workflowStatus.category = :doneCategory', {
+            doneCategory: 'DONE',
+        })
             .andWhere('task.updated_at >= :fromDate', { fromDate })
             .andWhere('task.deletedAt IS NULL')
             .andWhere('project.deletedAt IS NULL')

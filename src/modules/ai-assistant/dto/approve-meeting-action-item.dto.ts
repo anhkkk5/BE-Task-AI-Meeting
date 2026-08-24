@@ -23,11 +23,14 @@ export class ApproveMeetingActionItemDto {
   title?: string;
 
   @ApiPropertyOptional({ maxLength: 2000 })
-  @IsOptional() @IsString() @MaxLength(2000)
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
   description?: string;
 
   @ApiPropertyOptional({ enum: TaskPriority })
-  @IsOptional() @IsEnum(TaskPriority)
+  @IsOptional()
+  @IsEnum(TaskPriority)
   priority?: TaskPriority;
 
   @ApiPropertyOptional({ description: 'User UUID se duoc gan task.' })
@@ -47,7 +50,9 @@ export class ApproveMeetingActionItemDto {
   @IsDateString()
   dueDate?: string;
 
-  @ApiPropertyOptional({ description: 'Cho phép tạo dù hệ thống phát hiện task tương tự.' })
+  @ApiPropertyOptional({
+    description: 'Cho phép tạo dù hệ thống phát hiện task tương tự.',
+  })
   @IsOptional()
   @IsBoolean()
   allowDuplicate?: boolean;

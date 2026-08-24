@@ -13,7 +13,10 @@ export class AvatarUploadService {
     });
   }
 
-  upload(userId: string, file: Express.Multer.File): Promise<UploadApiResponse> {
+  upload(
+    userId: string,
+    file: Express.Multer.File,
+  ): Promise<UploadApiResponse> {
     if (!file) throw new BadRequestException('Vui lòng chọn một ảnh');
     if (!file.mimetype.startsWith('image/')) {
       throw new BadRequestException('Tệp tải lên phải là hình ảnh');
@@ -29,7 +32,8 @@ export class AvatarUploadService {
       throw new BadRequestException('Backend chưa cấu hình Cloudinary');
     }
 
-    const folder = this.configService.get<string>('CLOUDINARY_UPLOAD_FOLDER') || 'agile-ai';
+    const folder =
+      this.configService.get<string>('CLOUDINARY_UPLOAD_FOLDER') || 'agile-ai';
     return new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
@@ -38,10 +42,22 @@ export class AvatarUploadService {
           overwrite: true,
           invalidate: true,
           resource_type: 'image',
-          transformation: [{ width: 512, height: 512, crop: 'fill', gravity: 'face', quality: 'auto', fetch_format: 'auto' }],
+          transformation: [
+            {
+              width: 512,
+              height: 512,
+              crop: 'fill',
+              gravity: 'face',
+              quality: 'auto',
+              fetch_format: 'auto',
+            },
+          ],
         },
         (error, result) => {
-          if (error || !result) return reject(new BadRequestException('Không thể tải ảnh lên Cloudinary'));
+          if (error || !result)
+            return reject(
+              new BadRequestException('Không thể tải ảnh lên Cloudinary'),
+            );
           resolve(result);
         },
       );

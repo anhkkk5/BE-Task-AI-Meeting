@@ -72,11 +72,21 @@ __decorate([
     __metadata("design:type", String)
 ], TeamReportActionItem.prototype, "status", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'created_task_id', type: 'varchar', length: 36, nullable: true }),
+    (0, typeorm_1.Column)({
+        name: 'created_task_id',
+        type: 'varchar',
+        length: 36,
+        nullable: true,
+    }),
     __metadata("design:type", Object)
 ], TeamReportActionItem.prototype, "createdTaskId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'target_task_id', type: 'varchar', length: 36, nullable: true }),
+    (0, typeorm_1.Column)({
+        name: 'target_task_id',
+        type: 'varchar',
+        length: 36,
+        nullable: true,
+    }),
     __metadata("design:type", Object)
 ], TeamReportActionItem.prototype, "targetTaskId", void 0);
 __decorate([

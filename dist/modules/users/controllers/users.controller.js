@@ -50,7 +50,9 @@ let UsersController = class UsersController {
     }
     async uploadAvatar(user, file) {
         const uploaded = await this.avatarUploadService.upload(user.id, file);
-        return this.usersService.updateProfile(user.id, { avatarUrl: uploaded.secure_url });
+        return this.usersService.updateProfile(user.id, {
+            avatarUrl: uploaded.secure_url,
+        });
     }
     changePassword(user, dto) {
         return this.usersService.changePassword(user.id, dto);
@@ -114,7 +116,13 @@ __decorate([
     (0, common_1.Post)('me/avatar'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('avatar', { limits: { fileSize: 5 * 1024 * 1024 } })),
     (0, swagger_1.ApiConsumes)('multipart/form-data'),
-    (0, swagger_1.ApiBody)({ schema: { type: 'object', properties: { avatar: { type: 'string', format: 'binary' } }, required: ['avatar'] } }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: { avatar: { type: 'string', format: 'binary' } },
+            required: ['avatar'],
+        },
+    }),
     (0, swagger_1.ApiOperation)({ summary: 'Tải ảnh đại diện lên Cloudinary' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.UploadedFile)()),

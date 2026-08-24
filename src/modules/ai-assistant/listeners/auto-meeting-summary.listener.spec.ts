@@ -5,8 +5,7 @@ import { AutoMeetingSummaryListener } from './auto-meeting-summary.listener';
 
 describe('AutoMeetingSummaryListener', () => {
   let completedHandler:
-    | ((event: MeetingCompletedEvent) => void | Promise<void>)
-    | undefined;
+    ((event: MeetingCompletedEvent) => void | Promise<void>) | undefined;
   let unsubscribe: jest.Mock;
   let meetingLifecycleService: jest.Mocked<
     Pick<MeetingLifecycleService, 'onMeetingCompleted'>

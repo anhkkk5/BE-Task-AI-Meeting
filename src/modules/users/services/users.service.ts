@@ -32,7 +32,13 @@ export class UsersService {
     return this.usersRepository.updateRefreshTokenHash(id, refreshTokenHash);
   }
 
-  updateSecurity(id: string, data: Pick<Partial<User>, 'passwordHash' | 'refreshTokenHash' | 'mfaEnabled'>) {
+  updateSecurity(
+    id: string,
+    data: Pick<
+      Partial<User>,
+      'passwordHash' | 'refreshTokenHash' | 'mfaEnabled'
+    >,
+  ) {
     return this.usersRepository.update(id, data);
   }
 

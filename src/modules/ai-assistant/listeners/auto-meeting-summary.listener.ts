@@ -100,6 +100,8 @@ export class AutoMeetingSummaryListener
 
     const message = error instanceof Error ? error.message : String(error);
 
-    return /transcript/i.test(message) && /not found|khong tim thay/i.test(message);
+    return (
+      /transcript/i.test(message) && /not found|khong tim thay/i.test(message)
+    );
   }
 }

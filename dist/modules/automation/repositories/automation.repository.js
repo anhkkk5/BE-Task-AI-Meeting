@@ -25,21 +25,47 @@ let AutomationRepository = class AutomationRepository {
         this.rules = rules;
         this.runs = runs;
     }
-    listRules(projectId) { return this.rules.find({ where: { projectId }, order: { createdAt: 'DESC' } }); }
-    enabledRules() { return this.rules.find({ where: { enabled: true } }); }
-    findRule(id, projectId) { return this.rules.findOne({ where: { id, projectId } }); }
-    saveRule(data) { return this.rules.save(this.rules.create(data)); }
-    deleteRule(rule) { return this.rules.remove(rule); }
-    listRuns(ruleId) { return this.runs.find({ where: { ruleId }, order: { createdAt: 'DESC' }, take: 100 }); }
-    findRun(id) { return this.runs.findOne({ where: { id } }); }
-    findExecution(key) { return this.runs.findOne({ where: { executionKey: key } }); }
-    saveRun(data) { return this.runs.save(this.runs.create(data)); }
+    listRules(projectId) {
+        return this.rules.find({
+            where: { projectId },
+            order: { createdAt: 'DESC' },
+        });
+    }
+    enabledRules() {
+        return this.rules.find({ where: { enabled: true } });
+    }
+    findRule(id, projectId) {
+        return this.rules.findOne({ where: { id, projectId } });
+    }
+    saveRule(data) {
+        return this.rules.save(this.rules.create(data));
+    }
+    deleteRule(rule) {
+        return this.rules.remove(rule);
+    }
+    listRuns(ruleId) {
+        return this.runs.find({
+            where: { ruleId },
+            order: { createdAt: 'DESC' },
+            take: 100,
+        });
+    }
+    findRun(id) {
+        return this.runs.findOne({ where: { id } });
+    }
+    findExecution(key) {
+        return this.runs.findOne({ where: { executionKey: key } });
+    }
+    saveRun(data) {
+        return this.runs.save(this.runs.create(data));
+    }
 };
 exports.AutomationRepository = AutomationRepository;
 exports.AutomationRepository = AutomationRepository = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(automation_rule_entity_1.AutomationRule)),
     __param(1, (0, typeorm_1.InjectRepository)(automation_run_entity_1.AutomationRun)),
-    __metadata("design:paramtypes", [typeorm_2.Repository, typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], AutomationRepository);
 //# sourceMappingURL=automation.repository.js.map

@@ -17,7 +17,10 @@ import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { AskProjectAssistantDto } from '../dto/ask-project-assistant.dto';
 import { AiProviderService } from './ai-provider.service';
-import { ProjectAssistantMessage, ProjectAssistantMessageDocument } from '../schemas/project-assistant-message.schema';
+import {
+  ProjectAssistantMessage,
+  ProjectAssistantMessageDocument,
+} from '../schemas/project-assistant-message.schema';
 
 export type SprintRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type RiskSeverity = 'INFO' | 'WARNING' | 'DANGER';
@@ -65,7 +68,12 @@ type AssistantSource = {
 };
 
 export type ProjectAssistantActionDraft = {
-  type: 'CREATE_TASK' | 'UPDATE_TASK' | 'CHANGE_STATUS' | 'ASSIGN_TASK' | 'MOVE_TASK';
+  type:
+    | 'CREATE_TASK'
+    | 'UPDATE_TASK'
+    | 'CHANGE_STATUS'
+    | 'ASSIGN_TASK'
+    | 'MOVE_TASK';
   requiresConfirmation: true;
   taskId?: string;
   taskLabel?: string;
@@ -90,7 +98,8 @@ export class AiProjectAssistantService {
     private readonly sprintsRepository: SprintsRepository,
     private readonly tasksRepository: TasksRepository,
     private readonly workspaceAccessService: WorkspaceAccessService,
-    @Optional() @InjectModel(ProjectAssistantMessage.name)
+    @Optional()
+    @InjectModel(ProjectAssistantMessage.name)
     private readonly messageModel?: Model<ProjectAssistantMessageDocument>,
   ) {}
 
@@ -159,8 +168,25 @@ export class AiProjectAssistantService {
     }
 
     await this.messageModel?.create([
-      { workspaceId, projectId, userId, sprintId: sprint?.id ?? null, role: 'USER', content: dto.question, sources: [] },
-      { workspaceId, projectId, userId, sprintId: sprint?.id ?? null, role: 'ASSISTANT', content: output.answer, sources, actionDraft: actionDraft ?? null },
+      {
+        workspaceId,
+        projectId,
+        userId,
+        sprintId: sprint?.id ?? null,
+        role: 'USER',
+        content: dto.question,
+        sources: [],
+      },
+      {
+        workspaceId,
+        projectId,
+        userId,
+        sprintId: sprint?.id ?? null,
+        role: 'ASSISTANT',
+        content: output.answer,
+        sources,
+        actionDraft: actionDraft ?? null,
+      },
     ]);
 
     return {
@@ -188,15 +214,44 @@ export class AiProjectAssistantService {
 
   async getHistory(userId: string, workspaceId: string, projectId: string) {
     await this.assertAccess(userId, workspaceId, projectId);
-    if (!this.messageModel) return { success: true, message: 'Get assistant history successfully', data: { items: [] } };
-    const items = await this.messageModel.find({ workspaceId, projectId, userId }).sort({ createdAt: 1 }).limit(100).lean().exec();
-    return { success: true, message: 'Get assistant history successfully', data: { items: items.map((item: any) => ({ id: item._id.toString(), role: item.role, content: item.content, sources: item.sources ?? [], actionDraft: item.actionDraft ?? undefined, createdAt: item.createdAt })) } };
+    if (!this.messageModel)
+      return {
+        success: true,
+        message: 'Get assistant history successfully',
+        data: { items: [] },
+      };
+    const items = await this.messageModel
+      .find({ workspaceId, projectId, userId })
+      .sort({ createdAt: 1 })
+      .limit(100)
+      .lean()
+      .exec();
+    return {
+      success: true,
+      message: 'Get assistant history successfully',
+      data: {
+        items: items.map((item: any) => ({
+          id: item._id.toString(),
+          role: item.role,
+          content: item.content,
+          sources: item.sources ?? [],
+          actionDraft: item.actionDraft ?? undefined,
+          createdAt: item.createdAt,
+        })),
+      },
+    };
   }
 
   async clearHistory(userId: string, workspaceId: string, projectId: string) {
     await this.assertAccess(userId, workspaceId, projectId);
-    await this.messageModel?.deleteMany({ workspaceId, projectId, userId }).exec();
-    return { success: true, message: 'Clear assistant history successfully', data: null };
+    await this.messageModel
+      ?.deleteMany({ workspaceId, projectId, userId })
+      .exec();
+    return {
+      success: true,
+      message: 'Clear assistant history successfully',
+      data: null,
+    };
   }
 
   async getSprintRisk(
@@ -404,11 +459,17 @@ export class AiProjectAssistantService {
   ): ProjectAssistantActionDraft | undefined {
     const normalized = question.trim();
     const referencedTask = tasks.find((task) =>
-      new RegExp(`(?:^|\\s)${task.taskCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\s|[,.:;-])`, 'iu').test(normalized),
+      new RegExp(
+        `(?:^|\\s)${task.taskCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\s|[,.:;-])`,
+        'iu',
+      ).test(normalized),
     );
 
     const extractedTitle = normalized
-      .replace(/^.*?(?:tạo|thêm|lập)\s+(?:một\s+)?(?:task|công việc)\s*(?:mới\s*)?(?::|-)?\s*/iu, '')
+      .replace(
+        /^.*?(?:tạo|thêm|lập)\s+(?:một\s+)?(?:task|công việc)\s*(?:mới\s*)?(?::|-)?\s*/iu,
+        '',
+      )
       .replace(/[.!?]+$/u, '')
       .trim();
     const title = extractedTitle || 'Công việc mới từ Project Assistant';
@@ -420,16 +481,17 @@ export class AiProjectAssistantService {
           ? 'LOW'
           : 'MEDIUM';
 
-    if (/(?:tạo|thêm|lập)\s+(?:một\s+)?(?:task|công việc)/iu.test(normalized)) return {
-      type: 'CREATE_TASK',
-      requiresConfirmation: true,
-      payload: {
-        title: title.slice(0, 255),
-        description: `Bản nháp được đề xuất từ yêu cầu: ${normalized}`,
-        ...(sprint ? { sprintId: sprint.id } : {}),
-        priority,
-      },
-    };
+    if (/(?:tạo|thêm|lập)\s+(?:một\s+)?(?:task|công việc)/iu.test(normalized))
+      return {
+        type: 'CREATE_TASK',
+        requiresConfirmation: true,
+        payload: {
+          title: title.slice(0, 255),
+          description: `Bản nháp được đề xuất từ yêu cầu: ${normalized}`,
+          ...(sprint ? { sprintId: sprint.id } : {}),
+          priority,
+        },
+      };
 
     if (!referencedTask) return undefined;
     const base = {
@@ -437,21 +499,51 @@ export class AiProjectAssistantService {
       taskId: referencedTask.id,
       taskLabel: `${referencedTask.taskCode} - ${referencedTask.title}`,
     };
-    if (/\b(?:đổi|chuyển|cập nhật)\s+(?:trạng thái|status)/iu.test(normalized)) {
-      const status = /hoàn thành|done/iu.test(normalized) ? TaskStatus.Done
-        : /đang (?:làm|xử lý)|in[_ ]?progress/iu.test(normalized) ? TaskStatus.InProgress
-        : /review|kiểm thử|duyệt/iu.test(normalized) ? TaskStatus.Review
-        : /backlog/iu.test(normalized) ? TaskStatus.Backlog : TaskStatus.Todo;
+    if (
+      /\b(?:đổi|chuyển|cập nhật)\s+(?:trạng thái|status)/iu.test(normalized)
+    ) {
+      const status = /hoàn thành|done/iu.test(normalized)
+        ? TaskStatus.Done
+        : /đang (?:làm|xử lý)|in[_ ]?progress/iu.test(normalized)
+          ? TaskStatus.InProgress
+          : /review|kiểm thử|duyệt/iu.test(normalized)
+            ? TaskStatus.Review
+            : /backlog/iu.test(normalized)
+              ? TaskStatus.Backlog
+              : TaskStatus.Todo;
       return { ...base, type: 'CHANGE_STATUS', payload: { priority, status } };
     }
     if (/\b(?:giao|gán|assign|đổi người phụ trách)/iu.test(normalized)) {
-      return { ...base, type: 'ASSIGN_TASK', payload: { priority, assigneeId: null } };
+      return {
+        ...base,
+        type: 'ASSIGN_TASK',
+        payload: { priority, assigneeId: null },
+      };
     }
     if (/\b(?:chuyển|đưa)\s+.*(?:sprint|backlog)/iu.test(normalized)) {
-      return { ...base, type: 'MOVE_TASK', payload: { priority, sprintId: /backlog/iu.test(normalized) ? undefined : sprint?.id } };
+      return {
+        ...base,
+        type: 'MOVE_TASK',
+        payload: {
+          priority,
+          sprintId: /backlog/iu.test(normalized) ? undefined : sprint?.id,
+        },
+      };
     }
-    if (/\b(?:sửa|cập nhật|đổi)\s+(?:task|công việc|tiêu đề|mô tả)/iu.test(normalized)) {
-      return { ...base, type: 'UPDATE_TASK', payload: { priority, title: referencedTask.title, description: referencedTask.description ?? '' } };
+    if (
+      /\b(?:sửa|cập nhật|đổi)\s+(?:task|công việc|tiêu đề|mô tả)/iu.test(
+        normalized,
+      )
+    ) {
+      return {
+        ...base,
+        type: 'UPDATE_TASK',
+        payload: {
+          priority,
+          title: referencedTask.title,
+          description: referencedTask.description ?? '',
+        },
+      };
     }
     return undefined;
   }

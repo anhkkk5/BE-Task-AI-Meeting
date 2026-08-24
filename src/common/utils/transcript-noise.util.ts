@@ -49,7 +49,11 @@ const NOISE_PATTERNS: RegExp[] = [
  * Cac mau chua dau cham / gach cheo phai so khop tren van ban GOC, vi
  * normalizeTranscriptText() da xoa het ky tu dac biet.
  */
-const URL_PATTERNS: RegExp[] = [/https?:\/\//i, /www\./i, /\.(com|org|net|vn)\b/i];
+const URL_PATTERNS: RegExp[] = [
+  /https?:\/\//i,
+  /www\./i,
+  /\.(com|org|net|vn)\b/i,
+];
 
 export function stripDiacritics(value: string) {
   return value

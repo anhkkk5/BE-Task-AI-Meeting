@@ -98,12 +98,22 @@ __decorate([
     __metadata("design:type", String)
 ], Task.prototype, "status", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'workflow_status_id', type: 'varchar', length: 36, nullable: true }),
+    (0, typeorm_1.Column)({
+        name: 'workflow_status_id',
+        type: 'varchar',
+        length: 36,
+        nullable: true,
+    }),
     __metadata("design:type", Object)
 ], Task.prototype, "workflowStatusId", void 0);
 __decorate([
     (0, typeorm_1.Index)(),
-    (0, typeorm_1.Column)({ name: 'task_type', type: 'enum', enum: task_type_enum_1.TaskType, default: task_type_enum_1.TaskType.Task }),
+    (0, typeorm_1.Column)({
+        name: 'task_type',
+        type: 'enum',
+        enum: task_type_enum_1.TaskType,
+        default: task_type_enum_1.TaskType.Task,
+    }),
     __metadata("design:type", String)
 ], Task.prototype, "taskType", void 0);
 __decorate([
@@ -177,7 +187,10 @@ __decorate([
     __metadata("design:type", user_entity_1.User)
 ], Task.prototype, "creator", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => Task, (task) => task.children, { nullable: true, onDelete: 'SET NULL' }),
+    (0, typeorm_1.ManyToOne)(() => Task, (task) => task.children, {
+        nullable: true,
+        onDelete: 'SET NULL',
+    }),
     (0, typeorm_1.JoinColumn)({ name: 'parent_id' }),
     __metadata("design:type", Object)
 ], Task.prototype, "parent", void 0);

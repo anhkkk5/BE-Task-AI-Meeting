@@ -69,7 +69,10 @@ const mongoImports = (0, mongodb_config_1.mongodbConfig)().enabled
             { name: ai_prompt_log_schema_1.AiPromptLog.name, schema: ai_prompt_log_schema_1.AiPromptLogSchema },
             { name: meeting_summary_schema_1.MeetingSummary.name, schema: meeting_summary_schema_1.MeetingSummarySchema },
             { name: meeting_transcript_schema_1.MeetingTranscript.name, schema: meeting_transcript_schema_1.MeetingTranscriptSchema },
-            { name: project_assistant_message_schema_1.ProjectAssistantMessage.name, schema: project_assistant_message_schema_1.ProjectAssistantMessageSchema },
+            {
+                name: project_assistant_message_schema_1.ProjectAssistantMessage.name,
+                schema: project_assistant_message_schema_1.ProjectAssistantMessageSchema,
+            },
             {
                 name: personalized_meeting_summary_schema_1.PersonalizedMeetingSummary.name,
                 schema: personalized_meeting_summary_schema_1.PersonalizedMeetingSummarySchema,

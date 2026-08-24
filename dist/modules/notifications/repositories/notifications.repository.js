@@ -22,10 +22,15 @@ let NotificationsRepository = class NotificationsRepository {
     constructor(repository) {
         this.repository = repository;
     }
-    create(data) { return this.repository.save(this.repository.create(data)); }
-    findByIdempotencyKey(idempotencyKey) { return this.repository.findOne({ where: { idempotencyKey } }); }
+    create(data) {
+        return this.repository.save(this.repository.create(data));
+    }
+    findByIdempotencyKey(idempotencyKey) {
+        return this.repository.findOne({ where: { idempotencyKey } });
+    }
     findForUser(recipientId, page, limit, unreadOnly) {
-        const query = this.repository.createQueryBuilder('notification')
+        const query = this.repository
+            .createQueryBuilder('notification')
             .where('notification.recipient_id = :recipientId', { recipientId })
             .andWhere('notification.archived_at IS NULL')
             .orderBy('notification.created_at', 'DESC')
@@ -35,13 +40,32 @@ let NotificationsRepository = class NotificationsRepository {
             query.andWhere('notification.read_at IS NULL');
         return query.getManyAndCount();
     }
-    countUnread(recipientId) { return this.repository.count({ where: { recipientId, readAt: (0, typeorm_2.IsNull)(), archivedAt: (0, typeorm_2.IsNull)() } }); }
-    findOwned(id, recipientId) { return this.repository.findOne({ where: { id, recipientId } }); }
-    async markRead(notification) { notification.readAt ??= new Date(); return this.repository.save(notification); }
-    markAllRead(recipientId) {
-        return this.repository.createQueryBuilder().update(notification_entity_1.Notification).set({ readAt: () => 'CURRENT_TIMESTAMP(6)' }).where('recipient_id = :recipientId', { recipientId }).andWhere('read_at IS NULL').andWhere('archived_at IS NULL').execute();
+    countUnread(recipientId) {
+        return this.repository.count({
+            where: { recipientId, readAt: (0, typeorm_2.IsNull)(), archivedAt: (0, typeorm_2.IsNull)() },
+        });
     }
-    archive(notification) { notification.archivedAt = new Date(); return this.repository.save(notification); }
+    findOwned(id, recipientId) {
+        return this.repository.findOne({ where: { id, recipientId } });
+    }
+    async markRead(notification) {
+        notification.readAt ??= new Date();
+        return this.repository.save(notification);
+    }
+    markAllRead(recipientId) {
+        return this.repository
+            .createQueryBuilder()
+            .update(notification_entity_1.Notification)
+            .set({ readAt: () => 'CURRENT_TIMESTAMP(6)' })
+            .where('recipient_id = :recipientId', { recipientId })
+            .andWhere('read_at IS NULL')
+            .andWhere('archived_at IS NULL')
+            .execute();
+    }
+    archive(notification) {
+        notification.archivedAt = new Date();
+        return this.repository.save(notification);
+    }
 };
 exports.NotificationsRepository = NotificationsRepository;
 exports.NotificationsRepository = NotificationsRepository = __decorate([

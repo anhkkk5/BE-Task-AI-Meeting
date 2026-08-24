@@ -3,7 +3,8 @@ import { IsDateString, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class TranscribeAudioChunkDto {
   @ApiProperty({
-    description: 'Ma duy nhat cua doan am thanh, dung de chong ghi trung khi retry.',
+    description:
+      'Ma duy nhat cua doan am thanh, dung de chong ghi trung khi retry.',
     example: 'session-uuid-1',
   })
   @IsString()

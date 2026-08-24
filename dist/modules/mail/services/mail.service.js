@@ -68,12 +68,33 @@ let MailService = MailService_1 = class MailService {
                 case 'brevo':
                     await this.sendViaBrevo(input);
                     break;
-                default: this.logToConsole(input);
+                default:
+                    this.logToConsole(input);
             }
-            await this.observability?.record({ kind: 'EMAIL', status: 'SUCCESS', operation: `mail.${config.provider}`, durationMs: Date.now() - started, error: null, metadata: { subject: input.subject, recipientDomain: input.to.split('@')[1] ?? 'unknown' } });
+            await this.observability?.record({
+                kind: 'EMAIL',
+                status: 'SUCCESS',
+                operation: `mail.${config.provider}`,
+                durationMs: Date.now() - started,
+                error: null,
+                metadata: {
+                    subject: input.subject,
+                    recipientDomain: input.to.split('@')[1] ?? 'unknown',
+                },
+            });
         }
         catch (error) {
-            await this.observability?.record({ kind: 'EMAIL', status: 'FAILED', operation: `mail.${config.provider}`, durationMs: Date.now() - started, error: error instanceof Error ? error.message : String(error), metadata: { subject: input.subject, recipientDomain: input.to.split('@')[1] ?? 'unknown' } });
+            await this.observability?.record({
+                kind: 'EMAIL',
+                status: 'FAILED',
+                operation: `mail.${config.provider}`,
+                durationMs: Date.now() - started,
+                error: error instanceof Error ? error.message : String(error),
+                metadata: {
+                    subject: input.subject,
+                    recipientDomain: input.to.split('@')[1] ?? 'unknown',
+                },
+            });
             throw error;
         }
     }

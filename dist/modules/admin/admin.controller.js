@@ -30,8 +30,16 @@ let AdminController = class AdminController {
     getSystemStats() {
         return this.adminService.getSystemStats();
     }
-    getObservability(hours) { return this.observability.summary(Math.min(168, Math.max(1, Number(hours) || 24))).then((data) => ({ success: true, message: 'Success', data })); }
-    getAuditLogs(page, limit) { return this.observability.auditLogs(Math.max(1, Number(page) || 1), Math.min(100, Math.max(1, Number(limit) || 50))).then((data) => ({ success: true, message: 'Success', data })); }
+    getObservability(hours) {
+        return this.observability
+            .summary(Math.min(168, Math.max(1, Number(hours) || 24)))
+            .then((data) => ({ success: true, message: 'Success', data }));
+    }
+    getAuditLogs(page, limit) {
+        return this.observability
+            .auditLogs(Math.max(1, Number(page) || 1), Math.min(100, Math.max(1, Number(limit) || 50)))
+            .then((data) => ({ success: true, message: 'Success', data }));
+    }
     getAllUsers(page, limit, search, status) {
         return this.adminService.getAllUsers({
             page: page ? Number(page) : 1,
@@ -158,7 +166,9 @@ __decorate([
 ], AdminController.prototype, "createWorkspace", null);
 __decorate([
     (0, common_1.Get)('workspaces/:workspaceId'),
-    (0, swagger_1.ApiOperation)({ summary: '[ADMIN] Xem chủ sở hữu, thành viên, dự án và thống kê workspace' }),
+    (0, swagger_1.ApiOperation)({
+        summary: '[ADMIN] Xem chủ sở hữu, thành viên, dự án và thống kê workspace',
+    }),
     (0, swagger_1.ApiParam)({ name: 'workspaceId' }),
     __param(0, (0, common_1.Param)('workspaceId')),
     __metadata("design:type", Function),
@@ -191,6 +201,7 @@ exports.AdminController = AdminController = __decorate([
     (0, swagger_1.ApiTags)('System Admin'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard, system_admin_guard_1.SystemAdminGuard),
-    __metadata("design:paramtypes", [admin_service_1.AdminService, observability_service_1.ObservabilityService])
+    __metadata("design:paramtypes", [admin_service_1.AdminService,
+        observability_service_1.ObservabilityService])
 ], AdminController);
 //# sourceMappingURL=admin.controller.js.map

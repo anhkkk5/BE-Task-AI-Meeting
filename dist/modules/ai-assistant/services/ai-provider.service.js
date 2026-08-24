@@ -478,7 +478,17 @@ let AiProviderService = class AiProviderService {
         });
         const rawText = await response.text();
         if (!response.ok) {
-            await this.observability?.record({ kind: 'AI', status: 'FAILED', operation: `${provider}.${params.model}`, durationMs: Date.now() - started, inputTokens: null, outputTokens: null, estimatedCostUsd: null, error: `HTTP ${response.status}: ${rawText.slice(0, 500)}`, metadata: null });
+            await this.observability?.record({
+                kind: 'AI',
+                status: 'FAILED',
+                operation: `${provider}.${params.model}`,
+                durationMs: Date.now() - started,
+                inputTokens: null,
+                outputTokens: null,
+                estimatedCostUsd: null,
+                error: `HTTP ${response.status}: ${rawText.slice(0, 500)}`,
+                metadata: null,
+            });
             throw new Error(`${provider} API failed: ${response.status} ${rawText}`);
         }
         const groqResponse = JSON.parse(rawText);
@@ -490,7 +500,17 @@ let AiProviderService = class AiProviderService {
         const outputTokens = groqResponse.usage?.completion_tokens ?? 0;
         const inputRate = Number(process.env.AI_INPUT_COST_PER_MILLION_USD ?? 0);
         const outputRate = Number(process.env.AI_OUTPUT_COST_PER_MILLION_USD ?? 0);
-        await this.observability?.record({ kind: 'AI', status: 'SUCCESS', operation: `${provider}.${params.model}`, durationMs: Date.now() - started, inputTokens, outputTokens, estimatedCostUsd: (inputTokens * inputRate + outputTokens * outputRate) / 1_000_000, error: null, metadata: { model: groqResponse.model ?? params.model, provider } });
+        await this.observability?.record({
+            kind: 'AI',
+            status: 'SUCCESS',
+            operation: `${provider}.${params.model}`,
+            durationMs: Date.now() - started,
+            inputTokens,
+            outputTokens,
+            estimatedCostUsd: (inputTokens * inputRate + outputTokens * outputRate) / 1_000_000,
+            error: null,
+            metadata: { model: groqResponse.model ?? params.model, provider },
+        });
         return this.parseJsonContent(content);
     }
     parseJsonContent(content) {

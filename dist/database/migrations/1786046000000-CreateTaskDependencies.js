@@ -14,7 +14,9 @@ class CreateTaskDependencies1786046000000 {
       CONSTRAINT \`FK_task_dependency_creator\` FOREIGN KEY (\`created_by\`) REFERENCES \`users\`(\`id\`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin`);
     }
-    async down(queryRunner) { await queryRunner.query('DROP TABLE `task_dependencies`'); }
+    async down(queryRunner) {
+        await queryRunner.query('DROP TABLE `task_dependencies`');
+    }
 }
 exports.CreateTaskDependencies1786046000000 = CreateTaskDependencies1786046000000;
 //# sourceMappingURL=1786046000000-CreateTaskDependencies.js.map

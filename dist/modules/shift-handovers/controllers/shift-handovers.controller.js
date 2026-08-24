@@ -76,7 +76,10 @@ __decorate([
         description: 'Người đang phụ trách task tạo nội dung bàn giao cho một thành viên khác. Task chưa đổi người phụ trách ở bước này.',
     }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Tạo bản nháp thành công.' }),
-    (0, swagger_1.ApiResponse)({ status: 409, description: 'Task đã có yêu cầu bàn giao chưa hoàn tất.' }),
+    (0, swagger_1.ApiResponse)({
+        status: 409,
+        description: 'Task đã có yêu cầu bàn giao chưa hoàn tất.',
+    }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('workspaceId')),
     __param(2, (0, common_1.Param)('projectId')),

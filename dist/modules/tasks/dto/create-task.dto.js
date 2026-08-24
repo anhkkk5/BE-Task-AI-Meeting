@@ -47,7 +47,9 @@ __decorate([
     __metadata("design:type", String)
 ], CreateTaskDto.prototype, "acceptanceCriteria", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'User báo cáo Task; mặc định là người tạo.' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'User báo cáo Task; mặc định là người tạo.',
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)

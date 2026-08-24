@@ -14,7 +14,10 @@ export class RefreshTokenStrategy extends PassportStrategy(
   Strategy,
   'jwt-refresh',
 ) {
-  constructor(private readonly usersService: UsersService, @Optional() private readonly securityRepository?: AuthSecurityRepository) {
+  constructor(
+    private readonly usersService: UsersService,
+    @Optional() private readonly securityRepository?: AuthSecurityRepository,
+  ) {
     super({
       jwtFromRequest: (request: Request) =>
         RefreshTokenStrategy.extractRefreshTokenFromCookie(request),
@@ -29,7 +32,12 @@ export class RefreshTokenStrategy extends PassportStrategy(
     if (!user || user.status !== UserStatus.Active) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    if (payload.sid && this.securityRepository && !(await this.securityRepository.findSession(payload.sid, user.id))) throw new UnauthorizedException('Session has been revoked');
+    if (
+      payload.sid &&
+      this.securityRepository &&
+      !(await this.securityRepository.findSession(payload.sid, user.id))
+    )
+      throw new UnauthorizedException('Session has been revoked');
 
     return {
       id: user.id,

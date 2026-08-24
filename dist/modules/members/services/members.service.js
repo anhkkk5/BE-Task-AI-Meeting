@@ -42,12 +42,23 @@ let MembersService = class MembersService {
         const target = await this.workspaceMembersRepository.findByIdAndWorkspace(memberId, workspaceId);
         if (!target || target.status !== workspace_member_status_enum_1.WorkspaceMemberStatus.Active)
             throw new common_1.NotFoundException('Workspace member not found');
-        const managers = [workspace_role_enum_1.WorkspaceRole.Owner, workspace_role_enum_1.WorkspaceRole.ScrumMaster, workspace_role_enum_1.WorkspaceRole.ProjectManager];
+        const managers = [
+            workspace_role_enum_1.WorkspaceRole.Owner,
+            workspace_role_enum_1.WorkspaceRole.ScrumMaster,
+            workspace_role_enum_1.WorkspaceRole.ProjectManager,
+        ];
         if (target.userId !== currentUserId && !managers.includes(current.role))
             throw new common_1.BadRequestException('You can only update your own capacity');
         const unavailableDates = [...new Set(dto.unavailableDates ?? [])].sort();
-        const member = await this.workspaceMembersRepository.updateMember(target, { dailyCapacityHours: dto.dailyCapacityHours, unavailableDates });
-        return { success: true, message: 'Update member capacity successfully', data: { member: this.toMemberResponse(member) } };
+        const member = await this.workspaceMembersRepository.updateMember(target, {
+            dailyCapacityHours: dto.dailyCapacityHours,
+            unavailableDates,
+        });
+        return {
+            success: true,
+            message: 'Update member capacity successfully',
+            data: { member: this.toMemberResponse(member) },
+        };
     }
     async addMember(currentUserId, workspaceId, dto) {
         await this.workspaceAccessService.assertWorkspaceOwner(currentUserId, workspaceId);

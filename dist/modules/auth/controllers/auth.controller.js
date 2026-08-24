@@ -51,14 +51,20 @@ let AuthController = class AuthController {
         this.setRefreshTokenCookie(response, result.refreshToken);
         return result.body;
     }
-    forgotPassword(dto) { return this.authService.forgotPassword(dto); }
-    resetPassword(dto) { return this.authService.resetPassword(dto); }
+    forgotPassword(dto) {
+        return this.authService.forgotPassword(dto);
+    }
+    resetPassword(dto) {
+        return this.authService.resetPassword(dto);
+    }
     async verifyMfa(dto, response) {
         const result = await this.authService.verifyMfa(dto);
         this.setRefreshTokenCookie(response, result.refreshToken);
         return result.body;
     }
-    setMfa(user, dto) { return this.authService.setMfa(user, dto.enabled === true); }
+    setMfa(user, dto) {
+        return this.authService.setMfa(user, dto.enabled === true);
+    }
     refresh(user, request, response) {
         const refreshToken = this.getRefreshTokenFromCookie(request);
         if (!refreshToken) {
@@ -76,10 +82,21 @@ let AuthController = class AuthController {
     me(user) {
         return this.authService.getMe(user);
     }
-    sessions(user) { return this.authService.getSessions(user); }
-    revokeOthers(user) { return this.authService.revokeOtherSessions(user); }
-    revokeSession(user, sessionId) { return this.authService.revokeSession(user, sessionId); }
-    requestContext(request) { return { ipAddress: request.ip ?? request.socket?.remoteAddress ?? null, userAgent: request.headers['user-agent'] ?? null }; }
+    sessions(user) {
+        return this.authService.getSessions(user);
+    }
+    revokeOthers(user) {
+        return this.authService.revokeOtherSessions(user);
+    }
+    revokeSession(user, sessionId) {
+        return this.authService.revokeSession(user, sessionId);
+    }
+    requestContext(request) {
+        return {
+            ipAddress: request.ip ?? request.socket?.remoteAddress ?? null,
+            userAgent: request.headers['user-agent'] ?? null,
+        };
+    }
     setRefreshTokenCookie(response, refreshToken) {
         response.cookie(REFRESH_TOKEN_COOKIE, refreshToken, this.getRefreshTokenCookieOptions());
     }

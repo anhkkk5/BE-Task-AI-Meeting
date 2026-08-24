@@ -114,11 +114,21 @@ __decorate([
     __metadata("design:type", String)
 ], ShiftHandover.prototype, "status", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'change_request', type: 'varchar', length: 1000, nullable: true }),
+    (0, typeorm_1.Column)({
+        name: 'change_request',
+        type: 'varchar',
+        length: 1000,
+        nullable: true,
+    }),
     __metadata("design:type", Object)
 ], ShiftHandover.prototype, "changeRequest", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'rejection_reason', type: 'varchar', length: 1000, nullable: true }),
+    (0, typeorm_1.Column)({
+        name: 'rejection_reason',
+        type: 'varchar',
+        length: 1000,
+        nullable: true,
+    }),
     __metadata("design:type", Object)
 ], ShiftHandover.prototype, "rejectionReason", void 0);
 __decorate([

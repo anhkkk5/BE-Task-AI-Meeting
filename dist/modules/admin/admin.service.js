@@ -84,7 +84,9 @@ let AdminService = class AdminService {
         const skip = (page - 1) * limit;
         const qb = this.userRepo.createQueryBuilder('user');
         if (query.search) {
-            qb.andWhere('(user.fullName LIKE :search OR user.email LIKE :search)', { search: `%${query.search}%` });
+            qb.andWhere('(user.fullName LIKE :search OR user.email LIKE :search)', {
+                search: `%${query.search}%`,
+            });
         }
         if (query.status === 'active') {
             qb.andWhere('user.status = :status', { status: user_status_enum_1.UserStatus.Active });
@@ -118,9 +120,19 @@ let AdminService = class AdminService {
             throw new common_1.NotFoundException('User not found');
         const before = user.status;
         user.status =
-            user.status === user_status_enum_1.UserStatus.Active ? user_status_enum_1.UserStatus.Inactive : user_status_enum_1.UserStatus.Active;
+            user.status === user_status_enum_1.UserStatus.Active
+                ? user_status_enum_1.UserStatus.Inactive
+                : user_status_enum_1.UserStatus.Active;
         await this.userRepo.save(user);
-        await this.observability.audit({ actorId: adminId, action: user.status === user_status_enum_1.UserStatus.Active ? 'USER_ENABLED' : 'USER_DISABLED', targetType: 'USER', targetId: user.id, before: { status: before }, after: { status: user.status }, metadata: null });
+        await this.observability.audit({
+            actorId: adminId,
+            action: user.status === user_status_enum_1.UserStatus.Active ? 'USER_ENABLED' : 'USER_DISABLED',
+            targetType: 'USER',
+            targetId: user.id,
+            before: { status: before },
+            after: { status: user.status },
+            metadata: null,
+        });
         return {
             success: true,
             message: `Tài khoản đã được ${user.status === user_status_enum_1.UserStatus.Active ? 'kích hoạt' : 'vô hiệu hóa'}.`,
@@ -137,7 +149,15 @@ let AdminService = class AdminService {
         const before = user.isSystemAdmin;
         user.isSystemAdmin = !user.isSystemAdmin;
         await this.userRepo.save(user);
-        await this.observability.audit({ actorId: adminId, action: user.isSystemAdmin ? 'ADMIN_GRANTED' : 'ADMIN_REVOKED', targetType: 'USER', targetId: user.id, before: { isSystemAdmin: before }, after: { isSystemAdmin: user.isSystemAdmin }, metadata: null });
+        await this.observability.audit({
+            actorId: adminId,
+            action: user.isSystemAdmin ? 'ADMIN_GRANTED' : 'ADMIN_REVOKED',
+            targetType: 'USER',
+            targetId: user.id,
+            before: { isSystemAdmin: before },
+            after: { isSystemAdmin: user.isSystemAdmin },
+            metadata: null,
+        });
         return {
             success: true,
             message: `Quyền System Admin đã được ${user.isSystemAdmin ? 'cấp' : 'thu hồi'}.`,
@@ -150,7 +170,9 @@ let AdminService = class AdminService {
         const skip = (page - 1) * limit;
         const qb = this.workspaceRepo.createQueryBuilder('ws');
         if (query.search) {
-            qb.andWhere('(ws.name LIKE :search OR ws.slug LIKE :search)', { search: `%${query.search}%` });
+            qb.andWhere('(ws.name LIKE :search OR ws.slug LIKE :search)', {
+                search: `%${query.search}%`,
+            });
         }
         if (query.status === 'active') {
             qb.andWhere('ws.status = :status', { status: workspace_status_enum_1.WorkspaceStatus.Active });
@@ -202,7 +224,17 @@ let AdminService = class AdminService {
                 ? workspace_status_enum_1.WorkspaceStatus.Archived
                 : workspace_status_enum_1.WorkspaceStatus.Active;
         await this.workspaceRepo.save(ws);
-        await this.observability.audit({ actorId: adminId, action: ws.status === workspace_status_enum_1.WorkspaceStatus.Active ? 'WORKSPACE_RESTORED' : 'WORKSPACE_ARCHIVED', targetType: 'WORKSPACE', targetId: ws.id, before: { status: before }, after: { status: ws.status }, metadata: { name: ws.name } });
+        await this.observability.audit({
+            actorId: adminId,
+            action: ws.status === workspace_status_enum_1.WorkspaceStatus.Active
+                ? 'WORKSPACE_RESTORED'
+                : 'WORKSPACE_ARCHIVED',
+            targetType: 'WORKSPACE',
+            targetId: ws.id,
+            before: { status: before },
+            after: { status: ws.status },
+            metadata: { name: ws.name },
+        });
         return {
             success: true,
             message: `Workspace đã được ${ws.status === workspace_status_enum_1.WorkspaceStatus.Active ? 'kích hoạt' : 'lưu trữ'}.`,
@@ -210,7 +242,9 @@ let AdminService = class AdminService {
         };
     }
     async getWorkspaceDetail(workspaceId) {
-        const workspace = await this.workspaceRepo.findOne({ where: { id: workspaceId } });
+        const workspace = await this.workspaceRepo.findOne({
+            where: { id: workspaceId },
+        });
         if (!workspace)
             throw new common_1.NotFoundException('Workspace not found');
         const [owners, members, projects, totals] = await Promise.all([
@@ -219,7 +253,16 @@ let AdminService = class AdminService {
             this.dataSource.query(`SELECT p.id,p.name,p.key_code keyCode,p.status,p.created_by createdBy,p.created_at createdAt,u.full_name creatorName,(SELECT COUNT(*) FROM sprints s WHERE s.project_id=p.id AND s.deleted_at IS NULL) sprintCount,(SELECT COUNT(*) FROM tasks t WHERE t.project_id=p.id AND t.deleted_at IS NULL) taskCount FROM projects p LEFT JOIN users u ON u.id=p.created_by WHERE p.workspace_id=? AND p.deleted_at IS NULL ORDER BY p.created_at DESC`, [workspaceId]),
             this.dataSource.query(`SELECT (SELECT COUNT(*) FROM workspace_members WHERE workspace_id=? AND status='ACTIVE') memberCount,(SELECT COUNT(*) FROM projects WHERE workspace_id=? AND deleted_at IS NULL) projectCount,(SELECT COUNT(*) FROM sprints s JOIN projects p ON p.id=s.project_id WHERE p.workspace_id=? AND s.deleted_at IS NULL) sprintCount,(SELECT COUNT(*) FROM tasks t JOIN projects p ON p.id=t.project_id WHERE p.workspace_id=? AND t.deleted_at IS NULL) taskCount`, [workspaceId, workspaceId, workspaceId, workspaceId]),
         ]);
-        return { success: true, message: 'Success', data: { workspace: { ...workspace, owner: owners[0] ?? null }, members, projects, totals: totals[0] } };
+        return {
+            success: true,
+            message: 'Success',
+            data: {
+                workspace: { ...workspace, owner: owners[0] ?? null },
+                members,
+                projects,
+                totals: totals[0],
+            },
+        };
     }
     async createWorkspace(adminId, dto) {
         const name = dto.name?.trim();
@@ -239,14 +282,28 @@ let AdminService = class AdminService {
             await manager.query(`INSERT INTO workspaces (id,name,slug,description,owner_id,plan,status,created_at,updated_at) VALUES (?,?,?,?,?,'FREE','ACTIVE',NOW(),NOW())`, [id, name, slug, dto.description?.trim() || null, ownerId]);
             await manager.query(`INSERT INTO workspace_members (id,workspace_id,user_id,role,status,joined_at,daily_capacity_hours,unavailable_dates,created_at,updated_at) VALUES (?,?,?,'OWNER','ACTIVE',NOW(),8,JSON_ARRAY(),NOW(),NOW())`, [(0, crypto_1.randomUUID)(), id, ownerId]);
         });
-        await this.observability.audit({ actorId: adminId, action: 'WORKSPACE_CREATED', targetType: 'WORKSPACE', targetId: id, before: null, after: { name, ownerId }, metadata: null });
+        await this.observability.audit({
+            actorId: adminId,
+            action: 'WORKSPACE_CREATED',
+            targetType: 'WORKSPACE',
+            targetId: id,
+            before: null,
+            after: { name, ownerId },
+            metadata: null,
+        });
         return this.getWorkspaceDetail(id);
     }
     async updateWorkspace(adminId, workspaceId, dto) {
-        const workspace = await this.workspaceRepo.findOne({ where: { id: workspaceId } });
+        const workspace = await this.workspaceRepo.findOne({
+            where: { id: workspaceId },
+        });
         if (!workspace)
             throw new common_1.NotFoundException('Workspace not found');
-        const before = { name: workspace.name, description: workspace.description, plan: workspace.plan };
+        const before = {
+            name: workspace.name,
+            description: workspace.description,
+            plan: workspace.plan,
+        };
         if (dto.name?.trim())
             workspace.name = dto.name.trim();
         if (dto.description !== undefined)
@@ -254,7 +311,19 @@ let AdminService = class AdminService {
         if (dto.plan && ['FREE', 'PRO', 'ENTERPRISE'].includes(dto.plan))
             workspace.plan = dto.plan;
         await this.workspaceRepo.save(workspace);
-        await this.observability.audit({ actorId: adminId, action: 'WORKSPACE_UPDATED', targetType: 'WORKSPACE', targetId: workspaceId, before, after: { name: workspace.name, description: workspace.description, plan: workspace.plan }, metadata: null });
+        await this.observability.audit({
+            actorId: adminId,
+            action: 'WORKSPACE_UPDATED',
+            targetType: 'WORKSPACE',
+            targetId: workspaceId,
+            before,
+            after: {
+                name: workspace.name,
+                description: workspace.description,
+                plan: workspace.plan,
+            },
+            metadata: null,
+        });
         return this.getWorkspaceDetail(workspaceId);
     }
     toUserResponse(user) {

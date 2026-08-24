@@ -58,7 +58,9 @@ async function main() {
         user: process.env.MYSQL_USER,
         password: process.env.MYSQL_PASSWORD,
         database: process.env.MYSQL_DATABASE,
-        ssl: process.env.MYSQL_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+        ssl: process.env.MYSQL_SSL === 'true'
+            ? { rejectUnauthorized: false }
+            : undefined,
     });
     try {
         await connection.beginTransaction();
@@ -75,7 +77,10 @@ async function main() {
         const [workflowStatuses] = await connection.execute(`SELECT id, status_key
        FROM workflow_statuses
        WHERE template_id = ? AND enabled = 1`, [projects[0].workflow_template_id]);
-        const workflowStatusIds = new Map(workflowStatuses.map((item) => [String(item.status_key), String(item.id)]));
+        const workflowStatusIds = new Map(workflowStatuses.map((item) => [
+            String(item.status_key),
+            String(item.id),
+        ]));
         for (const requiredStatus of ['TODO', 'IN_PROGRESS', 'REVIEW', 'DONE']) {
             if (!workflowStatusIds.has(requiredStatus)) {
                 throw new Error(`Workflow status is missing: ${requiredStatus}`);
@@ -119,15 +124,33 @@ async function main() {
                 ...Array(7).fill('TODO'),
             ];
             const titles = [
-                'Phân tích yêu cầu người dùng', 'Thiết kế luồng đăng nhập', 'Chuẩn hóa giao diện Dashboard',
-                'Xây dựng API Workspace', 'Hoàn thiện phân quyền thành viên', 'Tối ưu truy vấn danh sách Task',
-                'Viết kiểm thử dịch vụ Sprint', 'Tích hợp thông báo thời gian thực', 'Thiết kế biểu đồ Burndown',
-                'Kiểm tra responsive Backlog', 'Xử lý kéo thả Task', 'Thêm bộ lọc theo trạng thái',
-                'Thêm bộ lọc theo người nhận', 'Xuất báo cáo Excel', 'Xuất báo cáo PDF',
-                'Tối ưu trạng thái loading', 'Kiểm thử quy trình tạo Sprint', 'Rà soát validation API',
-                'Cập nhật tài liệu hướng dẫn', 'Kiểm thử trên màn hình nhỏ', 'Tối ưu khả năng truy cập',
-                'Chuẩn hóa nhãn công việc', 'Bổ sung dữ liệu Daily Update', 'Rà soát bảo mật phiên đăng nhập',
-                'Kiểm tra hiệu năng trang dự án', 'Hoàn thiện trạng thái Review', 'Chuẩn bị bản demo',
+                'Phân tích yêu cầu người dùng',
+                'Thiết kế luồng đăng nhập',
+                'Chuẩn hóa giao diện Dashboard',
+                'Xây dựng API Workspace',
+                'Hoàn thiện phân quyền thành viên',
+                'Tối ưu truy vấn danh sách Task',
+                'Viết kiểm thử dịch vụ Sprint',
+                'Tích hợp thông báo thời gian thực',
+                'Thiết kế biểu đồ Burndown',
+                'Kiểm tra responsive Backlog',
+                'Xử lý kéo thả Task',
+                'Thêm bộ lọc theo trạng thái',
+                'Thêm bộ lọc theo người nhận',
+                'Xuất báo cáo Excel',
+                'Xuất báo cáo PDF',
+                'Tối ưu trạng thái loading',
+                'Kiểm thử quy trình tạo Sprint',
+                'Rà soát validation API',
+                'Cập nhật tài liệu hướng dẫn',
+                'Kiểm thử trên màn hình nhỏ',
+                'Tối ưu khả năng truy cập',
+                'Chuẩn hóa nhãn công việc',
+                'Bổ sung dữ liệu Daily Update',
+                'Rà soát bảo mật phiên đăng nhập',
+                'Kiểm tra hiệu năng trang dự án',
+                'Hoàn thiện trạng thái Review',
+                'Chuẩn bị bản demo',
                 'Nghiệm thu Sprint cùng nhóm',
             ];
             for (let index = 0; index < statuses.length; index += 1) {
@@ -145,15 +168,27 @@ async function main() {
              created_by, due_date, estimated_hours, story_points, completed_at, started_at,
              created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'TASK', ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-                    (0, crypto_1.randomUUID)(), projectId, sprintId, `${DEMO_TASK_PREFIX}${String(index + 1).padStart(3, '0')}`,
-                    titles[index], 'Dữ liệu mẫu phục vụ kiểm thử đầy đủ giao diện và biểu đồ tiến độ.',
+                    (0, crypto_1.randomUUID)(),
+                    projectId,
+                    sprintId,
+                    `${DEMO_TASK_PREFIX}${String(index + 1).padStart(3, '0')}`,
+                    titles[index],
+                    'Dữ liệu mẫu phục vụ kiểm thử đầy đủ giao diện và biểu đồ tiến độ.',
                     JSON.stringify(index % 3 === 0 ? ['demo', 'frontend'] : ['demo', 'sprint']),
-                    'Hoàn thành đúng yêu cầu và được kiểm tra trên giao diện.', status,
+                    'Hoàn thành đúng yêu cầu và được kiểm tra trên giao diện.',
+                    status,
                     workflowStatusIds.get(status),
                     index % 7 === 0 ? 'HIGH' : index % 5 === 0 ? 'LOW' : 'MEDIUM',
-                    assigneeId, creatorId, creatorId, toSqlDate(daysFrom(now, (index % 10) - 2)),
-                    2 + (index % 6), [1, 2, 3, 5, 8][index % 5], completedAt, startedAt,
-                    daysFrom(startDate, -2 + (index % 4)), completedAt ?? startedAt ?? now,
+                    assigneeId,
+                    creatorId,
+                    creatorId,
+                    toSqlDate(daysFrom(now, (index % 10) - 2)),
+                    2 + (index % 6),
+                    [1, 2, 3, 5, 8][index % 5],
+                    completedAt,
+                    startedAt,
+                    daysFrom(startDate, -2 + (index % 4)),
+                    completedAt ?? startedAt ?? now,
                 ]);
             }
         }

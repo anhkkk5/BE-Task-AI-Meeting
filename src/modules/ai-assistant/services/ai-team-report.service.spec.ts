@@ -48,7 +48,9 @@ describe('AiTeamReportService', () => {
       'buildTeamReportInput' | 'computeMetrics'
     >
   >;
-  let aiReportEventsService: jest.Mocked<Pick<AiReportEventsService, 'publish'>>;
+  let aiReportEventsService: jest.Mocked<
+    Pick<AiReportEventsService, 'publish'>
+  >;
   let projectAccessService: jest.Mocked<
     Pick<ProjectAccessService, 'assertProjectInWorkspace'>
   >;
@@ -174,9 +176,7 @@ describe('AiTeamReportService', () => {
     };
     aiReportAccessService = {
       assertCanUseTeamReports: jest.fn(),
-      assertCanViewTeamReport: jest
-        .fn()
-        .mockResolvedValue(WorkspaceRole.Owner),
+      assertCanViewTeamReport: jest.fn().mockResolvedValue(WorkspaceRole.Owner),
       isManagerRole: jest.fn().mockReturnValue(true),
     };
     dataBuilderService = {
@@ -386,7 +386,9 @@ describe('AiTeamReportService', () => {
       reportId.toString(),
     );
 
-    expect(aiReportAccessService.assertCanUseTeamReports).not.toHaveBeenCalled();
+    expect(
+      aiReportAccessService.assertCanUseTeamReports,
+    ).not.toHaveBeenCalled();
     expect(response.data.canManage).toBe(false);
     // Du lieu dau vao la ban nhap noi bo, thanh vien chi can noi dung bao cao.
     expect(response.data.report.inputData).toBeUndefined();

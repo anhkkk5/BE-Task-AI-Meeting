@@ -104,10 +104,7 @@ export class GroqTranscriptionService {
       file.originalname || `meeting-audio-${Date.now()}.${extension}`,
     );
     formData.append('model', model);
-    formData.append(
-      'language',
-      process.env.AI_TRANSCRIPTION_LANGUAGE || 'vi',
-    );
+    formData.append('language', process.env.AI_TRANSCRIPTION_LANGUAGE || 'vi');
 
     // Chi gui prompt khi that su co ten rieng can giu dung chinh ta. Prompt
     // rong giup Whisper bam sat am thanh thay vi "doan" theo van phong prompt.
