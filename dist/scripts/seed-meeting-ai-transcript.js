@@ -113,7 +113,7 @@ async function main() {
         const [members] = await db.execute(`SELECT wm.user_id, u.full_name, u.email
        FROM workspace_members wm
        INNER JOIN users u ON u.id = wm.user_id
-       WHERE wm.workspace_id = ? AND wm.status = 'ACTIVE' AND u.deleted_at IS NULL
+       WHERE wm.workspace_id = ? AND wm.status = 'ACTIVE'
        ORDER BY CASE WHEN u.full_name IN ('nta', 'abcd2') THEN 0 ELSE 1 END, wm.created_at ASC`, [project.workspace_id]);
         if (members.length < 2)
             throw new Error('At least two active members are required');

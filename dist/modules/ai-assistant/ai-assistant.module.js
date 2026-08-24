@@ -52,6 +52,7 @@ const prompt_builder_service_1 = require("./services/prompt-builder.service");
 const auto_meeting_summary_listener_1 = require("./listeners/auto-meeting-summary.listener");
 const team_report_notification_listener_1 = require("./listeners/team-report-notification.listener");
 const ai_daily_report_scheduler_service_1 = require("./schedulers/ai-daily-report-scheduler.service");
+const ai_daily_update_scheduler_service_1 = require("./schedulers/ai-daily-update-scheduler.service");
 const meeting_action_item_review_entity_1 = require("./entities/meeting-action-item-review.entity");
 const meeting_action_item_reviews_repository_1 = require("./repositories/meeting-action-item-reviews.repository");
 const ai_meeting_action_item_review_service_1 = require("./services/ai-meeting-action-item-review.service");
@@ -130,6 +131,7 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
             auto_meeting_summary_listener_1.AutoMeetingSummaryListener,
             team_report_notification_listener_1.TeamReportNotificationListener,
             ai_daily_report_scheduler_service_1.AiDailyReportSchedulerService,
+            ai_daily_update_scheduler_service_1.AiDailyUpdateSchedulerService,
             ai_meeting_action_item_review_service_1.AiMeetingActionItemReviewService,
             meeting_action_item_reviews_repository_1.MeetingActionItemReviewsRepository,
             ai_team_report_action_item_service_1.AiTeamReportActionItemService,

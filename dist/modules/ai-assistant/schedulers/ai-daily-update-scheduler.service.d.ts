@@ -1,0 +1,45 @@
+import { OnApplicationBootstrap } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import Redis from 'ioredis';
+import { DailyUpdatesRepository } from '../../daily-updates/repositories/daily-updates.repository';
+import { ProjectsRepository } from '../../projects/repositories/projects.repository';
+import { SprintsRepository } from '../../sprints/repositories/sprints.repository';
+import { AiUserPreferencesService } from '../../users/services/ai-user-preferences.service';
+import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
+import { AiProviderService } from '../services/ai-provider.service';
+import { AiReportDataBuilderService } from '../services/ai-report-data-builder.service';
+import { PromptBuilderService } from '../services/prompt-builder.service';
+export type AutomaticDailyUpdateRunResult = {
+    updateDate: string;
+    projects: number;
+    generated: number;
+    skipped: number;
+    failed: number;
+    lockAcquired: boolean;
+};
+export declare class AiDailyUpdateSchedulerService implements OnApplicationBootstrap {
+    private readonly configService;
+    private readonly schedulerRegistry;
+    private readonly redis;
+    private readonly projectsRepository;
+    private readonly workspaceMembersRepository;
+    private readonly sprintsRepository;
+    private readonly dailyUpdatesRepository;
+    private readonly dataBuilder;
+    private readonly promptBuilder;
+    private readonly aiProvider;
+    private readonly preferencesService;
+    private readonly logger;
+    private readonly jobName;
+    constructor(configService: ConfigService, schedulerRegistry: SchedulerRegistry, redis: Redis, projectsRepository: ProjectsRepository, workspaceMembersRepository: WorkspaceMembersRepository, sprintsRepository: SprintsRepository, dailyUpdatesRepository: DailyUpdatesRepository, dataBuilder: AiReportDataBuilderService, promptBuilder: PromptBuilderService, aiProvider: AiProviderService, preferencesService: AiUserPreferencesService);
+    onApplicationBootstrap(): void;
+    runScheduledDailyUpdates(now?: Date): Promise<AutomaticDailyUpdateRunResult>;
+    private previousDate;
+    private formatDateInTimeZone;
+    private releaseLock;
+    private isDuplicateError;
+    private getTimeZone;
+    private getLockTtlSeconds;
+    private getBoolean;
+}

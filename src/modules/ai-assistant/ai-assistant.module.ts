@@ -55,6 +55,7 @@ import { PromptBuilderService } from './services/prompt-builder.service';
 import { AutoMeetingSummaryListener } from './listeners/auto-meeting-summary.listener';
 import { TeamReportNotificationListener } from './listeners/team-report-notification.listener';
 import { AiDailyReportSchedulerService } from './schedulers/ai-daily-report-scheduler.service';
+import { AiDailyUpdateSchedulerService } from './schedulers/ai-daily-update-scheduler.service';
 import { MeetingActionItemReview } from './entities/meeting-action-item-review.entity';
 import { MeetingActionItemReviewsRepository } from './repositories/meeting-action-item-reviews.repository';
 import { AiMeetingActionItemReviewService } from './services/ai-meeting-action-item-review.service';
@@ -137,6 +138,7 @@ const mongoImports = mongodbConfig().enabled
     AutoMeetingSummaryListener,
     TeamReportNotificationListener,
     AiDailyReportSchedulerService,
+    AiDailyUpdateSchedulerService,
     AiMeetingActionItemReviewService,
     MeetingActionItemReviewsRepository,
     AiTeamReportActionItemService,
