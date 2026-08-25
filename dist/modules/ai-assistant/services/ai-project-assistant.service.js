@@ -27,6 +27,8 @@ const sprint_access_service_1 = require("../../sprints/services/sprint-access.se
 const tasks_repository_1 = require("../../tasks/repositories/tasks.repository");
 const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
 const ai_provider_service_1 = require("./ai-provider.service");
+const meeting_summary_schema_1 = require("../schemas/meeting-summary.schema");
+const personalized_meeting_summary_schema_1 = require("../schemas/personalized-meeting-summary.schema");
 const project_assistant_message_schema_1 = require("../schemas/project-assistant-message.schema");
 let AiProjectAssistantService = class AiProjectAssistantService {
     aiProviderService;
@@ -37,8 +39,10 @@ let AiProjectAssistantService = class AiProjectAssistantService {
     sprintsRepository;
     tasksRepository;
     workspaceAccessService;
+    meetingSummaryModel;
+    personalizedSummaryModel;
     messageModel;
-    constructor(aiProviderService, dailyUpdatesRepository, projectAccessService, projectsRepository, sprintAccessService, sprintsRepository, tasksRepository, workspaceAccessService, messageModel) {
+    constructor(aiProviderService, dailyUpdatesRepository, projectAccessService, projectsRepository, sprintAccessService, sprintsRepository, tasksRepository, workspaceAccessService, meetingSummaryModel, personalizedSummaryModel, messageModel) {
         this.aiProviderService = aiProviderService;
         this.dailyUpdatesRepository = dailyUpdatesRepository;
         this.projectAccessService = projectAccessService;
@@ -47,6 +51,8 @@ let AiProjectAssistantService = class AiProjectAssistantService {
         this.sprintsRepository = sprintsRepository;
         this.tasksRepository = tasksRepository;
         this.workspaceAccessService = workspaceAccessService;
+        this.meetingSummaryModel = meetingSummaryModel;
+        this.personalizedSummaryModel = personalizedSummaryModel;
         this.messageModel = messageModel;
     }
     async ask(userId, workspaceId, projectId, dto) {
@@ -69,15 +75,30 @@ let AiProjectAssistantService = class AiProjectAssistantService {
         const risk = sprint
             ? this.buildRiskAssessment(sprint, tasks, updates)
             : undefined;
-        const fallback = this.buildFallbackAnswer(dto.question, project, sprint, tasks, updates, risk);
-        const sources = this.buildSources(project, sprint, tasks, updates, dto.question);
+        const [latestMeetingSummary, personalMeetingSummaries] = await Promise.all([
+            this.meetingSummaryModel
+                ?.findOne({ workspaceId, projectId })
+                .sort({ createdAt: -1 })
+                .lean()
+                .exec() ?? null,
+            this.personalizedSummaryModel
+                ?.find({ workspaceId, projectId, userId })
+                .sort({ createdAt: -1 })
+                .limit(10)
+                .lean()
+                .exec() ?? [],
+        ]);
+        const fallback = this.buildFallbackAnswer(dto.question, userId, project, sprint, tasks, updates, risk, latestMeetingSummary, personalMeetingSummaries);
+        const sources = this.buildSources(userId, project, sprint, tasks, updates, dto.question);
         const actionDraft = this.buildActionDraft(dto.question, sprint, tasks);
         let output = fallback;
-        try {
-            output = (await this.aiProviderService.generateProjectAssistantAnswer(this.buildPrompt(dto.question, project, sprint, tasks, updates, risk), fallback)).output;
-        }
-        catch {
-            output = fallback;
+        if (!this.isDeterministicQuestion(dto.question)) {
+            try {
+                output = (await this.aiProviderService.generateProjectAssistantAnswer(this.buildPrompt(dto.question, project, sprint, tasks, updates, risk, latestMeetingSummary, personalMeetingSummaries), fallback)).output;
+            }
+            catch {
+                output = fallback;
+            }
         }
         await this.messageModel?.create([
             {
@@ -399,21 +420,41 @@ let AiProjectAssistantService = class AiProjectAssistantService {
             result.items.find((sprint) => sprint.status !== sprint_status_enum_1.SprintStatus.Cancelled) ??
             null);
     }
-    buildFallbackAnswer(question, project, sprint, tasks, updates, risk) {
+    buildFallbackAnswer(question, userId, project, sprint, tasks, updates, risk, latestMeetingSummary, personalMeetingSummaries = []) {
         const normalized = question.toLocaleLowerCase('vi');
-        const openTasks = tasks.filter((task) => ![task_status_enum_1.TaskStatus.Done, task_status_enum_1.TaskStatus.Cancelled].includes(task.status));
+        const asksMine = /(?:của tôi|tôi đang|việc tôi|task tôi)/iu.test(normalized);
+        const scopedTasks = asksMine
+            ? tasks.filter((task) => task.assigneeId === userId)
+            : tasks;
+        const openTasks = scopedTasks.filter((task) => ![task_status_enum_1.TaskStatus.Done, task_status_enum_1.TaskStatus.Cancelled].includes(task.status));
         const overdue = openTasks.filter((task) => task.dueDate &&
             this.toUtcDate(task.dueDate) < this.startOfUtcDay(new Date()));
         const blockers = updates.filter((update) => update.blockers?.trim());
-        let answer = `Dự án ${project?.name ?? ''} có ${tasks.length} công việc trong phạm vi đang xem, ${openTasks.length} công việc chưa hoàn thành.`;
+        let answer = `${asksMine ? 'Bạn' : `Dự án ${project?.name ?? ''}`} có ${scopedTasks.length} công việc trong phạm vi đang xem, ${openTasks.length} công việc chưa hoàn thành.`;
         if ((normalized.includes('rủi ro') || normalized.includes('risk')) &&
             risk) {
             answer = `${risk.levelLabel}: ${risk.score}/100. ${risk.summary}`;
         }
         else if (normalized.includes('quá hạn')) {
             answer = overdue.length
-                ? `Có ${overdue.length} công việc quá hạn: ${overdue.map((task) => `${task.taskCode} - ${task.title}`).join('; ')}.`
-                : 'Không có công việc quá hạn trong phạm vi đang xem.';
+                ? `Có ${overdue.length} công việc quá hạn: ${overdue.map((task) => `${task.taskCode} - ${task.title} — phụ trách: ${task.assignee?.fullName ?? task.assignee?.email ?? 'chưa phân công'}`).join('; ')}.`
+                : asksMine
+                    ? 'Bạn không có công việc quá hạn trong Sprint đang xem.'
+                    : 'Không có công việc quá hạn trong phạm vi đang xem.';
+        }
+        else if (/cuộc họp.*(?:quyết định|đã chốt)|quyết định.*cuộc họp/iu.test(normalized)) {
+            const decisions = latestMeetingSummary?.decisions ?? [];
+            answer = decisions.length
+                ? `Cuộc họp gần nhất “${latestMeetingSummary.title}” đã thống nhất: ${decisions.join('; ')}.`
+                : latestMeetingSummary
+                    ? `Cuộc họp gần nhất “${latestMeetingSummary.title}” chưa ghi nhận quyết định nào.`
+                    : 'Chưa có bản tóm tắt cuộc họp để xác định các quyết định gần nhất.';
+        }
+        else if (/action item|việc sau họp|đầu việc.*cuộc họp/iu.test(normalized)) {
+            const items = personalMeetingSummaries.flatMap((summary) => summary.aiOutput?.actionItems ?? []);
+            answer = items.length
+                ? `Có ${items.length} action item liên quan đến bạn: ${items.map((item) => `${item.title ?? item.text}${item.deadline ? ` — hạn ${item.deadline}` : ''}`).join('; ')}. Hệ thống hiện chưa có trạng thái hoàn tất riêng cho action item nên chưa thể khẳng định mục nào đã được xử lý.`
+                : 'Không tìm thấy action item nào được giao cho bạn trong các bản tóm tắt cuộc họp.';
         }
         else if (normalized.includes('blocker') ||
             normalized.includes('trở ngại')) {
@@ -428,11 +469,15 @@ let AiProjectAssistantService = class AiProjectAssistantService {
                 ? `Có ${unassigned.length} công việc chưa có người phụ trách: ${unassigned.map((task) => task.taskCode).join(', ')}.`
                 : 'Tất cả công việc đang mở đều đã có người phụ trách.';
         }
+        else if (/(?:sprint hiện tại|sprint này).*(?:bao nhiêu|còn bao nhiêu).*(?:ngày|công việc)|(?:còn bao nhiêu ngày)/iu.test(normalized) &&
+            risk) {
+            answer = `${sprint?.name ?? 'Sprint hiện tại'} đã hoàn thành ${risk.metrics.completedTasks}/${risk.metrics.totalTasks} công việc; còn ${risk.metrics.remainingTasks} công việc và ${risk.metrics.remainingDays} ngày đến hạn kết thúc.`;
+        }
         else if (normalized.includes('tiến độ') ||
             normalized.includes('hoàn thành')) {
-            const done = tasks.filter((task) => task.status === task_status_enum_1.TaskStatus.Done).length;
-            const rate = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
-            answer = `${sprint?.name ?? project?.name ?? 'Phạm vi hiện tại'} đã hoàn thành ${done}/${tasks.length} công việc, tương đương ${rate}%.`;
+            const done = scopedTasks.filter((task) => task.status === task_status_enum_1.TaskStatus.Done).length;
+            const rate = scopedTasks.length ? Math.round((done / scopedTasks.length) * 100) : 0;
+            answer = `${sprint?.name ?? project?.name ?? 'Phạm vi hiện tại'} đã hoàn thành ${done}/${scopedTasks.length} công việc, tương đương ${rate}%.`;
         }
         return {
             answer,
@@ -444,7 +489,10 @@ let AiProjectAssistantService = class AiProjectAssistantService {
             ],
         };
     }
-    buildSources(project, sprint, tasks, updates, question) {
+    isDeterministicQuestion(question) {
+        return /quá hạn|rủi ro|risk|blocker|trở ngại|chưa gán|chưa giao|tiến độ|hoàn thành|còn bao nhiêu ngày|cuộc họp.*(?:quyết định|đã chốt)|quyết định.*cuộc họp|action item|việc sau họp|đầu việc.*cuộc họp/iu.test(question);
+    }
+    buildSources(userId, project, sprint, tasks, updates, question) {
         const sources = [];
         if (project) {
             sources.push({
@@ -463,6 +511,8 @@ let AiProjectAssistantService = class AiProjectAssistantService {
             });
         }
         const wantsBlockers = /blocker|trở ngại/i.test(question);
+        const wantsOverdue = /quá hạn/iu.test(question);
+        const asksMine = /(?:của tôi|tôi đang|việc tôi|task tôi)/iu.test(question);
         if (wantsBlockers) {
             sources.push(...updates
                 .filter((update) => update.blockers?.trim())
@@ -475,7 +525,16 @@ let AiProjectAssistantService = class AiProjectAssistantService {
             })));
         }
         else {
-            sources.push(...tasks.slice(0, 5).map((task) => ({
+            const relevantTasks = tasks.filter((task) => {
+                if (asksMine && task.assigneeId !== userId)
+                    return false;
+                if (!wantsOverdue)
+                    return true;
+                return (![task_status_enum_1.TaskStatus.Done, task_status_enum_1.TaskStatus.Cancelled].includes(task.status) &&
+                    Boolean(task.dueDate) &&
+                    this.toUtcDate(task.dueDate) < this.startOfUtcDay(new Date()));
+            });
+            sources.push(...relevantTasks.slice(0, 8).map((task) => ({
                 type: 'TASK',
                 id: task.id,
                 label: `${task.taskCode} - ${task.title}`,
@@ -484,7 +543,7 @@ let AiProjectAssistantService = class AiProjectAssistantService {
         }
         return sources;
     }
-    buildPrompt(question, project, sprint, tasks, updates, risk) {
+    buildPrompt(question, project, sprint, tasks, updates, risk, latestMeetingSummary, personalMeetingSummaries = []) {
         return JSON.stringify({
             question,
             project: project
@@ -521,6 +580,16 @@ let AiProjectAssistantService = class AiProjectAssistantService {
                 blockers: update.blockers,
                 mood: update.mood,
             })),
+            latestMeetingSummary: latestMeetingSummary
+                ? {
+                    title: latestMeetingSummary.title,
+                    summary: latestMeetingSummary.summary,
+                    decisions: latestMeetingSummary.decisions ?? [],
+                    actionItems: latestMeetingSummary.actionItems ?? [],
+                    risks: latestMeetingSummary.risks ?? [],
+                }
+                : null,
+            myMeetingActionItems: personalMeetingSummaries.flatMap((summary) => summary.aiOutput?.actionItems ?? []),
             risk,
         });
     }
@@ -571,7 +640,11 @@ exports.AiProjectAssistantService = AiProjectAssistantService;
 exports.AiProjectAssistantService = AiProjectAssistantService = __decorate([
     (0, common_1.Injectable)(),
     __param(8, (0, common_1.Optional)()),
-    __param(8, (0, mongoose_1.InjectModel)(project_assistant_message_schema_1.ProjectAssistantMessage.name)),
+    __param(8, (0, mongoose_1.InjectModel)(meeting_summary_schema_1.MeetingSummary.name)),
+    __param(9, (0, common_1.Optional)()),
+    __param(9, (0, mongoose_1.InjectModel)(personalized_meeting_summary_schema_1.PersonalizedMeetingSummary.name)),
+    __param(10, (0, common_1.Optional)()),
+    __param(10, (0, mongoose_1.InjectModel)(project_assistant_message_schema_1.ProjectAssistantMessage.name)),
     __metadata("design:paramtypes", [ai_provider_service_1.AiProviderService,
         daily_updates_repository_1.DailyUpdatesRepository,
         project_access_service_1.ProjectAccessService,
@@ -580,6 +653,8 @@ exports.AiProjectAssistantService = AiProjectAssistantService = __decorate([
         sprints_repository_1.SprintsRepository,
         tasks_repository_1.TasksRepository,
         workspace_access_service_1.WorkspaceAccessService,
+        mongoose_2.Model,
+        mongoose_2.Model,
         mongoose_2.Model])
 ], AiProjectAssistantService);
 //# sourceMappingURL=ai-project-assistant.service.js.map

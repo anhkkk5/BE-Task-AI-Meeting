@@ -12,6 +12,8 @@ import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { AskProjectAssistantDto } from '../dto/ask-project-assistant.dto';
 import { AiProviderService } from './ai-provider.service';
+import { MeetingSummaryDocument } from '../schemas/meeting-summary.schema';
+import { PersonalizedMeetingSummaryDocument } from '../schemas/personalized-meeting-summary.schema';
 import { ProjectAssistantMessageDocument } from '../schemas/project-assistant-message.schema';
 export type SprintRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type RiskSeverity = 'INFO' | 'WARNING' | 'DANGER';
@@ -75,8 +77,10 @@ export declare class AiProjectAssistantService {
     private readonly sprintsRepository;
     private readonly tasksRepository;
     private readonly workspaceAccessService;
+    private readonly meetingSummaryModel?;
+    private readonly personalizedSummaryModel?;
     private readonly messageModel?;
-    constructor(aiProviderService: AiProviderService, dailyUpdatesRepository: DailyUpdatesRepository, projectAccessService: ProjectAccessService, projectsRepository: ProjectsRepository, sprintAccessService: SprintAccessService, sprintsRepository: SprintsRepository, tasksRepository: TasksRepository, workspaceAccessService: WorkspaceAccessService, messageModel?: Model<ProjectAssistantMessageDocument> | undefined);
+    constructor(aiProviderService: AiProviderService, dailyUpdatesRepository: DailyUpdatesRepository, projectAccessService: ProjectAccessService, projectsRepository: ProjectsRepository, sprintAccessService: SprintAccessService, sprintsRepository: SprintsRepository, tasksRepository: TasksRepository, workspaceAccessService: WorkspaceAccessService, meetingSummaryModel?: Model<MeetingSummaryDocument> | undefined, personalizedSummaryModel?: Model<PersonalizedMeetingSummaryDocument> | undefined, messageModel?: Model<ProjectAssistantMessageDocument> | undefined);
     ask(userId: string, workspaceId: string, projectId: string, dto: AskProjectAssistantDto): Promise<{
         success: boolean;
         message: string;
@@ -125,6 +129,7 @@ export declare class AiProjectAssistantService {
     private assertAccess;
     private findDefaultSprint;
     private buildFallbackAnswer;
+    private isDeterministicQuestion;
     private buildSources;
     private buildPrompt;
     private calculateSchedule;

@@ -18,6 +18,14 @@ import { WorkspaceAccessService } from '../../workspaces/services/workspace-acce
 import { AskProjectAssistantDto } from '../dto/ask-project-assistant.dto';
 import { AiProviderService } from './ai-provider.service';
 import {
+  MeetingSummary,
+  MeetingSummaryDocument,
+} from '../schemas/meeting-summary.schema';
+import {
+  PersonalizedMeetingSummary,
+  PersonalizedMeetingSummaryDocument,
+} from '../schemas/personalized-meeting-summary.schema';
+import {
   ProjectAssistantMessage,
   ProjectAssistantMessageDocument,
 } from '../schemas/project-assistant-message.schema';
@@ -99,6 +107,12 @@ export class AiProjectAssistantService {
     private readonly tasksRepository: TasksRepository,
     private readonly workspaceAccessService: WorkspaceAccessService,
     @Optional()
+    @InjectModel(MeetingSummary.name)
+    private readonly meetingSummaryModel?: Model<MeetingSummaryDocument>,
+    @Optional()
+    @InjectModel(PersonalizedMeetingSummary.name)
+    private readonly personalizedSummaryModel?: Model<PersonalizedMeetingSummaryDocument>,
+    @Optional()
     @InjectModel(ProjectAssistantMessage.name)
     private readonly messageModel?: Model<ProjectAssistantMessageDocument>,
   ) {}
@@ -138,15 +152,32 @@ export class AiProjectAssistantService {
     const risk = sprint
       ? this.buildRiskAssessment(sprint, tasks, updates)
       : undefined;
+    const [latestMeetingSummary, personalMeetingSummaries] = await Promise.all([
+      this.meetingSummaryModel
+        ?.findOne({ workspaceId, projectId })
+        .sort({ createdAt: -1 })
+        .lean()
+        .exec() ?? null,
+      this.personalizedSummaryModel
+        ?.find({ workspaceId, projectId, userId })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .lean()
+        .exec() ?? [],
+    ]);
     const fallback = this.buildFallbackAnswer(
       dto.question,
+      userId,
       project,
       sprint,
       tasks,
       updates,
       risk,
+      latestMeetingSummary,
+      personalMeetingSummaries,
     );
     const sources = this.buildSources(
+      userId,
       project,
       sprint,
       tasks,
@@ -156,15 +187,26 @@ export class AiProjectAssistantService {
     const actionDraft = this.buildActionDraft(dto.question, sprint, tasks);
 
     let output = fallback;
-    try {
-      output = (
-        await this.aiProviderService.generateProjectAssistantAnswer(
-          this.buildPrompt(dto.question, project, sprint, tasks, updates, risk),
-          fallback,
-        )
-      ).output;
-    } catch {
-      output = fallback;
+    if (!this.isDeterministicQuestion(dto.question)) {
+      try {
+        output = (
+          await this.aiProviderService.generateProjectAssistantAnswer(
+            this.buildPrompt(
+              dto.question,
+              project,
+              sprint,
+              tasks,
+              updates,
+              risk,
+              latestMeetingSummary,
+              personalMeetingSummaries,
+            ),
+            fallback,
+          )
+        ).output;
+      } catch {
+        output = fallback;
+      }
     }
 
     await this.messageModel?.create([
@@ -579,14 +621,21 @@ export class AiProjectAssistantService {
 
   private buildFallbackAnswer(
     question: string,
+    userId: string,
     project: Project | null,
     sprint: Sprint | null,
     tasks: Task[],
     updates: DailyUpdate[],
     risk?: SprintRiskAssessment,
+    latestMeetingSummary?: any,
+    personalMeetingSummaries: any[] = [],
   ) {
     const normalized = question.toLocaleLowerCase('vi');
-    const openTasks = tasks.filter(
+    const asksMine = /(?:của tôi|tôi đang|việc tôi|task tôi)/iu.test(normalized);
+    const scopedTasks = asksMine
+      ? tasks.filter((task) => task.assigneeId === userId)
+      : tasks;
+    const openTasks = scopedTasks.filter(
       (task) => ![TaskStatus.Done, TaskStatus.Cancelled].includes(task.status),
     );
     const overdue = openTasks.filter(
@@ -595,7 +644,7 @@ export class AiProjectAssistantService {
         this.toUtcDate(task.dueDate) < this.startOfUtcDay(new Date()),
     );
     const blockers = updates.filter((update) => update.blockers?.trim());
-    let answer = `Dự án ${project?.name ?? ''} có ${tasks.length} công việc trong phạm vi đang xem, ${openTasks.length} công việc chưa hoàn thành.`;
+    let answer = `${asksMine ? 'Bạn' : `Dự án ${project?.name ?? ''}`} có ${scopedTasks.length} công việc trong phạm vi đang xem, ${openTasks.length} công việc chưa hoàn thành.`;
 
     if (
       (normalized.includes('rủi ro') || normalized.includes('risk')) &&
@@ -604,8 +653,24 @@ export class AiProjectAssistantService {
       answer = `${risk.levelLabel}: ${risk.score}/100. ${risk.summary}`;
     } else if (normalized.includes('quá hạn')) {
       answer = overdue.length
-        ? `Có ${overdue.length} công việc quá hạn: ${overdue.map((task) => `${task.taskCode} - ${task.title}`).join('; ')}.`
-        : 'Không có công việc quá hạn trong phạm vi đang xem.';
+        ? `Có ${overdue.length} công việc quá hạn: ${overdue.map((task) => `${task.taskCode} - ${task.title} — phụ trách: ${task.assignee?.fullName ?? task.assignee?.email ?? 'chưa phân công'}`).join('; ')}.`
+        : asksMine
+          ? 'Bạn không có công việc quá hạn trong Sprint đang xem.'
+          : 'Không có công việc quá hạn trong phạm vi đang xem.';
+    } else if (/cuộc họp.*(?:quyết định|đã chốt)|quyết định.*cuộc họp/iu.test(normalized)) {
+      const decisions = latestMeetingSummary?.decisions ?? [];
+      answer = decisions.length
+        ? `Cuộc họp gần nhất “${latestMeetingSummary.title}” đã thống nhất: ${decisions.join('; ')}.`
+        : latestMeetingSummary
+          ? `Cuộc họp gần nhất “${latestMeetingSummary.title}” chưa ghi nhận quyết định nào.`
+          : 'Chưa có bản tóm tắt cuộc họp để xác định các quyết định gần nhất.';
+    } else if (/action item|việc sau họp|đầu việc.*cuộc họp/iu.test(normalized)) {
+      const items = personalMeetingSummaries.flatMap(
+        (summary) => summary.aiOutput?.actionItems ?? [],
+      );
+      answer = items.length
+        ? `Có ${items.length} action item liên quan đến bạn: ${items.map((item: any) => `${item.title ?? item.text}${item.deadline ? ` — hạn ${item.deadline}` : ''}`).join('; ')}. Hệ thống hiện chưa có trạng thái hoàn tất riêng cho action item nên chưa thể khẳng định mục nào đã được xử lý.`
+        : 'Không tìm thấy action item nào được giao cho bạn trong các bản tóm tắt cuộc họp.';
     } else if (
       normalized.includes('blocker') ||
       normalized.includes('trở ngại')
@@ -622,14 +687,19 @@ export class AiProjectAssistantService {
         ? `Có ${unassigned.length} công việc chưa có người phụ trách: ${unassigned.map((task) => task.taskCode).join(', ')}.`
         : 'Tất cả công việc đang mở đều đã có người phụ trách.';
     } else if (
+      /(?:sprint hiện tại|sprint này).*(?:bao nhiêu|còn bao nhiêu).*(?:ngày|công việc)|(?:còn bao nhiêu ngày)/iu.test(normalized) &&
+      risk
+    ) {
+      answer = `${sprint?.name ?? 'Sprint hiện tại'} đã hoàn thành ${risk.metrics.completedTasks}/${risk.metrics.totalTasks} công việc; còn ${risk.metrics.remainingTasks} công việc và ${risk.metrics.remainingDays} ngày đến hạn kết thúc.`;
+    } else if (
       normalized.includes('tiến độ') ||
       normalized.includes('hoàn thành')
     ) {
-      const done = tasks.filter(
+      const done = scopedTasks.filter(
         (task) => task.status === TaskStatus.Done,
       ).length;
-      const rate = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
-      answer = `${sprint?.name ?? project?.name ?? 'Phạm vi hiện tại'} đã hoàn thành ${done}/${tasks.length} công việc, tương đương ${rate}%.`;
+      const rate = scopedTasks.length ? Math.round((done / scopedTasks.length) * 100) : 0;
+      answer = `${sprint?.name ?? project?.name ?? 'Phạm vi hiện tại'} đã hoàn thành ${done}/${scopedTasks.length} công việc, tương đương ${rate}%.`;
     }
 
     return {
@@ -643,7 +713,14 @@ export class AiProjectAssistantService {
     };
   }
 
+  private isDeterministicQuestion(question: string) {
+    return /quá hạn|rủi ro|risk|blocker|trở ngại|chưa gán|chưa giao|tiến độ|hoàn thành|còn bao nhiêu ngày|cuộc họp.*(?:quyết định|đã chốt)|quyết định.*cuộc họp|action item|việc sau họp|đầu việc.*cuộc họp/iu.test(
+      question,
+    );
+  }
+
   private buildSources(
+    userId: string,
     project: Project | null,
     sprint: Sprint | null,
     tasks: Task[],
@@ -668,6 +745,8 @@ export class AiProjectAssistantService {
       });
     }
     const wantsBlockers = /blocker|trở ngại/i.test(question);
+    const wantsOverdue = /quá hạn/iu.test(question);
+    const asksMine = /(?:của tôi|tôi đang|việc tôi|task tôi)/iu.test(question);
     if (wantsBlockers) {
       sources.push(
         ...updates
@@ -681,8 +760,17 @@ export class AiProjectAssistantService {
           })),
       );
     } else {
+      const relevantTasks = tasks.filter((task) => {
+        if (asksMine && task.assigneeId !== userId) return false;
+        if (!wantsOverdue) return true;
+        return (
+          ![TaskStatus.Done, TaskStatus.Cancelled].includes(task.status) &&
+          Boolean(task.dueDate) &&
+          this.toUtcDate(task.dueDate!) < this.startOfUtcDay(new Date())
+        );
+      });
       sources.push(
-        ...tasks.slice(0, 5).map((task) => ({
+        ...relevantTasks.slice(0, 8).map((task) => ({
           type: 'TASK' as const,
           id: task.id,
           label: `${task.taskCode} - ${task.title}`,
@@ -700,6 +788,8 @@ export class AiProjectAssistantService {
     tasks: Task[],
     updates: DailyUpdate[],
     risk?: SprintRiskAssessment,
+    latestMeetingSummary?: any,
+    personalMeetingSummaries: any[] = [],
   ) {
     return JSON.stringify({
       question,
@@ -737,6 +827,18 @@ export class AiProjectAssistantService {
         blockers: update.blockers,
         mood: update.mood,
       })),
+      latestMeetingSummary: latestMeetingSummary
+        ? {
+            title: latestMeetingSummary.title,
+            summary: latestMeetingSummary.summary,
+            decisions: latestMeetingSummary.decisions ?? [],
+            actionItems: latestMeetingSummary.actionItems ?? [],
+            risks: latestMeetingSummary.risks ?? [],
+          }
+        : null,
+      myMeetingActionItems: personalMeetingSummaries.flatMap(
+        (summary) => summary.aiOutput?.actionItems ?? [],
+      ),
       risk,
     });
   }
