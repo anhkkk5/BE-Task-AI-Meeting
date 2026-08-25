@@ -31,12 +31,12 @@ export declare class AiDailyReportSchedulerService implements OnApplicationBoots
     private readonly redis;
     private readonly projectsRepository;
     private readonly workspaceMembersRepository;
-    private readonly personalReportService;
+    private readonly _personalReportService;
     private readonly teamReportService;
     private readonly logger;
     private readonly jobName;
     private readonly lastRunKey;
-    constructor(configService: ConfigService, schedulerRegistry: SchedulerRegistry, redis: Redis, projectsRepository: ProjectsRepository, workspaceMembersRepository: WorkspaceMembersRepository, personalReportService: AiPersonalReportService, teamReportService: AiTeamReportService);
+    constructor(configService: ConfigService, schedulerRegistry: SchedulerRegistry, redis: Redis, projectsRepository: ProjectsRepository, workspaceMembersRepository: WorkspaceMembersRepository, _personalReportService: AiPersonalReportService, teamReportService: AiTeamReportService);
     onApplicationBootstrap(): void;
     runScheduledReports(now?: Date): Promise<AutomaticReportRunResult>;
     getAutomationStatus(): Promise<ReportAutomationStatus>;

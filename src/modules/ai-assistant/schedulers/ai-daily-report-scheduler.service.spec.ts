@@ -141,7 +141,7 @@ describe('AiDailyReportSchedulerService', () => {
     expect(redis.eval).not.toHaveBeenCalled();
   });
 
-  it('creates personal and team reports only for eligible active members', async () => {
+  it('creates only the team report and leaves personal reporting to daily updates', async () => {
     const owner = createMember('owner-id', WorkspaceRole.Owner);
     const member = createMember('member-id', WorkspaceRole.Member);
     const viewer = createMember('viewer-id', WorkspaceRole.Viewer);
@@ -164,34 +164,14 @@ describe('AiDailyReportSchedulerService', () => {
     expect(result).toEqual({
       reportDate: '2026-07-22',
       projects: 1,
-      generated: 3,
+      generated: 1,
       skipped: 0,
       failed: 0,
       lockAcquired: true,
     });
     expect(
       personalReportService.generateScheduledPersonalDailyReport,
-    ).toHaveBeenCalledTimes(2);
-    expect(
-      personalReportService.generateScheduledPersonalDailyReport,
-    ).toHaveBeenNthCalledWith(
-      1,
-      'owner-id',
-      'workspace-id',
-      'project-id',
-      'owner-id',
-      '2026-07-22',
-    );
-    expect(
-      personalReportService.generateScheduledPersonalDailyReport,
-    ).toHaveBeenNthCalledWith(
-      2,
-      'owner-id',
-      'workspace-id',
-      'project-id',
-      'member-id',
-      '2026-07-22',
-    );
+    ).not.toHaveBeenCalled();
     expect(
       teamReportService.generateScheduledTeamDailyReport,
     ).toHaveBeenCalledWith(
@@ -203,20 +183,11 @@ describe('AiDailyReportSchedulerService', () => {
     expect(redis.eval).toHaveBeenCalled();
   });
 
-  it('continues processing when one personal report fails', async () => {
-    const errorLogger = jest
-      .spyOn(Logger.prototype, 'error')
-      .mockImplementation(() => undefined);
+  it('does not call personal report generation even when members are active', async () => {
     workspaceMembersRepository.findActiveByWorkspace.mockResolvedValue([
       createMember('owner-id', WorkspaceRole.Owner),
       createMember('member-id', WorkspaceRole.Member),
     ]);
-    personalReportService.generateScheduledPersonalDailyReport
-      .mockRejectedValueOnce(new Error('AI provider unavailable'))
-      .mockResolvedValueOnce({
-        generated: true,
-        reportId: 'personal-report-id',
-      });
     teamReportService.generateScheduledTeamDailyReport.mockResolvedValue({
       generated: false,
       reportId: 'existing-team-report-id',
@@ -226,15 +197,14 @@ describe('AiDailyReportSchedulerService', () => {
       new Date('2026-07-22T10:00:00.000Z'),
     );
 
-    expect(result.generated).toBe(1);
+    expect(result.generated).toBe(0);
     expect(result.skipped).toBe(1);
-    expect(result.failed).toBe(1);
+    expect(result.failed).toBe(0);
     expect(
       personalReportService.generateScheduledPersonalDailyReport,
-    ).toHaveBeenCalledTimes(2);
+    ).not.toHaveBeenCalled();
     expect(
       teamReportService.generateScheduledTeamDailyReport,
     ).toHaveBeenCalledTimes(1);
-    errorLogger.mockRestore();
   });
 });

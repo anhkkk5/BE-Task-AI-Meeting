@@ -36,18 +36,18 @@ let AiDailyReportSchedulerService = AiDailyReportSchedulerService_1 = class AiDa
     redis;
     projectsRepository;
     workspaceMembersRepository;
-    personalReportService;
+    _personalReportService;
     teamReportService;
     logger = new common_1.Logger(AiDailyReportSchedulerService_1.name);
     jobName = 'automatic-ai-daily-reports';
     lastRunKey = 'ai-daily-reports:last-run';
-    constructor(configService, schedulerRegistry, redis, projectsRepository, workspaceMembersRepository, personalReportService, teamReportService) {
+    constructor(configService, schedulerRegistry, redis, projectsRepository, workspaceMembersRepository, _personalReportService, teamReportService) {
         this.configService = configService;
         this.schedulerRegistry = schedulerRegistry;
         this.redis = redis;
         this.projectsRepository = projectsRepository;
         this.workspaceMembersRepository = workspaceMembersRepository;
-        this.personalReportService = personalReportService;
+        this._personalReportService = _personalReportService;
         this.teamReportService = teamReportService;
     }
     onApplicationBootstrap() {
@@ -110,16 +110,6 @@ let AiDailyReportSchedulerService = AiDailyReportSchedulerService_1 = class AiDa
                             (this.getBoolean('AI_DAILY_REPORT_INCLUDE_TEAM', true) ? 1 : 0);
                     this.logger.warn(`Bo qua project ${project.id}: khong co nguoi quan ly hop le`);
                     continue;
-                }
-                for (const member of activeMembers) {
-                    try {
-                        const generated = await this.personalReportService.generateScheduledPersonalDailyReport(manager.userId, project.workspaceId, project.id, member.userId, reportDate);
-                        result[generated.generated ? 'generated' : 'skipped'] += 1;
-                    }
-                    catch (error) {
-                        result.failed += 1;
-                        this.logger.error(`Khong the tao bao cao ca nhan cho user ${member.userId} tai project ${project.id}`, error instanceof Error ? error.stack : String(error));
-                    }
                 }
                 if (this.getBoolean('AI_DAILY_REPORT_INCLUDE_TEAM', true)) {
                     try {

@@ -53,7 +53,7 @@ export class AiDailyReportSchedulerService implements OnApplicationBootstrap {
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
     private readonly projectsRepository: ProjectsRepository,
     private readonly workspaceMembersRepository: WorkspaceMembersRepository,
-    private readonly personalReportService: AiPersonalReportService,
+    private readonly _personalReportService: AiPersonalReportService,
     private readonly teamReportService: AiTeamReportService,
   ) {}
 
@@ -154,26 +154,6 @@ export class AiDailyReportSchedulerService implements OnApplicationBootstrap {
             `Bo qua project ${project.id}: khong co nguoi quan ly hop le`,
           );
           continue;
-        }
-
-        for (const member of activeMembers) {
-          try {
-            const generated =
-              await this.personalReportService.generateScheduledPersonalDailyReport(
-                manager.userId,
-                project.workspaceId,
-                project.id,
-                member.userId,
-                reportDate,
-              );
-            result[generated.generated ? 'generated' : 'skipped'] += 1;
-          } catch (error) {
-            result.failed += 1;
-            this.logger.error(
-              `Khong the tao bao cao ca nhan cho user ${member.userId} tai project ${project.id}`,
-              error instanceof Error ? error.stack : String(error),
-            );
-          }
         }
 
         if (this.getBoolean('AI_DAILY_REPORT_INCLUDE_TEAM', true)) {
