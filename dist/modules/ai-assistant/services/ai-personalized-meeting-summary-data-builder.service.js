@@ -16,23 +16,36 @@ const meeting_participants_repository_1 = require("../../meetings/repositories/m
 const meeting_transcripts_service_1 = require("../../meetings/services/meeting-transcripts.service");
 const project_access_service_1 = require("../../projects/services/project-access.service");
 const users_service_1 = require("../../users/services/users.service");
+const tasks_repository_1 = require("../../tasks/repositories/tasks.repository");
+const workspace_access_service_1 = require("../../workspaces/services/workspace-access.service");
 let AiPersonalizedMeetingSummaryDataBuilderService = class AiPersonalizedMeetingSummaryDataBuilderService {
     meetingParticipantsRepository;
     meetingTranscriptsService;
     projectAccessService;
     usersService;
-    constructor(meetingParticipantsRepository, meetingTranscriptsService, projectAccessService, usersService) {
+    tasksRepository;
+    workspaceAccessService;
+    constructor(meetingParticipantsRepository, meetingTranscriptsService, projectAccessService, usersService, tasksRepository, workspaceAccessService) {
         this.meetingParticipantsRepository = meetingParticipantsRepository;
         this.meetingTranscriptsService = meetingTranscriptsService;
         this.projectAccessService = projectAccessService;
         this.usersService = usersService;
+        this.tasksRepository = tasksRepository;
+        this.workspaceAccessService = workspaceAccessService;
     }
     async buildPersonalizedMeetingSummaryInput(params) {
-        const [project, participants, targetUser, transcript] = await Promise.all([
+        const [project, participants, targetUser, transcript, workspaceRole, tasks] = await Promise.all([
             this.projectAccessService.assertProjectInWorkspace(params.projectId, params.workspaceId),
             this.meetingParticipantsRepository.findByMeeting(params.meeting.id),
             this.usersService.findById(params.targetUserId),
             this.findTranscriptIfAvailable(params.meeting),
+            this.workspaceAccessService.getUserWorkspaceRole(params.targetUserId, params.workspaceId),
+            this.tasksRepository.findByProject(params.projectId, {
+                assigneeId: params.targetUserId,
+                sprintId: params.meeting.sprintId ?? undefined,
+                page: 1,
+                limit: 100,
+            }),
         ]);
         if (!targetUser) {
             throw new common_1.NotFoundException('Target user not found');
@@ -42,6 +55,7 @@ let AiPersonalizedMeetingSummaryDataBuilderService = class AiPersonalizedMeeting
             fullName: targetUser.fullName,
             email: targetUser.email,
         });
+        const targetParticipant = participants.find((participant) => participant.userId === targetUser.id);
         return {
             workspace: {
                 id: params.workspaceId,
@@ -73,6 +87,8 @@ let AiPersonalizedMeetingSummaryDataBuilderService = class AiPersonalizedMeeting
                 userId: targetUser.id,
                 fullName: targetUser.fullName,
                 email: targetUser.email,
+                workspaceRole: workspaceRole ?? null,
+                meetingRole: targetParticipant?.role ?? null,
             },
             participants: participants.map((participant) => ({
                 userId: participant.userId,
@@ -100,6 +116,16 @@ let AiPersonalizedMeetingSummaryDataBuilderService = class AiPersonalizedMeeting
                 })
                 : [],
             targetActionItems,
+            assignedTasks: tasks.items.map((task) => ({
+                id: task.id,
+                taskCode: task.taskCode,
+                title: task.title,
+                status: task.workflowStatusKey ?? task.status,
+                priority: task.priority,
+                dueDate: task.dueDate ?? null,
+                sprintId: task.sprintId,
+                isBlocked: Boolean(task.isBlocked),
+            })),
             transcriptId: transcript?._id.toString() ?? params.sourceSummary.transcriptId,
             generatedAt: new Date().toISOString(),
         };
@@ -165,6 +191,8 @@ exports.AiPersonalizedMeetingSummaryDataBuilderService = AiPersonalizedMeetingSu
     __metadata("design:paramtypes", [meeting_participants_repository_1.MeetingParticipantsRepository,
         meeting_transcripts_service_1.MeetingTranscriptsService,
         project_access_service_1.ProjectAccessService,
-        users_service_1.UsersService])
+        users_service_1.UsersService,
+        tasks_repository_1.TasksRepository,
+        workspace_access_service_1.WorkspaceAccessService])
 ], AiPersonalizedMeetingSummaryDataBuilderService);
 //# sourceMappingURL=ai-personalized-meeting-summary-data-builder.service.js.map

@@ -49,6 +49,8 @@ export declare class AiProviderService {
     private normalizePersonalizedMeetingSummaryOutput;
     private normalizeText;
     private normalizeTextArray;
+    private cleanMeetingTextArray;
+    private isActionItemForTarget;
     private normalizeMeetingSummaryOutput;
     private resolveMeetingAssignee;
     private normalizeNameKey;
@@ -59,8 +61,13 @@ export declare class AiProviderService {
     private hasActionSignal;
     private hasRiskSignal;
     private toMeetingActionItem;
+    private normalizeForMatching;
+    private isOffTopicMeetingLine;
+    private isReportingInstruction;
+    private isWorkRelevantMeetingLine;
     private generatePersonalizedMeetingSummaryMockResponse;
     private textMentionsTarget;
+    private textRelatesToTarget;
     private toPersonalizedMeetingActionItem;
     private generateTeamMockResponse;
 }

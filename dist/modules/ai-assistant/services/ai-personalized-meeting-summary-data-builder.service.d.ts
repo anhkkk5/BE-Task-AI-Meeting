@@ -3,6 +3,8 @@ import { MeetingParticipantsRepository } from '../../meetings/repositories/meeti
 import { MeetingTranscriptsService } from '../../meetings/services/meeting-transcripts.service';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { UsersService } from '../../users/services/users.service';
+import { TasksRepository } from '../../tasks/repositories/tasks.repository';
+import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { MeetingSummaryActionItem, MeetingSummaryDocument } from '../schemas/meeting-summary.schema';
 export type PersonalizedMeetingSummaryInputData = {
     workspace: {
@@ -33,6 +35,8 @@ export type PersonalizedMeetingSummaryInputData = {
         userId: string;
         fullName: string;
         email: string;
+        workspaceRole?: string | null;
+        meetingRole?: string | null;
     };
     participants: {
         userId: string;
@@ -54,6 +58,16 @@ export type PersonalizedMeetingSummaryInputData = {
     };
     relatedTranscriptSnippets: string[];
     targetActionItems: MeetingSummaryActionItem[];
+    assignedTasks?: {
+        id: string;
+        taskCode: string;
+        title: string;
+        status: string;
+        priority: string;
+        dueDate: string | null;
+        sprintId: string | null;
+        isBlocked: boolean;
+    }[];
     transcriptId: string | null;
     generatedAt: string;
 };
@@ -62,7 +76,9 @@ export declare class AiPersonalizedMeetingSummaryDataBuilderService {
     private readonly meetingTranscriptsService;
     private readonly projectAccessService;
     private readonly usersService;
-    constructor(meetingParticipantsRepository: MeetingParticipantsRepository, meetingTranscriptsService: MeetingTranscriptsService, projectAccessService: ProjectAccessService, usersService: UsersService);
+    private readonly tasksRepository;
+    private readonly workspaceAccessService;
+    constructor(meetingParticipantsRepository: MeetingParticipantsRepository, meetingTranscriptsService: MeetingTranscriptsService, projectAccessService: ProjectAccessService, usersService: UsersService, tasksRepository: TasksRepository, workspaceAccessService: WorkspaceAccessService);
     buildPersonalizedMeetingSummaryInput(params: {
         workspaceId: string;
         projectId: string;

@@ -599,16 +599,19 @@ let AiProviderService = class AiProviderService {
                 deadline: item.deadline ?? null,
                 source: item.source ?? null,
             }))
-                .filter((item) => item.title)
+                .filter((item) => item.title &&
+                !this.isOffTopicMeetingLine(item.title) &&
+                !this.isReportingInstruction(item.title) &&
+                this.isActionItemForTarget(item, inputData))
             : [];
         return {
             title,
             personalSummary,
-            relevantDecisions: this.normalizeTextArray(output.relevantDecisions),
+            relevantDecisions: this.cleanMeetingTextArray(output.relevantDecisions),
             myActionItems,
-            mentions: this.normalizeTextArray(output.mentions),
-            risks: this.normalizeTextArray(output.risks),
-            nextSteps: this.normalizeTextArray(output.nextSteps),
+            mentions: this.cleanMeetingTextArray(output.mentions),
+            risks: this.cleanMeetingTextArray(output.risks),
+            nextSteps: this.cleanMeetingTextArray(output.nextSteps),
             generatedText: this.normalizeText(output.generatedText, `${title}\n\n${personalSummary}`),
         };
     }
@@ -623,6 +626,20 @@ let AiProviderService = class AiProviderService {
                 .filter(Boolean)
             : [];
     }
+    cleanMeetingTextArray(value) {
+        return this.normalizeTextArray(value).filter((item) => !this.isOffTopicMeetingLine(item) &&
+            !this.isReportingInstruction(item));
+    }
+    isActionItemForTarget(item, inputData) {
+        if (item.assigneeId)
+            return item.assigneeId === inputData.targetUser.userId;
+        const targetName = this.normalizeForMatching(inputData.targetUser.fullName);
+        const assigneeName = this.normalizeForMatching(item.assigneeName ?? '');
+        if (targetName && assigneeName)
+            return assigneeName.includes(targetName);
+        const normalizedTitle = this.normalizeForMatching(item.title);
+        return inputData.targetActionItems.some((source) => normalizedTitle.includes(this.normalizeForMatching(source.text)));
+    }
     normalizeMeetingSummaryOutput(output, inputData) {
         const title = typeof output.title === 'string' && output.title.trim()
             ? output.title.trim()
@@ -631,7 +648,11 @@ let AiProviderService = class AiProviderService {
             ? output.summary.trim()
             : 'Chua co du lieu du de tong hop.';
         const actionItems = Array.isArray(output.actionItems)
-            ? output.actionItems.map((item) => {
+            ? output.actionItems
+                .filter((item) => item?.text &&
+                !this.isOffTopicMeetingLine(item.text) &&
+                !this.isReportingInstruction(item.text))
+                .map((item) => {
                 const assignee = this.resolveMeetingAssignee(item, inputData);
                 return {
                     text: item.text,
@@ -646,14 +667,12 @@ let AiProviderService = class AiProviderService {
         return {
             title,
             summary,
-            keyPoints: Array.isArray(output.keyPoints) ? output.keyPoints : [],
-            decisions: Array.isArray(output.decisions) ? output.decisions : [],
+            keyPoints: this.cleanMeetingTextArray(output.keyPoints),
+            decisions: this.cleanMeetingTextArray(output.decisions),
             actionItems,
-            risks: Array.isArray(output.risks) ? output.risks : [],
-            openQuestions: Array.isArray(output.openQuestions)
-                ? output.openQuestions
-                : [],
-            nextSteps: Array.isArray(output.nextSteps) ? output.nextSteps : [],
+            risks: this.cleanMeetingTextArray(output.risks),
+            openQuestions: this.cleanMeetingTextArray(output.openQuestions),
+            nextSteps: this.cleanMeetingTextArray(output.nextSteps),
             generatedText: typeof output.generatedText === 'string' && output.generatedText.trim()
                 ? output.generatedText
                 : [
@@ -706,19 +725,23 @@ let AiProviderService = class AiProviderService {
     generateMeetingSummaryMockResponse(prompt, inputData, provider) {
         const model = process.env.AI_MODEL || `${provider}-meeting-summary`;
         const transcriptLines = this.getTranscriptLines(inputData);
-        const keyPoints = transcriptLines.slice(0, 6);
-        const decisions = transcriptLines
+        const workLines = transcriptLines.filter((line) => !this.isOffTopicMeetingLine(line));
+        const keyPoints = workLines
+            .filter((line) => this.isWorkRelevantMeetingLine(line))
+            .slice(0, 6);
+        const decisions = workLines
             .filter((line) => this.hasDecisionSignal(line))
             .slice(0, 8);
-        const actionItems = transcriptLines
+        const actionItems = workLines
             .filter((line) => this.hasActionSignal(line))
             .slice(0, 8)
-            .map((line) => this.toMeetingActionItem(line));
-        const risks = transcriptLines
+            .map((line) => this.toMeetingActionItem(line, inputData));
+        const risks = workLines
             .filter((line) => this.hasRiskSignal(line))
             .slice(0, 8);
-        const openQuestions = transcriptLines
-            .filter((line) => line.includes('?') || /cau hoi|hoi lai/i.test(line))
+        const openQuestions = workLines
+            .filter((line) => (line.includes('?') || /câu hỏi|hỏi lại/i.test(line)) &&
+            !this.isReportingInstruction(line))
             .slice(0, 8);
         const nextSteps = actionItems.length
             ? actionItems.map((item) => item.text).slice(0, 5)
@@ -789,38 +812,66 @@ let AiProviderService = class AiProviderService {
         });
     }
     hasDecisionSignal(line) {
-        return /quyet dinh|thong nhat|chot|dong y|approved|decided/i.test(line);
+        return /quyet dinh|thong nhat|chot|dong y|approved|decided/.test(this.normalizeForMatching(line));
     }
     hasActionSignal(line) {
-        return /\b(se|can|phai|todo|action|lam|xu ly)\b/i.test(line);
+        return /\b(se|can|phai|todo|action item|lam|xu ly|phu trach|giao cho)\b/.test(this.normalizeForMatching(line));
     }
     hasRiskSignal(line) {
-        return /rui ro|blocker|tre|qua han|chan|risk|delay|issue/i.test(line);
+        const normalized = this.normalizeForMatching(line);
+        if (/muc tieu.*(xem|ra soat).*blocker/.test(normalized))
+            return false;
+        return /\b(blocker|rui ro|qua han|bi chan|dang chan|loi|cham|thieu tai nguyen|chua hoan thanh)\b/.test(normalized);
     }
-    toMeetingActionItem(line) {
+    toMeetingActionItem(line, inputData) {
         const [maybeSpeaker, ...rest] = line.split(':');
         const assigneeName = rest.length ? maybeSpeaker.trim() : null;
+        const participant = inputData.participants.find((item) => item.fullName?.toLowerCase() === assigneeName?.toLowerCase() ||
+            item.email?.split('@')[0].toLowerCase() === assigneeName?.toLowerCase());
         return {
             text: line,
-            assigneeName: assigneeName || null,
-            assigneeUserId: null,
+            assigneeName: (participant?.fullName ?? assigneeName) || null,
+            assigneeUserId: participant?.userId ?? null,
             dueDate: null,
             status: 'OPEN',
             source: line,
         };
     }
+    normalizeForMatching(value) {
+        return value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd')
+            .replace(/Đ/g, 'D')
+            .toLowerCase();
+    }
+    isOffTopicMeetingLine(line) {
+        const value = this.normalizeForMatching(line);
+        return /ca phe|banh ngon|gui xe|troi mua|den muon|dieu hoa|phong hop hoi lanh|cuoi tuan moi nguoi co di/.test(value);
+    }
+    isReportingInstruction(line) {
+        const value = this.normalizeForMatching(line);
+        return /khong dua.*bao cao|cach viet bao cao|tom tat.*khong dua/.test(value);
+    }
+    isWorkRelevantMeetingLine(line) {
+        const value = this.normalizeForMatching(line);
+        return /task|sprint|api|backend|frontend|test|pull request|review|demo|phat hanh|deadline|han |blocker|staging|database|devops|transcript|audio|dependency|quyet dinh|thong nhat|phu trach|hoan thanh|dang lam|loi/.test(value);
+    }
     generatePersonalizedMeetingSummaryMockResponse(prompt, inputData, provider) {
         const model = process.env.AI_MODEL || `${provider}-personalized-meeting-summary`;
         const targetName = inputData.targetUser.fullName || inputData.targetUser.email;
-        const mentions = inputData.relatedTranscriptSnippets.slice(0, 10);
+        const mentions = inputData.relatedTranscriptSnippets
+            .filter((item) => !this.isOffTopicMeetingLine(item) &&
+            !this.isReportingInstruction(item))
+            .slice(0, 10);
         const myActionItems = inputData.targetActionItems
             .slice(0, 10)
             .map((item) => this.toPersonalizedMeetingActionItem(item));
         const relevantDecisions = inputData.meetingSummary.decisions
-            .filter((decision) => this.textMentionsTarget(decision, inputData))
+            .filter((decision) => this.textRelatesToTarget(decision, inputData))
             .slice(0, 8);
         const risks = inputData.meetingSummary.risks
-            .filter((risk) => this.textMentionsTarget(risk, inputData))
+            .filter((risk) => this.textRelatesToTarget(risk, inputData))
             .slice(0, 8);
         const nextSteps = myActionItems.map((item) => item.title).slice(0, 8);
         const hasDirectContent = mentions.length ||
@@ -829,7 +880,7 @@ let AiProviderService = class AiProviderService {
             risks.length;
         const personalSummary = hasDirectContent
             ? [
-                `${targetName} co noi dung lien quan trong meeting "${inputData.meeting.title}".`,
+                `${targetName} có nội dung liên quan trong cuộc họp "${inputData.meeting.title}" với vai trò ${inputData.targetUser.workspaceRole ?? inputData.targetUser.meetingRole ?? 'thành viên'}.`,
                 myActionItems.length
                     ? `Action items lien quan: ${myActionItems
                         .map((item) => item.title)
@@ -888,6 +939,19 @@ let AiProviderService = class AiProviderService {
         const targetName = inputData.targetUser.fullName.toLowerCase();
         return (Boolean(targetName && normalizedText.includes(targetName)) ||
             normalizedText.includes(inputData.targetUser.email.toLowerCase()));
+    }
+    textRelatesToTarget(text, inputData) {
+        if (this.textMentionsTarget(text, inputData))
+            return true;
+        const normalized = this.normalizeForMatching(text);
+        return (inputData.assignedTasks ?? []).some((task) => {
+            if (normalized.includes(this.normalizeForMatching(task.taskCode)))
+                return true;
+            const meaningfulWords = this.normalizeForMatching(task.title)
+                .split(/\s+/)
+                .filter((word) => word.length >= 5);
+            return meaningfulWords.length > 0 && meaningfulWords.some((word) => normalized.includes(word));
+        });
     }
     toPersonalizedMeetingActionItem(item) {
         return {

@@ -5,6 +5,8 @@ import { MeetingParticipantsRepository } from '../../meetings/repositories/meeti
 import { MeetingTranscriptsService } from '../../meetings/services/meeting-transcripts.service';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
 import { UsersService } from '../../users/services/users.service';
+import { TasksRepository } from '../../tasks/repositories/tasks.repository';
+import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import {
   MeetingSummaryActionItem,
   MeetingSummaryDocument,
@@ -39,6 +41,8 @@ export type PersonalizedMeetingSummaryInputData = {
     userId: string;
     fullName: string;
     email: string;
+    workspaceRole?: string | null;
+    meetingRole?: string | null;
   };
   participants: {
     userId: string;
@@ -60,6 +64,16 @@ export type PersonalizedMeetingSummaryInputData = {
   };
   relatedTranscriptSnippets: string[];
   targetActionItems: MeetingSummaryActionItem[];
+  assignedTasks?: {
+    id: string;
+    taskCode: string;
+    title: string;
+    status: string;
+    priority: string;
+    dueDate: string | null;
+    sprintId: string | null;
+    isBlocked: boolean;
+  }[];
   transcriptId: string | null;
   generatedAt: string;
 };
@@ -71,6 +85,8 @@ export class AiPersonalizedMeetingSummaryDataBuilderService {
     private readonly meetingTranscriptsService: MeetingTranscriptsService,
     private readonly projectAccessService: ProjectAccessService,
     private readonly usersService: UsersService,
+    private readonly tasksRepository: TasksRepository,
+    private readonly workspaceAccessService: WorkspaceAccessService,
   ) {}
 
   async buildPersonalizedMeetingSummaryInput(params: {
@@ -80,7 +96,7 @@ export class AiPersonalizedMeetingSummaryDataBuilderService {
     sourceSummary: MeetingSummaryDocument;
     targetUserId: string;
   }): Promise<PersonalizedMeetingSummaryInputData> {
-    const [project, participants, targetUser, transcript] = await Promise.all([
+    const [project, participants, targetUser, transcript, workspaceRole, tasks] = await Promise.all([
       this.projectAccessService.assertProjectInWorkspace(
         params.projectId,
         params.workspaceId,
@@ -88,6 +104,16 @@ export class AiPersonalizedMeetingSummaryDataBuilderService {
       this.meetingParticipantsRepository.findByMeeting(params.meeting.id),
       this.usersService.findById(params.targetUserId),
       this.findTranscriptIfAvailable(params.meeting),
+      this.workspaceAccessService.getUserWorkspaceRole(
+        params.targetUserId,
+        params.workspaceId,
+      ),
+      this.tasksRepository.findByProject(params.projectId, {
+        assigneeId: params.targetUserId,
+        sprintId: params.meeting.sprintId ?? undefined,
+        page: 1,
+        limit: 100,
+      }),
     ]);
 
     if (!targetUser) {
@@ -101,6 +127,10 @@ export class AiPersonalizedMeetingSummaryDataBuilderService {
         fullName: targetUser.fullName,
         email: targetUser.email,
       },
+    );
+
+    const targetParticipant = participants.find(
+      (participant) => participant.userId === targetUser.id,
     );
 
     return {
@@ -134,6 +164,8 @@ export class AiPersonalizedMeetingSummaryDataBuilderService {
         userId: targetUser.id,
         fullName: targetUser.fullName,
         email: targetUser.email,
+        workspaceRole: workspaceRole ?? null,
+        meetingRole: targetParticipant?.role ?? null,
       },
       participants: participants.map((participant) => ({
         userId: participant.userId,
@@ -161,6 +193,16 @@ export class AiPersonalizedMeetingSummaryDataBuilderService {
           })
         : [],
       targetActionItems,
+      assignedTasks: tasks.items.map((task) => ({
+        id: task.id,
+        taskCode: task.taskCode,
+        title: task.title,
+        status: task.workflowStatusKey ?? task.status,
+        priority: task.priority,
+        dueDate: task.dueDate ?? null,
+        sprintId: task.sprintId,
+        isBlocked: Boolean(task.isBlocked),
+      })),
       transcriptId:
         transcript?._id.toString() ?? params.sourceSummary.transcriptId,
       generatedAt: new Date().toISOString(),

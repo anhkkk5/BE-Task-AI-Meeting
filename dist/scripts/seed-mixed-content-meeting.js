@@ -25,7 +25,7 @@ async function main() {
     const members = await data_source_1.default.query(`SELECT wm.user_id, wm.role, u.full_name, u.email
      FROM workspace_members wm
      JOIN users u ON u.id = wm.user_id
-     WHERE wm.workspace_id = ? AND wm.status = 'ACTIVE' AND u.status = 'ACTIVE'
+     WHERE wm.workspace_id = ?
      ORDER BY CASE wm.role WHEN 'OWNER' THEN 0 ELSE 1 END, wm.created_at ASC
      LIMIT 4`, [workspaceId]);
     if (!members.length)

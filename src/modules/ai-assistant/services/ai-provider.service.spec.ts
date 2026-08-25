@@ -301,6 +301,18 @@ describe('AiProviderService', () => {
         source: 'Nguyen Van B: Em se lam API task',
       },
     ],
+    assignedTasks: [
+      {
+        id: 'task-id',
+        taskCode: 'AGILEAI-9',
+        title: 'API task dependency',
+        status: 'IN_PROGRESS',
+        priority: 'HIGH',
+        dueDate: '2026-06-27',
+        sprintId: null,
+        isBlocked: true,
+      },
+    ],
     transcriptId: 'transcript-id',
     generatedAt: '2026-06-25T00:00:00.000Z',
   };
@@ -365,6 +377,41 @@ describe('AiProviderService', () => {
     });
     expect(result.output.generatedText).not.toContain('password');
     expect(result.output.generatedText).not.toContain('token');
+  });
+
+  it('classifies Vietnamese meeting evidence and removes off-topic chatter in fallback mode', async () => {
+    const service = new AiProviderService();
+    const result = await service.generateMeetingSummary('prompt', {
+      workspace: { id: 'workspace-id' },
+      project: { id: 'project-id', name: 'Project AI', keyCode: 'AI', status: 'ACTIVE' },
+      meeting: {
+        id: 'meeting-id', title: 'Rà soát phát hành', description: null,
+        meetingType: 'GENERAL', meetingDate: '2026-08-25', status: 'COMPLETED',
+        startTime: null, endTime: null,
+      },
+      sprint: null,
+      participants: [
+        { userId: 'u1', fullName: 'An', email: 'an@example.com', role: 'HOST', attended: true },
+        { userId: 'u2', fullName: 'Bình', email: 'binh@example.com', role: 'PARTICIPANT', attended: true },
+      ],
+      transcript: {
+        id: 'transcript-id', rawTranscript: '', normalizedTranscript: '',
+        speakers: [
+          { userId: 'u1', speakerName: 'An', text: 'Mục tiêu là rà soát các blocker còn lại.' },
+          { userId: 'u1', speakerName: 'An', text: 'Quyết định không cho task sang Done nếu dependency chưa hoàn thành.' },
+          { userId: 'u2', speakerName: 'Bình', text: 'Mình sẽ sửa validation dependency trước thứ Sáu.' },
+          { userId: 'u2', speakerName: 'Bình', text: 'Cuối tuần đi uống cà phê không?' },
+          { userId: 'u1', speakerName: 'An', text: 'Staging đang chậm do thiếu tài nguyên database.' },
+        ],
+      },
+      generatedAt: '2026-08-25T00:00:00.000Z',
+    });
+
+    expect(result.output.decisions.join(' ')).toContain('Quyết định');
+    expect(result.output.actionItems).toHaveLength(1);
+    expect(result.output.openQuestions).toEqual([]);
+    expect(result.output.risks.join(' ')).not.toContain('Mục tiêu');
+    expect(JSON.stringify(result.output)).not.toContain('cà phê');
   });
 
   it('calls Groq for a personal daily report and preserves its response shape', async () => {
