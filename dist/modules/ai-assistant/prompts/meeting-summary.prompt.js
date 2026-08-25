@@ -14,7 +14,9 @@ Quy tắc phân loại bắt buộc:
 - actionItems chỉ chứa hành động cụ thể. Xác định người phụ trách bằng userId/fullName trong participants; không lấy người đang nói làm assignee nếu câu nói giao việc cho người khác.
 - openQuestions chỉ chứa vấn đề công việc chưa được giải quyết. Không đưa câu hỏi xã giao hoặc chuyện ngoài lề vào đây.
 - nextSteps là các bước công việc sau cuộc họp; không đưa chỉ dẫn về cách viết báo cáo vào kết quả.
-- summary tối đa 3 câu; keyPoints tối đa 6; decisions 5; actionItems 8; risks 5; openQuestions 4; nextSteps 6.
+- summary chỉ 1 câu kết luận ngắn, không nêu số dòng transcript, số người tham gia hoặc kể lại diễn biến.
+- keyPoints là phần nội dung chính theo từng người. Mỗi thành viên chỉ có tối đa một mục theo đúng mẫu "Tên thành viên: ý chính", gộp các phát biểu liên quan của người đó và bỏ chi tiết lan man. Tối đa 8 thành viên.
+- decisions tối đa 5; actionItems 8; risks 5; openQuestions 4; nextSteps 6.
 - Mỗi mục chỉ có một ý, không lặp giữa các nhóm.
 - Không có bằng chứng thì trả mảng rỗng.
 - Không hiển thị UUID/email trong văn bản. userId chỉ được đặt trong assigneeUserId.

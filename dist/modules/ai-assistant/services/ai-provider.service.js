@@ -726,9 +726,20 @@ let AiProviderService = class AiProviderService {
         const model = `${provider}-meeting-summary`;
         const transcriptLines = this.getTranscriptLines(inputData);
         const workLines = transcriptLines.filter((line) => !this.isOffTopicMeetingLine(line));
-        const keyPoints = workLines
-            .filter((line) => this.isWorkRelevantMeetingLine(line))
-            .slice(0, 6);
+        const memberPoints = new Map();
+        for (const line of workLines.filter((item) => this.isWorkRelevantMeetingLine(item))) {
+            const [speaker, ...contentParts] = line.split(':');
+            const content = contentParts.join(':').trim();
+            if (!content || !speaker.trim())
+                continue;
+            const current = memberPoints.get(speaker.trim()) ?? [];
+            if (current.length < 2)
+                current.push(content);
+            memberPoints.set(speaker.trim(), current);
+        }
+        const keyPoints = [...memberPoints.entries()]
+            .map(([speaker, points]) => `${speaker}: ${points.join(' ')}`)
+            .slice(0, 8);
         const decisions = workLines
             .filter((line) => this.hasDecisionSignal(line))
             .slice(0, 8);
@@ -746,17 +757,11 @@ let AiProviderService = class AiProviderService {
         const nextSteps = actionItems.length
             ? actionItems.map((item) => item.text).slice(0, 5)
             : [];
-        const participantText = inputData.participants.length
-            ? `${inputData.participants.length} participant`
-            : 'chua co participant trong du lieu';
-        const summary = [
-            `Meeting "${inputData.meeting.title}" co ${transcriptLines.length} dong transcript va ${participantText}.`,
-            keyPoints.length
-                ? `Noi dung chinh: ${keyPoints.slice(0, 3).join(' ')}`
-                : 'Transcript chua co noi dung du de tong hop.',
-        ].join(' ');
+        const summary = keyPoints.length
+            ? `Cuộc họp tập trung vào ${keyPoints.length} nội dung công việc chính của các thành viên.`
+            : 'Cuộc họp chưa có đủ nội dung công việc để tổng hợp.';
         const output = {
-            title: `Tom tat meeting - ${inputData.meeting.title}`,
+            title: `Tóm tắt cuộc họp - ${inputData.meeting.title}`,
             summary,
             keyPoints,
             decisions,
@@ -765,12 +770,12 @@ let AiProviderService = class AiProviderService {
             openQuestions,
             nextSteps,
             generatedText: [
-                `Tom tat meeting - ${inputData.meeting.title}`,
+                `Tóm tắt cuộc họp - ${inputData.meeting.title}`,
                 '',
-                `Tong quan: ${summary}`,
+                `Tổng quan: ${summary}`,
                 keyPoints.length
-                    ? `Y chinh: ${keyPoints.join('; ')}`
-                    : 'Y chinh: Chua co du lieu.',
+                    ? `Nội dung theo thành viên: ${keyPoints.join('; ')}`
+                    : 'Nội dung theo thành viên: Chưa có dữ liệu.',
                 decisions.length
                     ? `Quyet dinh: ${decisions.join('; ')}`
                     : 'Quyet dinh: Chua co du lieu.',
