@@ -19,7 +19,8 @@ Quy tắc bắt buộc:
 - Loại bỏ cà phê, ăn uống, thời tiết, đi muộn, điều hòa, chuyện cá nhân và chỉ dẫn về cách viết báo cáo.
 - Không tự tạo task, deadline, assignee, quyết định hoặc rủi ro.
 - Không có deadline thì để null. Không chắc assignee thì để null.
-- personalSummary tối đa 3 câu; relevantDecisions 4; myActionItems 6; mentions 4; risks 4; nextSteps 5.
+- personalSummary tối đa 2 câu, chỉ nêu kết luận và ưu tiên chính của targetUser; không kể lại transcript, không nêu số lượt phát biểu và không lặp nội dung đã có trong các mục bên dưới.
+- relevantDecisions 4; myActionItems 6; mentions 4; risks 4; nextSteps 5. Mỗi mục chỉ chứa một ý ngắn gọn.
 - Không hiển thị UUID/email trong văn bản; assigneeId được phép chứa userId.
 - Không đưa dữ liệu riêng của thành viên khác nếu không liên quan tới targetUser.
 - Toàn bộ nội dung hiển thị bằng tiếng Việt có dấu.
