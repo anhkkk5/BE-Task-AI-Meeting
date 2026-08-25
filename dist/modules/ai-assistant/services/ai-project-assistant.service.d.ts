@@ -130,6 +130,8 @@ export declare class AiProjectAssistantService {
     private findDefaultSprint;
     private buildFallbackAnswer;
     private isDeterministicQuestion;
+    private isUsageHelpQuestion;
+    private isOutOfScopeQuestion;
     private buildSources;
     private buildPrompt;
     private calculateSchedule;

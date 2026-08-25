@@ -646,7 +646,21 @@ export class AiProjectAssistantService {
     const blockers = updates.filter((update) => update.blockers?.trim());
     let answer = `${asksMine ? 'Bạn' : `Dự án ${project?.name ?? ''}`} có ${scopedTasks.length} công việc trong phạm vi đang xem, ${openTasks.length} công việc chưa hoàn thành.`;
 
-    if (
+    if (this.isUsageHelpQuestion(normalized)) {
+      answer = [
+        'Bạn có thể sử dụng AgileFlow theo quy trình sau:',
+        '1. Backlog: tạo và sắp xếp công việc cần thực hiện.',
+        '2. Board: kéo task qua Cần làm, Đang làm, Review và Hoàn thành.',
+        '3. Cập nhật hằng ngày: kiểm tra bản nháp AI, chỉnh sửa rồi gửi.',
+        '4. Cuộc họp: nhập transcript để AI tạo tóm tắt chung và theo thành viên.',
+        '5. Bàn giao: chuyển công việc cho thành viên khác và theo dõi trạng thái tiếp nhận.',
+        '6. Trợ lý dự án: hỏi về tiến độ, task quá hạn, rủi ro Sprint, quyết định cuộc họp hoặc action item.',
+        'Bạn muốn được hướng dẫn chi tiết phần nào?',
+      ].join('\n');
+    } else if (this.isOutOfScopeQuestion(normalized)) {
+      answer =
+        'Mình là trợ lý dự án AgileFlow nên không viết thuật toán hoặc mã nguồn chung không liên quan đến dữ liệu và thao tác trong dự án. Bạn có thể hỏi mình về task, Sprint, cuộc họp, bàn giao, Daily Update hoặc cách sử dụng AgileFlow.';
+    } else if (
       (normalized.includes('rủi ro') || normalized.includes('risk')) &&
       risk
     ) {
@@ -714,7 +728,23 @@ export class AiProjectAssistantService {
   }
 
   private isDeterministicQuestion(question: string) {
-    return /quá hạn|rủi ro|risk|blocker|trở ngại|chưa gán|chưa giao|tiến độ|hoàn thành|còn bao nhiêu ngày|cuộc họp.*(?:quyết định|đã chốt)|quyết định.*cuộc họp|action item|việc sau họp|đầu việc.*cuộc họp/iu.test(
+    return (
+      this.isUsageHelpQuestion(question) ||
+      this.isOutOfScopeQuestion(question) ||
+      /quá hạn|rủi ro|risk|blocker|trở ngại|chưa gán|chưa giao|tiến độ|hoàn thành|còn bao nhiêu ngày|cuộc họp.*(?:quyết định|đã chốt)|quyết định.*cuộc họp|action item|việc sau họp|đầu việc.*cuộc họp/iu.test(
+        question,
+      )
+    );
+  }
+
+  private isUsageHelpQuestion(question: string) {
+    return /hướng dẫn.*(?:sử dụng|dùng).*(?:hệ thống|agileflow)|(?:sử dụng|dùng).*agileflow|hệ thống.*(?:dùng|hoạt động).*như thế nào/iu.test(
+      question,
+    );
+  }
+
+  private isOutOfScopeQuestion(question: string) {
+    return /(?:code|viết mã|lập trình).*(?:cho tôi|giúp tôi)|thuật toán.*(?:bot|website|ứng dụng)|(?:nấu ăn|thời tiết|giải trí|tình yêu)/iu.test(
       question,
     );
   }
@@ -727,6 +757,12 @@ export class AiProjectAssistantService {
     updates: DailyUpdate[],
     question: string,
   ): AssistantSource[] {
+    if (
+      this.isUsageHelpQuestion(question) ||
+      this.isOutOfScopeQuestion(question)
+    ) {
+      return [];
+    }
     const sources: AssistantSource[] = [];
     if (project) {
       sources.push({
