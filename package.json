@@ -17,6 +17,7 @@
     "migration:run:prod": "typeorm migration:run -d dist/database/mysql/data-source.js",
     "migration:revert": "npm run build && typeorm migration:revert -d dist/database/mysql/data-source.js",
     "dataset:action-items:generate": "ts-node src/scripts/generate-action-item-evaluation-dataset.ts",
+    "seed:meeting:mixed": "ts-node src/scripts/seed-mixed-content-meeting.ts",
     "dataset:action-items:validate": "ts-node src/scripts/validate-action-item-evaluation-dataset.ts",
     "dataset:action-items:infer": "ts-node src/scripts/run-action-item-evaluation-inference.ts",
     "dataset:action-items:oracle": "ts-node src/scripts/create-oracle-action-item-predictions.ts",

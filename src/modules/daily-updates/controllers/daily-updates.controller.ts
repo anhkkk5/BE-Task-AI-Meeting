@@ -97,6 +97,23 @@ export class DailyUpdatesController {
     );
   }
 
+  @Get('draft/pending')
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({ summary: 'Get my pending AI daily update draft' })
+  getMyReviewDraft(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Query('date') updateDate: string,
+  ) {
+    return this.dailyUpdatesService.getMyReviewDraft(
+      user.id,
+      workspaceId,
+      projectId,
+      updateDate,
+    );
+  }
+
   @Get()
   @WorkspaceRoles(...dailyUpdateManagerRoles)
   @UseGuards(WorkspaceRolesGuard)

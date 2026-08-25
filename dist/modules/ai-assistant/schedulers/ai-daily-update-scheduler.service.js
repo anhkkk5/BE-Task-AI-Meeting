@@ -34,8 +34,12 @@ const workspace_members_repository_1 = require("../../workspaces/repositories/wo
 const ai_provider_service_1 = require("../services/ai-provider.service");
 const ai_report_data_builder_service_1 = require("../services/ai-report-data-builder.service");
 const prompt_builder_service_1 = require("../services/prompt-builder.service");
+const daily_update_submission_status_enum_1 = require("../../../common/enums/daily-update-submission-status.enum");
+const notification_entity_1 = require("../../notifications/entities/notification.entity");
+const notifications_service_1 = require("../../notifications/notifications.service");
 const AI_AUTO_NOTE = '[AI_AUTO_DAILY_UPDATE]\nBản cập nhật này được AI tự động tạo lúc 00:00 vì bạn chưa gửi Daily Update trong ngày. Vui lòng kiểm tra và chỉnh sửa nếu cần.';
-let AiDailyUpdateSchedulerService = AiDailyUpdateSchedulerService_1 = class AiDailyUpdateSchedulerService {
+let AiDailyUpdateSchedulerService = class AiDailyUpdateSchedulerService {
+    static { AiDailyUpdateSchedulerService_1 = this; }
     configService;
     schedulerRegistry;
     redis;
@@ -47,9 +51,13 @@ let AiDailyUpdateSchedulerService = AiDailyUpdateSchedulerService_1 = class AiDa
     promptBuilder;
     aiProvider;
     preferencesService;
+    notificationsService;
+    static REVIEW_NOTE = '[AI_DRAFT] Bản nháp do AI tạo từ task và bàn giao. Nội dung chưa được người dùng xác nhận.';
     logger = new common_1.Logger(AiDailyUpdateSchedulerService_1.name);
-    jobName = 'automatic-ai-daily-updates';
-    constructor(configService, schedulerRegistry, redis, projectsRepository, workspaceMembersRepository, sprintsRepository, dailyUpdatesRepository, dataBuilder, promptBuilder, aiProvider, preferencesService) {
+    draftJobName = 'automatic-ai-daily-update-drafts';
+    expiryJobName = 'expire-ai-daily-update-drafts';
+    reminderJobName = 'remind-ai-daily-update-drafts';
+    constructor(configService, schedulerRegistry, redis, projectsRepository, workspaceMembersRepository, sprintsRepository, dailyUpdatesRepository, dataBuilder, promptBuilder, aiProvider, preferencesService, notificationsService) {
         this.configService = configService;
         this.schedulerRegistry = schedulerRegistry;
         this.redis = redis;
@@ -61,13 +69,14 @@ let AiDailyUpdateSchedulerService = AiDailyUpdateSchedulerService_1 = class AiDa
         this.promptBuilder = promptBuilder;
         this.aiProvider = aiProvider;
         this.preferencesService = preferencesService;
+        this.notificationsService = notificationsService;
     }
     onApplicationBootstrap() {
         if (!this.getBoolean('AI_DAILY_UPDATE_SCHEDULER_ENABLED', false)) {
             this.logger.log('Lịch tạo Daily Update tự động đang tắt');
             return;
         }
-        const cronTime = this.configService.get('AI_DAILY_UPDATE_CRON', '0 0 0 * * *');
+        const cronTime = this.configService.get('AI_DAILY_UPDATE_CRON', '0 0 17 * * *');
         const timeZone = this.getTimeZone();
         try {
             const job = cron_1.CronJob.from({
@@ -78,8 +87,30 @@ let AiDailyUpdateSchedulerService = AiDailyUpdateSchedulerService_1 = class AiDa
                 onTick: () => void this.runScheduledDailyUpdates(),
                 errorHandler: (error) => this.logger.error('Lịch tạo Daily Update gặp lỗi', error),
             });
-            this.schedulerRegistry.addCronJob(this.jobName, job);
+            this.schedulerRegistry.addCronJob(this.draftJobName, job);
             job.start();
+            const expiryCron = this.configService.get('AI_DAILY_UPDATE_EXPIRY_CRON', '0 59 23 * * *');
+            const expiryJob = cron_1.CronJob.from({
+                cronTime: expiryCron,
+                timeZone,
+                start: false,
+                waitForCompletion: true,
+                onTick: () => void this.expireUndeliveredDrafts(),
+                errorHandler: (error) => this.logger.error('Daily Update draft expiry scheduler failed', error),
+            });
+            this.schedulerRegistry.addCronJob(this.expiryJobName, expiryJob);
+            expiryJob.start();
+            const reminderCron = this.configService.get('AI_DAILY_UPDATE_REMINDER_CRON', '0 0 21 * * *');
+            const reminderJob = cron_1.CronJob.from({
+                cronTime: reminderCron,
+                timeZone,
+                start: false,
+                waitForCompletion: true,
+                onTick: () => void this.remindUndeliveredDrafts(),
+                errorHandler: (error) => this.logger.error('Daily Update reminder scheduler failed', error),
+            });
+            this.schedulerRegistry.addCronJob(this.reminderJobName, reminderJob);
+            reminderJob.start();
             this.logger.log(`Đã bật lịch tạo Daily Update: ${cronTime} (${timeZone})`);
         }
         catch (error) {
@@ -87,8 +118,7 @@ let AiDailyUpdateSchedulerService = AiDailyUpdateSchedulerService_1 = class AiDa
         }
     }
     async runScheduledDailyUpdates(now = new Date()) {
-        const currentLocalDate = this.formatDateInTimeZone(now, this.getTimeZone());
-        const updateDate = this.previousDate(currentLocalDate);
+        const updateDate = this.formatDateInTimeZone(now, this.getTimeZone());
         const result = {
             updateDate,
             projects: 0,
@@ -147,10 +177,26 @@ let AiDailyUpdateSchedulerService = AiDailyUpdateSchedulerService_1 = class AiDa
                             todayPlan: generated.output.todayPlan,
                             blockers: generated.output.blockers || null,
                             notes: generated.output.notes
-                                ? `${AI_AUTO_NOTE}\n\n${generated.output.notes}`
-                                : AI_AUTO_NOTE,
+                                ? `${AiDailyUpdateSchedulerService_1.REVIEW_NOTE}\n\n${generated.output.notes}`
+                                : AiDailyUpdateSchedulerService_1.REVIEW_NOTE,
                             mood: null,
                             needHelpFromId: null,
+                            submissionStatus: daily_update_submission_status_enum_1.DailyUpdateSubmissionStatus.PendingReview,
+                            generatedByAi: true,
+                            submittedAt: null,
+                        });
+                        await this.notificationsService.create({
+                            recipientId: member.userId,
+                            type: notification_entity_1.NotificationType.DailyUpdateDraftReady,
+                            title: 'AI đã soạn Daily Update',
+                            body: 'Vui lòng kiểm tra và gửi bản nháp trước khi ngày làm việc kết thúc.',
+                            link: `/workspaces/${project.workspaceId}/projects/${project.id}/daily-updates/create?date=${updateDate}`,
+                            metadata: {
+                                workspaceId: project.workspaceId,
+                                projectId: project.id,
+                                updateDate,
+                            },
+                            idempotencyKey: `DAILY_UPDATE_DRAFT_READY:${project.id}:${member.userId}:${updateDate}`,
                         });
                         result.generated += 1;
                     }
@@ -178,10 +224,35 @@ let AiDailyUpdateSchedulerService = AiDailyUpdateSchedulerService_1 = class AiDa
             }
         }
     }
-    previousDate(date) {
+    async expireUndeliveredDrafts(now = new Date()) {
+        const today = this.formatDateInTimeZone(now, this.getTimeZone());
+        return this.dailyUpdatesRepository.markPendingAsMissed(this.nextDate(today));
+    }
+    async remindUndeliveredDrafts(now = new Date()) {
+        const updateDate = this.formatDateInTimeZone(now, this.getTimeZone());
+        const drafts = await this.dailyUpdatesRepository.findPendingReviewDrafts(updateDate);
+        for (const draft of drafts) {
+            await this.notificationsService.create({
+                recipientId: draft.userId,
+                type: notification_entity_1.NotificationType.DailyUpdateDraftReady,
+                title: 'Daily Update vẫn đang chờ duyệt',
+                body: 'Bản nháp AI chưa được gửi. Hãy kiểm tra trước khi ngày làm việc kết thúc.',
+                link: `/workspaces/${draft.workspaceId}/projects/${draft.projectId}/daily-updates/create?date=${updateDate}`,
+                metadata: {
+                    workspaceId: draft.workspaceId,
+                    projectId: draft.projectId,
+                    updateDate,
+                },
+                idempotencyKey: `DAILY_UPDATE_DRAFT_REMINDER:${draft.projectId}:${draft.userId}:${updateDate}`,
+            });
+        }
+        return { reminded: drafts.length };
+    }
+    nextDate(date) {
         const [year, month, day] = date.split('-').map(Number);
-        const previous = new Date(Date.UTC(year, month - 1, day - 1));
-        return previous.toISOString().slice(0, 10);
+        return new Date(Date.UTC(year, month - 1, day + 1))
+            .toISOString()
+            .slice(0, 10);
     }
     formatDateInTimeZone(date, timeZone) {
         const parts = new Intl.DateTimeFormat('en-CA', {
@@ -234,6 +305,7 @@ exports.AiDailyUpdateSchedulerService = AiDailyUpdateSchedulerService = AiDailyU
         ai_report_data_builder_service_1.AiReportDataBuilderService,
         prompt_builder_service_1.PromptBuilderService,
         ai_provider_service_1.AiProviderService,
-        ai_user_preferences_service_1.AiUserPreferencesService])
+        ai_user_preferences_service_1.AiUserPreferencesService,
+        notifications_service_1.NotificationsService])
 ], AiDailyUpdateSchedulerService);
 //# sourceMappingURL=ai-daily-update-scheduler.service.js.map

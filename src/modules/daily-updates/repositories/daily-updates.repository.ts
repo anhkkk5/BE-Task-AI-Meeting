@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GetDailyUpdatesQueryDto } from '../dto/get-daily-updates-query.dto';
 import { DailyUpdate } from '../entities/daily-update.entity';
+import { DailyUpdateSubmissionStatus } from '../../../common/enums/daily-update-submission-status.enum';
 
 @Injectable()
 export class DailyUpdatesRepository {
@@ -25,6 +26,9 @@ export class DailyUpdatesRepository {
       | 'userId'
       | 'workspaceId'
       | 'yesterdayWork'
+      | 'submissionStatus'
+      | 'generatedByAi'
+      | 'submittedAt'
     >,
   ) {
     const dailyUpdate = this.repository.create(data);
@@ -68,11 +72,50 @@ export class DailyUpdatesRepository {
   }
 
   findMy(projectId: string, userId: string, query: GetDailyUpdatesQueryDto) {
-    return this.findByProject(projectId, query, { userId });
+    return this.findByProject(projectId, query, {
+      userId,
+      status: DailyUpdateSubmissionStatus.Submitted,
+    });
   }
 
   findTeam(projectId: string, query: GetDailyUpdatesQueryDto) {
-    return this.findByProject(projectId, query, { userId: query.memberId });
+    return this.findByProject(projectId, query, {
+      userId: query.memberId,
+      status: DailyUpdateSubmissionStatus.Submitted,
+    });
+  }
+
+  findReviewDraft(projectId: string, userId: string, updateDate: string) {
+    return this.repository.findOne({
+      where: {
+        projectId,
+        userId,
+        updateDate,
+        submissionStatus: DailyUpdateSubmissionStatus.PendingReview,
+      },
+      relations: { sprint: true, user: true, needHelpFrom: true },
+    });
+  }
+
+  findPendingReviewDrafts(updateDate: string) {
+    return this.repository.find({
+      where: {
+        updateDate,
+        submissionStatus: DailyUpdateSubmissionStatus.PendingReview,
+      },
+    });
+  }
+
+  markPendingAsMissed(beforeDate: string) {
+    return this.repository
+      .createQueryBuilder()
+      .update(DailyUpdate)
+      .set({ submissionStatus: DailyUpdateSubmissionStatus.Missed })
+      .where('submission_status = :status', {
+        status: DailyUpdateSubmissionStatus.PendingReview,
+      })
+      .andWhere('update_date < :beforeDate', { beforeDate })
+      .execute();
   }
 
   async update(dailyUpdate: DailyUpdate, data: Partial<DailyUpdate>) {
@@ -94,7 +137,7 @@ export class DailyUpdatesRepository {
   private async findByProject(
     projectId: string,
     query: GetDailyUpdatesQueryDto,
-    options: { userId?: string },
+    options: { userId?: string; status?: DailyUpdateSubmissionStatus },
   ) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
@@ -109,6 +152,12 @@ export class DailyUpdatesRepository {
     if (options.userId) {
       builder.andWhere('dailyUpdate.userId = :userId', {
         userId: options.userId,
+      });
+    }
+
+    if (options.status) {
+      builder.andWhere('dailyUpdate.submissionStatus = :submissionStatus', {
+        submissionStatus: options.status,
       });
     }
 

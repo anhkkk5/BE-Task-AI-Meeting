@@ -146,7 +146,7 @@ describe('DailyUpdatesService', () => {
       'sprint-id',
       'project-id',
     );
-    expect(dailyUpdatesRepository.create).toHaveBeenCalledWith({
+    expect(dailyUpdatesRepository.create).toHaveBeenCalledWith(expect.objectContaining({
       workspaceId: 'workspace-id',
       projectId: 'project-id',
       userId: 'member-id',
@@ -158,7 +158,9 @@ describe('DailyUpdatesService', () => {
       notes: 'Need review',
       mood: DailyMood.Normal,
       needHelpFromId: null,
-    });
+      generatedByAi: false,
+      submissionStatus: 'SUBMITTED',
+    }));
     expect(response.data.dailyUpdate.userId).toBe('member-id');
   });
 

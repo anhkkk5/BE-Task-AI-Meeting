@@ -26,6 +26,7 @@ var NotificationType;
     NotificationType["MeetingInvited"] = "MEETING_INVITED";
     NotificationType["MeetingUpdated"] = "MEETING_UPDATED";
     NotificationType["MeetingCancelled"] = "MEETING_CANCELLED";
+    NotificationType["DailyUpdateDraftReady"] = "DAILY_UPDATE_DRAFT_READY";
 })(NotificationType || (exports.NotificationType = NotificationType = {}));
 let Notification = class Notification {
     id;

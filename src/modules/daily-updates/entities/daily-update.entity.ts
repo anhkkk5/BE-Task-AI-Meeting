@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { DailyMood } from '../../../common/enums/daily-mood.enum';
+import { DailyUpdateSubmissionStatus } from '../../../common/enums/daily-update-submission-status.enum';
 import { Project } from '../../projects/entities/project.entity';
 import { Sprint } from '../../sprints/entities/sprint.entity';
 import { User } from '../../users/entities/user.entity';
@@ -65,6 +66,21 @@ export class DailyUpdate {
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;
+
+  @Index()
+  @Column({
+    name: 'submission_status',
+    type: 'enum',
+    enum: DailyUpdateSubmissionStatus,
+    default: DailyUpdateSubmissionStatus.Submitted,
+  })
+  submissionStatus: DailyUpdateSubmissionStatus;
+
+  @Column({ name: 'generated_by_ai', type: 'boolean', default: false })
+  generatedByAi: boolean;
+
+  @Column({ name: 'submitted_at', type: 'datetime', nullable: true })
+  submittedAt: Date | null;
 
   @Index()
   @Column({

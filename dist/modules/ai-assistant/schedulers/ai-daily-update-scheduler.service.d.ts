@@ -10,6 +10,7 @@ import { WorkspaceMembersRepository } from '../../workspaces/repositories/worksp
 import { AiProviderService } from '../services/ai-provider.service';
 import { AiReportDataBuilderService } from '../services/ai-report-data-builder.service';
 import { PromptBuilderService } from '../services/prompt-builder.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 export type AutomaticDailyUpdateRunResult = {
     updateDate: string;
     projects: number;
@@ -30,12 +31,20 @@ export declare class AiDailyUpdateSchedulerService implements OnApplicationBoots
     private readonly promptBuilder;
     private readonly aiProvider;
     private readonly preferencesService;
+    private readonly notificationsService;
+    private static readonly REVIEW_NOTE;
     private readonly logger;
-    private readonly jobName;
-    constructor(configService: ConfigService, schedulerRegistry: SchedulerRegistry, redis: Redis, projectsRepository: ProjectsRepository, workspaceMembersRepository: WorkspaceMembersRepository, sprintsRepository: SprintsRepository, dailyUpdatesRepository: DailyUpdatesRepository, dataBuilder: AiReportDataBuilderService, promptBuilder: PromptBuilderService, aiProvider: AiProviderService, preferencesService: AiUserPreferencesService);
+    private readonly draftJobName;
+    private readonly expiryJobName;
+    private readonly reminderJobName;
+    constructor(configService: ConfigService, schedulerRegistry: SchedulerRegistry, redis: Redis, projectsRepository: ProjectsRepository, workspaceMembersRepository: WorkspaceMembersRepository, sprintsRepository: SprintsRepository, dailyUpdatesRepository: DailyUpdatesRepository, dataBuilder: AiReportDataBuilderService, promptBuilder: PromptBuilderService, aiProvider: AiProviderService, preferencesService: AiUserPreferencesService, notificationsService: NotificationsService);
     onApplicationBootstrap(): void;
     runScheduledDailyUpdates(now?: Date): Promise<AutomaticDailyUpdateRunResult>;
-    private previousDate;
+    expireUndeliveredDrafts(now?: Date): Promise<import("typeorm").UpdateResult>;
+    remindUndeliveredDrafts(now?: Date): Promise<{
+        reminded: number;
+    }>;
+    private nextDate;
     private formatDateInTimeZone;
     private releaseLock;
     private isDuplicateError;

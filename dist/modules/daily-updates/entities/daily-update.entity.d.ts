@@ -1,4 +1,5 @@
 import { DailyMood } from '../../../common/enums/daily-mood.enum';
+import { DailyUpdateSubmissionStatus } from '../../../common/enums/daily-update-submission-status.enum';
 import { Project } from '../../projects/entities/project.entity';
 import { Sprint } from '../../sprints/entities/sprint.entity';
 import { User } from '../../users/entities/user.entity';
@@ -15,6 +16,9 @@ export declare class DailyUpdate {
     blockers: string | null;
     needHelpFromId: string | null;
     notes: string | null;
+    submissionStatus: DailyUpdateSubmissionStatus;
+    generatedByAi: boolean;
+    submittedAt: Date | null;
     mood: DailyMood | null;
     workspace: Workspace;
     project: Project;

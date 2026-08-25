@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { WorkspaceAccessService } from '../../workspaces/services/workspace-access.service';
 import { ProjectAccessService } from '../../projects/services/project-access.service';
@@ -12,6 +13,7 @@ import { UpdateDailyUpdateDto } from '../dto/update-daily-update.dto';
 import { DailyUpdate } from '../entities/daily-update.entity';
 import { DailyUpdatesRepository } from '../repositories/daily-updates.repository';
 import { DailyUpdateAccessService } from './daily-update-access.service';
+import { DailyUpdateSubmissionStatus } from '../../../common/enums/daily-update-submission-status.enum';
 
 @Injectable()
 export class DailyUpdatesService {
@@ -51,7 +53,13 @@ export class DailyUpdatesService {
       updateDate,
     );
 
-    if (duplicate) {
+    if (
+      duplicate &&
+      ![
+        DailyUpdateSubmissionStatus.PendingReview,
+        DailyUpdateSubmissionStatus.Missed,
+      ].includes(duplicate.submissionStatus)
+    ) {
       throw new ConflictException('Daily update already exists for this date');
     }
 
@@ -61,19 +69,27 @@ export class DailyUpdatesService {
       currentUserId,
     );
 
-    const dailyUpdate = await this.dailyUpdatesRepository.create({
-      workspaceId,
-      projectId,
-      userId: currentUserId,
+    const submittedData = {
       sprintId: dto.sprintId ?? null,
-      updateDate,
       yesterdayWork: dto.yesterdayWork.trim(),
       todayPlan: dto.todayPlan.trim(),
       blockers: this.optionalText(dto.blockers),
       needHelpFromId: dto.needHelpFromId ?? null,
       notes: this.optionalText(dto.notes),
       mood: dto.mood ?? null,
-    });
+      submissionStatus: DailyUpdateSubmissionStatus.Submitted,
+      submittedAt: new Date(),
+    };
+    const dailyUpdate = duplicate
+      ? await this.dailyUpdatesRepository.update(duplicate, submittedData)
+      : await this.dailyUpdatesRepository.create({
+          workspaceId,
+          projectId,
+          userId: currentUserId,
+          updateDate,
+          generatedByAi: false,
+          ...submittedData,
+        });
 
     return {
       success: true,
@@ -81,6 +97,32 @@ export class DailyUpdatesService {
       data: {
         dailyUpdate: this.toDailyUpdateResponse(dailyUpdate),
       },
+    };
+  }
+
+  async getMyReviewDraft(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    updateDate: string,
+  ) {
+    await this.workspaceAccessService.assertWorkspaceMember(
+      currentUserId,
+      workspaceId,
+    );
+    await this.projectAccessService.assertProjectInWorkspace(
+      projectId,
+      workspaceId,
+    );
+    const draft = await this.dailyUpdatesRepository.findReviewDraft(
+      projectId,
+      currentUserId,
+      this.normalizeDate(updateDate),
+    );
+    return {
+      success: true,
+      message: 'Get pending daily update draft successfully',
+      data: { draft: draft ? this.toDailyUpdateResponse(draft) : null },
     };
   }
 
@@ -183,6 +225,13 @@ export class DailyUpdatesService {
         dailyUpdateId,
         projectId,
       );
+    if (
+      dailyUpdate.submissionStatus &&
+      dailyUpdate.submissionStatus !== DailyUpdateSubmissionStatus.Submitted &&
+      dailyUpdate.userId !== currentUserId
+    ) {
+      throw new NotFoundException('Daily update not found');
+    }
     await this.dailyUpdateAccessService.assertCanViewDailyUpdate(
       currentUserId,
       workspaceId,
@@ -415,6 +464,9 @@ export class DailyUpdatesService {
         : null,
       notes: dailyUpdate.notes,
       mood: dailyUpdate.mood,
+      submissionStatus: dailyUpdate.submissionStatus,
+      generatedByAi: dailyUpdate.generatedByAi,
+      submittedAt: dailyUpdate.submittedAt,
       createdAt: dailyUpdate.createdAt,
       updatedAt: dailyUpdate.updatedAt,
     };

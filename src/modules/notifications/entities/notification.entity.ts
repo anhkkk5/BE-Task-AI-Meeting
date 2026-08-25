@@ -22,6 +22,7 @@ export enum NotificationType {
   MeetingInvited = 'MEETING_INVITED',
   MeetingUpdated = 'MEETING_UPDATED',
   MeetingCancelled = 'MEETING_CANCELLED',
+  DailyUpdateDraftReady = 'DAILY_UPDATE_DRAFT_READY',
 }
 
 @Entity('notifications')

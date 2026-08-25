@@ -6,6 +6,7 @@ import { GetDailyUpdatesQueryDto } from '../dto/get-daily-updates-query.dto';
 import { UpdateDailyUpdateDto } from '../dto/update-daily-update.dto';
 import { DailyUpdatesRepository } from '../repositories/daily-updates.repository';
 import { DailyUpdateAccessService } from './daily-update-access.service';
+import { DailyUpdateSubmissionStatus } from '../../../common/enums/daily-update-submission-status.enum';
 export declare class DailyUpdatesService {
     private readonly dailyUpdatesRepository;
     private readonly dailyUpdateAccessService;
@@ -47,9 +48,54 @@ export declare class DailyUpdatesService {
                 } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
+        };
+    }>;
+    getMyReviewDraft(currentUserId: string, workspaceId: string, projectId: string, updateDate: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            draft: {
+                id: string;
+                workspaceId: string;
+                projectId: string;
+                sprintId: string | null;
+                userId: string;
+                user: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
+                sprint: {
+                    id: string;
+                    name: string;
+                    status: import("../../../common/enums/sprint-status.enum").SprintStatus;
+                } | null;
+                updateDate: string;
+                yesterdayWork: string;
+                todayPlan: string;
+                blockers: string | null;
+                needHelpFromId: string | null;
+                needHelpFrom: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
+                notes: string | null;
+                mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
+                createdAt: Date;
+                updatedAt: Date;
+            } | null;
         };
     }>;
     getMyDailyUpdates(currentUserId: string, workspaceId: string, projectId: string, query: GetDailyUpdatesQueryDto): Promise<{
@@ -86,6 +132,9 @@ export declare class DailyUpdatesService {
                 } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
             }[];
@@ -130,6 +179,9 @@ export declare class DailyUpdatesService {
                 } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
             }[];
@@ -174,6 +226,9 @@ export declare class DailyUpdatesService {
                 } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -213,6 +268,9 @@ export declare class DailyUpdatesService {
                 } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
             };

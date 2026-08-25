@@ -63,6 +63,7 @@ const ai_team_report_action_item_controller_1 = require("./controllers/ai-team-r
 const meeting_transcript_schema_1 = require("../meetings/schemas/meeting-transcript.schema");
 const project_assistant_message_schema_1 = require("./schemas/project-assistant-message.schema");
 const mongodb_observability_scheduler_1 = require("./schedulers/mongodb-observability.scheduler");
+const notifications_module_1 = require("../notifications/notifications.module");
 const mongoImports = (0, mongodb_config_1.mongodbConfig)().enabled
     ? [
         mongoose_1.MongooseModule.forFeature([
@@ -97,6 +98,7 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
             tasks_module_1.TasksModule,
             users_module_1.UsersModule,
             workspaces_module_1.WorkspacesModule,
+            notifications_module_1.NotificationsModule,
         ],
         controllers: [
             ai_draft_controller_1.AiDraftController,

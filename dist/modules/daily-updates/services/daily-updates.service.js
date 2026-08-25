@@ -16,6 +16,7 @@ const project_access_service_1 = require("../../projects/services/project-access
 const sprint_access_service_1 = require("../../sprints/services/sprint-access.service");
 const daily_updates_repository_1 = require("../repositories/daily-updates.repository");
 const daily_update_access_service_1 = require("./daily-update-access.service");
+const daily_update_submission_status_enum_1 = require("../../../common/enums/daily-update-submission-status.enum");
 let DailyUpdatesService = class DailyUpdatesService {
     dailyUpdatesRepository;
     dailyUpdateAccessService;
@@ -38,29 +39,51 @@ let DailyUpdatesService = class DailyUpdatesService {
         }
         const updateDate = this.normalizeDate(dto.updateDate);
         const duplicate = await this.dailyUpdatesRepository.findDuplicate(workspaceId, projectId, currentUserId, updateDate);
-        if (duplicate) {
+        if (duplicate &&
+            ![
+                daily_update_submission_status_enum_1.DailyUpdateSubmissionStatus.PendingReview,
+                daily_update_submission_status_enum_1.DailyUpdateSubmissionStatus.Missed,
+            ].includes(duplicate.submissionStatus)) {
             throw new common_1.ConflictException('Daily update already exists for this date');
         }
         await this.assertNeedHelpFromMember(dto.needHelpFromId, workspaceId, currentUserId);
-        const dailyUpdate = await this.dailyUpdatesRepository.create({
-            workspaceId,
-            projectId,
-            userId: currentUserId,
+        const submittedData = {
             sprintId: dto.sprintId ?? null,
-            updateDate,
             yesterdayWork: dto.yesterdayWork.trim(),
             todayPlan: dto.todayPlan.trim(),
             blockers: this.optionalText(dto.blockers),
             needHelpFromId: dto.needHelpFromId ?? null,
             notes: this.optionalText(dto.notes),
             mood: dto.mood ?? null,
-        });
+            submissionStatus: daily_update_submission_status_enum_1.DailyUpdateSubmissionStatus.Submitted,
+            submittedAt: new Date(),
+        };
+        const dailyUpdate = duplicate
+            ? await this.dailyUpdatesRepository.update(duplicate, submittedData)
+            : await this.dailyUpdatesRepository.create({
+                workspaceId,
+                projectId,
+                userId: currentUserId,
+                updateDate,
+                generatedByAi: false,
+                ...submittedData,
+            });
         return {
             success: true,
             message: 'Create daily update successfully',
             data: {
                 dailyUpdate: this.toDailyUpdateResponse(dailyUpdate),
             },
+        };
+    }
+    async getMyReviewDraft(currentUserId, workspaceId, projectId, updateDate) {
+        await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
+        await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
+        const draft = await this.dailyUpdatesRepository.findReviewDraft(projectId, currentUserId, this.normalizeDate(updateDate));
+        return {
+            success: true,
+            message: 'Get pending daily update draft successfully',
+            data: { draft: draft ? this.toDailyUpdateResponse(draft) : null },
         };
     }
     async getMyDailyUpdates(currentUserId, workspaceId, projectId, query) {
@@ -108,6 +131,11 @@ let DailyUpdatesService = class DailyUpdatesService {
         await this.workspaceAccessService.assertWorkspaceMember(currentUserId, workspaceId);
         await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
         const dailyUpdate = await this.dailyUpdateAccessService.assertDailyUpdateInProject(dailyUpdateId, projectId);
+        if (dailyUpdate.submissionStatus &&
+            dailyUpdate.submissionStatus !== daily_update_submission_status_enum_1.DailyUpdateSubmissionStatus.Submitted &&
+            dailyUpdate.userId !== currentUserId) {
+            throw new common_1.NotFoundException('Daily update not found');
+        }
         await this.dailyUpdateAccessService.assertCanViewDailyUpdate(currentUserId, workspaceId, dailyUpdate);
         return {
             success: true,
@@ -238,6 +266,9 @@ let DailyUpdatesService = class DailyUpdatesService {
                 : null,
             notes: dailyUpdate.notes,
             mood: dailyUpdate.mood,
+            submissionStatus: dailyUpdate.submissionStatus,
+            generatedByAi: dailyUpdate.generatedByAi,
+            submittedAt: dailyUpdate.submittedAt,
             createdAt: dailyUpdate.createdAt,
             updatedAt: dailyUpdate.updatedAt,
         };

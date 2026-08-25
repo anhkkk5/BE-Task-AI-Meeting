@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DailyUpdate = void 0;
 const typeorm_1 = require("typeorm");
 const daily_mood_enum_1 = require("../../../common/enums/daily-mood.enum");
+const daily_update_submission_status_enum_1 = require("../../../common/enums/daily-update-submission-status.enum");
 const project_entity_1 = require("../../projects/entities/project.entity");
 const sprint_entity_1 = require("../../sprints/entities/sprint.entity");
 const user_entity_1 = require("../../users/entities/user.entity");
@@ -28,6 +29,9 @@ let DailyUpdate = class DailyUpdate {
     blockers;
     needHelpFromId;
     notes;
+    submissionStatus;
+    generatedByAi;
+    submittedAt;
     mood;
     workspace;
     project;
@@ -94,6 +98,24 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'text', nullable: true }),
     __metadata("design:type", Object)
 ], DailyUpdate.prototype, "notes", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({
+        name: 'submission_status',
+        type: 'enum',
+        enum: daily_update_submission_status_enum_1.DailyUpdateSubmissionStatus,
+        default: daily_update_submission_status_enum_1.DailyUpdateSubmissionStatus.Submitted,
+    }),
+    __metadata("design:type", String)
+], DailyUpdate.prototype, "submissionStatus", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'generated_by_ai', type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], DailyUpdate.prototype, "generatedByAi", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'submitted_at', type: 'datetime', nullable: true }),
+    __metadata("design:type", Object)
+], DailyUpdate.prototype, "submittedAt", void 0);
 __decorate([
     (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({

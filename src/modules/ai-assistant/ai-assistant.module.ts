@@ -72,6 +72,7 @@ import {
   ProjectAssistantMessageSchema,
 } from './schemas/project-assistant-message.schema';
 import { MongodbObservabilityScheduler } from './schedulers/mongodb-observability.scheduler';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 const mongoImports = mongodbConfig().enabled
   ? [
@@ -104,6 +105,7 @@ const mongoImports = mongodbConfig().enabled
     TasksModule,
     UsersModule,
     WorkspacesModule,
+    NotificationsModule,
   ],
   controllers: [
     AiDraftController,

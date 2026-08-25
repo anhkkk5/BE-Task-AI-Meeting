@@ -40,6 +40,9 @@ export declare class DailyUpdatesController {
                 } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: import("../../../common/enums/daily-update-submission-status.enum").DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -79,6 +82,9 @@ export declare class DailyUpdatesController {
                 } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: import("../../../common/enums/daily-update-submission-status.enum").DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
             }[];
@@ -87,6 +93,48 @@ export declare class DailyUpdatesController {
                 page: number;
                 limit: number;
             };
+        };
+    }>;
+    getMyReviewDraft(user: AuthUser, workspaceId: string, projectId: string, updateDate: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            draft: {
+                id: string;
+                workspaceId: string;
+                projectId: string;
+                sprintId: string | null;
+                userId: string;
+                user: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
+                sprint: {
+                    id: string;
+                    name: string;
+                    status: import("../../../common/enums/sprint-status.enum").SprintStatus;
+                } | null;
+                updateDate: string;
+                yesterdayWork: string;
+                todayPlan: string;
+                blockers: string | null;
+                needHelpFromId: string | null;
+                needHelpFrom: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
+                notes: string | null;
+                mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: import("../../../common/enums/daily-update-submission-status.enum").DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
+                createdAt: Date;
+                updatedAt: Date;
+            } | null;
         };
     }>;
     getTeamDailyUpdates(user: AuthUser, workspaceId: string, projectId: string, query: GetDailyUpdatesQueryDto): Promise<{
@@ -123,6 +171,9 @@ export declare class DailyUpdatesController {
                 } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: import("../../../common/enums/daily-update-submission-status.enum").DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
             }[];
@@ -167,6 +218,9 @@ export declare class DailyUpdatesController {
                 } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: import("../../../common/enums/daily-update-submission-status.enum").DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
             };
@@ -206,6 +260,9 @@ export declare class DailyUpdatesController {
                 } | null;
                 notes: string | null;
                 mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: import("../../../common/enums/daily-update-submission-status.enum").DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
                 createdAt: Date;
                 updatedAt: Date;
             };

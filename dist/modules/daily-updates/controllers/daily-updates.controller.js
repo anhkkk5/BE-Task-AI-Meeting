@@ -47,6 +47,9 @@ let DailyUpdatesController = class DailyUpdatesController {
     getMyDailyUpdates(user, workspaceId, projectId, query) {
         return this.dailyUpdatesService.getMyDailyUpdates(user.id, workspaceId, projectId, query);
     }
+    getMyReviewDraft(user, workspaceId, projectId, updateDate) {
+        return this.dailyUpdatesService.getMyReviewDraft(user.id, workspaceId, projectId, updateDate);
+    }
     getTeamDailyUpdates(user, workspaceId, projectId, query) {
         return this.dailyUpdatesService.getTeamDailyUpdates(user.id, workspaceId, projectId, query);
     }
@@ -100,6 +103,18 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String, get_daily_updates_query_dto_1.GetDailyUpdatesQueryDto]),
     __metadata("design:returntype", void 0)
 ], DailyUpdatesController.prototype, "getMyDailyUpdates", null);
+__decorate([
+    (0, common_1.Get)('draft/pending'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Get my pending AI daily update draft' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Query)('date')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String]),
+    __metadata("design:returntype", void 0)
+], DailyUpdatesController.prototype, "getMyReviewDraft", null);
 __decorate([
     (0, common_1.Get)(),
     (0, workspace_roles_decorator_1.WorkspaceRoles)(...dailyUpdateManagerRoles),

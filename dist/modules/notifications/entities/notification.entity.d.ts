@@ -11,7 +11,8 @@ export declare enum NotificationType {
     HandoverChangesRequested = "HANDOVER_CHANGES_REQUESTED",
     MeetingInvited = "MEETING_INVITED",
     MeetingUpdated = "MEETING_UPDATED",
-    MeetingCancelled = "MEETING_CANCELLED"
+    MeetingCancelled = "MEETING_CANCELLED",
+    DailyUpdateDraftReady = "DAILY_UPDATE_DRAFT_READY"
 }
 export declare class Notification {
     id: string;
