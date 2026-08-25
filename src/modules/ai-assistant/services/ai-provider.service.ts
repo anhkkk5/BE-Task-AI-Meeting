@@ -1434,6 +1434,108 @@ export class AiProviderService {
     provider: string,
   ) {
     const model = process.env.AI_MODEL || `${provider}-team-report`;
+    const statusLabels: Record<string, string> = {
+      ACKNOWLEDGED: 'Đã tiếp nhận',
+      PENDING: 'Chờ người nhận phản hồi',
+      CHANGES_REQUESTED: 'Yêu cầu bổ sung',
+      REJECTED: 'Đã từ chối',
+      DRAFT: 'Chưa gửi',
+      CANCELLED: 'Đã hủy',
+    };
+    const describeHandover = (handover: TeamReportInputData['handovers'][number]) =>
+      `${handover.senderName ?? 'Chưa rõ người giao'} → ${handover.receiverName ?? 'Chưa rõ người nhận'}: ${handover.taskCode ?? ''}${handover.taskCode ? ' - ' : ''}${handover.taskTitle ?? 'Công việc chưa có tên'} — ${statusLabels[handover.status] ?? handover.status}`;
+    const accepted = inputData.handovers.filter(
+      (handover) => handover.status === 'ACKNOWLEDGED',
+    );
+    const waiting = inputData.handovers.filter((handover) =>
+      ['DRAFT', 'PENDING', 'CHANGES_REQUESTED'].includes(handover.status),
+    );
+    const blockers = inputData.handovers.flatMap((handover) =>
+      [handover.blockers, handover.changeRequest, handover.rejectionReason]
+        .filter((value): value is string => Boolean(value?.trim()))
+        .map((value) => `${describeHandover(handover)}: ${value}`),
+    );
+    const risks = inputData.handovers
+      .filter((handover) =>
+        ['PENDING', 'CHANGES_REQUESTED', 'REJECTED'].includes(handover.status),
+      )
+      .map(describeHandover);
+    const involvedMembers = inputData.members.filter((member) =>
+      inputData.handovers.some(
+        (handover) =>
+          handover.senderId === member.userId ||
+          handover.receiverId === member.userId,
+      ),
+    );
+    const memberSummaries = involvedMembers.map((member) => {
+      const related = inputData.handovers.filter(
+        (handover) =>
+          handover.senderId === member.userId ||
+          handover.receiverId === member.userId,
+      );
+      return {
+        userId: member.userId,
+        fullName: member.fullName,
+        summary: related
+          .map((handover) => {
+            const role =
+              handover.senderId === member.userId
+                ? `Đã giao cho ${handover.receiverName ?? 'người nhận chưa xác định'}`
+                : `Được ${handover.senderName ?? 'người giao chưa xác định'} bàn giao`;
+            return `${role}: ${handover.taskCode ?? ''}${handover.taskCode ? ' - ' : ''}${handover.taskTitle ?? 'Công việc chưa có tên'} (${statusLabels[handover.status] ?? handover.status}).`;
+          })
+          .join(' '),
+        blockers: related
+          .flatMap((handover) => [
+            handover.blockers,
+            handover.changeRequest,
+            handover.rejectionReason,
+          ])
+          .filter((value): value is string => Boolean(value?.trim())),
+      };
+    });
+    const total = inputData.handoverStats.total;
+    const summary = total
+      ? `Trong ngày có ${total} lượt bàn giao: ${inputData.handoverStats.acknowledged} đã tiếp nhận, ${inputData.handoverStats.pending} đang chờ, ${inputData.handoverStats.changesRequested} yêu cầu bổ sung và ${inputData.handoverStats.rejected} bị từ chối.`
+      : 'Không có bàn giao công việc trong ngày.';
+    const teamProgress = total
+      ? `Tỷ lệ tiếp nhận bàn giao: ${Math.round((inputData.handoverStats.acknowledged / total) * 100)}% (${inputData.handoverStats.acknowledged}/${total}).`
+      : 'Chưa phát sinh bàn giao để tính tỷ lệ tiếp nhận.';
+    const handoverSummary = inputData.handovers.length
+      ? inputData.handovers.map(describeHandover).join('\n')
+      : 'Không có bàn giao công việc trong ngày.';
+    const recommendations = waiting.length
+      ? ['Phản hồi các bàn giao đang chờ và bổ sung thông tin theo yêu cầu.']
+      : ['Không có bàn giao đang chờ xử lý.'];
+    const output: TeamDailyReportOutput = {
+      title: `Báo cáo bàn giao công việc - ${inputData.project.name}`,
+      summary,
+      teamProgress,
+      completedWork: accepted.map(describeHandover),
+      todayFocus: waiting.map(describeHandover),
+      blockers,
+      risks,
+      missingDailyUpdates: [],
+      handoverSummary,
+      memberSummaries,
+      recommendations,
+      generatedText: [
+        `Báo cáo bàn giao công việc - ${inputData.project.name}`,
+        summary,
+        teamProgress,
+        handoverSummary,
+      ].join('\n\n'),
+    };
+
+    return {
+      model,
+      output,
+      rawResponse: JSON.stringify({ provider, promptLength: prompt.length, ...output }),
+    };
+
+    /* istanbul ignore next -- legacy mock kept below for old snapshots */
+    // eslint-disable-next-line no-unreachable
+    {
     const completedWork = inputData.tasks
       .filter((task) => task.status === 'DONE')
       .map((task) => `${task.taskCode} - ${task.title}`);
@@ -1547,5 +1649,6 @@ export class AiProviderService {
         ...output,
       }),
     };
+    }
   }
 }

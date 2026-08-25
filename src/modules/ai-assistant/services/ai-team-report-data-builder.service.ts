@@ -30,9 +30,9 @@ import {
  * huu ich khi nguoi dung thuc su muon doi chieu tien do.
  */
 export const DEFAULT_TEAM_REPORT_DATA_SOURCES: TeamReportDataSources = {
-  tasks: true,
-  dailyUpdates: true,
-  meetingTranscripts: true,
+  tasks: false,
+  dailyUpdates: false,
+  meetingTranscripts: false,
   previousReport: false,
 };
 
@@ -70,6 +70,8 @@ type TeamTaskInput = {
 
 type TeamHandoverInput = {
   id: string;
+  senderId: string;
+  receiverId: string;
   taskCode: string | null;
   taskTitle: string | null;
   status: string;
@@ -78,6 +80,12 @@ type TeamHandoverInput = {
   completedWork: string | null;
   remainingWork: string | null;
   blockers: string | null;
+  nextSteps: string | null;
+  changeRequest: string | null;
+  rejectionReason: string | null;
+  submittedAt: string | null;
+  acknowledgedAt: string | null;
+  rejectedAt: string | null;
 };
 
 /**
@@ -282,30 +290,26 @@ export class AiTeamReportDataBuilderService {
    * frontend se khong the tu tinh lai khi ve danh sach bao cao.
    */
   computeMetrics(inputData: TeamReportInputData): TeamReportMetrics {
-    const activeTasks = inputData.tasks.filter(
-      (task) => task.status !== TaskStatus.Cancelled,
+    const total = inputData.handoverStats.total;
+    const acknowledged = inputData.handoverStats.acknowledged;
+    const waiting =
+      inputData.handoverStats.pending +
+      inputData.handoverStats.changesRequested;
+    const involvedMemberIds = new Set(
+      inputData.handovers.flatMap((item) => [item.senderId, item.receiverId]),
     );
-    const doneTasks = activeTasks.filter(
-      (task) => task.status === TaskStatus.Done,
-    ).length;
-    const inProgressTasks = activeTasks.filter((task) =>
-      [TaskStatus.InProgress, TaskStatus.Review].includes(
-        task.status as TaskStatus,
-      ),
-    ).length;
-    const handoverBlockers = inputData.handovers.filter((handover) =>
-      Boolean(handover.blockers?.trim()),
-    ).length;
 
     return {
-      doneTasks,
-      totalTasks: activeTasks.length,
-      inProgressTasks,
-      blockerCount: inputData.blockers.length + handoverBlockers,
-      progressPercent: activeTasks.length
-        ? Math.round((doneTasks / activeTasks.length) * 100)
+      doneTasks: acknowledged,
+      totalTasks: total,
+      inProgressTasks: waiting,
+      blockerCount:
+        inputData.handoverStats.changesRequested +
+        inputData.handoverStats.rejected,
+      progressPercent: total
+        ? Math.round((acknowledged / total) * 100)
         : 0,
-      memberCount: inputData.members.length,
+      memberCount: involvedMemberIds.size,
     };
   }
 
@@ -397,6 +401,8 @@ export class AiTeamReportDataBuilderService {
 
     return handovers.map((handover) => ({
       id: handover.id,
+      senderId: handover.senderId,
+      receiverId: handover.receiverId,
       taskCode: handover.task?.taskCode ?? null,
       taskTitle: handover.task?.title ?? null,
       status: handover.status,
@@ -405,6 +411,12 @@ export class AiTeamReportDataBuilderService {
       completedWork: handover.completedWork ?? null,
       remainingWork: handover.remainingWork ?? null,
       blockers: handover.blockers ?? null,
+      nextSteps: handover.nextSteps ?? null,
+      changeRequest: handover.changeRequest ?? null,
+      rejectionReason: handover.rejectionReason ?? null,
+      submittedAt: handover.submittedAt?.toISOString() ?? null,
+      acknowledgedAt: handover.acknowledgedAt?.toISOString() ?? null,
+      rejectedAt: handover.rejectedAt?.toISOString() ?? null,
     }));
   }
 

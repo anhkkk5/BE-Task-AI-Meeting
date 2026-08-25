@@ -29,9 +29,9 @@ const meetings_repository_1 = require("../../meetings/repositories/meetings.repo
 const ai_report_schema_1 = require("../schemas/ai-report.schema");
 const meeting_summary_schema_1 = require("../schemas/meeting-summary.schema");
 exports.DEFAULT_TEAM_REPORT_DATA_SOURCES = {
-    tasks: true,
-    dailyUpdates: true,
-    meetingTranscripts: true,
+    tasks: false,
+    dailyUpdates: false,
+    meetingTranscripts: false,
     previousReport: false,
 };
 let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
@@ -130,19 +130,21 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
         };
     }
     computeMetrics(inputData) {
-        const activeTasks = inputData.tasks.filter((task) => task.status !== task_status_enum_1.TaskStatus.Cancelled);
-        const doneTasks = activeTasks.filter((task) => task.status === task_status_enum_1.TaskStatus.Done).length;
-        const inProgressTasks = activeTasks.filter((task) => [task_status_enum_1.TaskStatus.InProgress, task_status_enum_1.TaskStatus.Review].includes(task.status)).length;
-        const handoverBlockers = inputData.handovers.filter((handover) => Boolean(handover.blockers?.trim())).length;
+        const total = inputData.handoverStats.total;
+        const acknowledged = inputData.handoverStats.acknowledged;
+        const waiting = inputData.handoverStats.pending +
+            inputData.handoverStats.changesRequested;
+        const involvedMemberIds = new Set(inputData.handovers.flatMap((item) => [item.senderId, item.receiverId]));
         return {
-            doneTasks,
-            totalTasks: activeTasks.length,
-            inProgressTasks,
-            blockerCount: inputData.blockers.length + handoverBlockers,
-            progressPercent: activeTasks.length
-                ? Math.round((doneTasks / activeTasks.length) * 100)
+            doneTasks: acknowledged,
+            totalTasks: total,
+            inProgressTasks: waiting,
+            blockerCount: inputData.handoverStats.changesRequested +
+                inputData.handoverStats.rejected,
+            progressPercent: total
+                ? Math.round((acknowledged / total) * 100)
                 : 0,
-            memberCount: inputData.members.length,
+            memberCount: involvedMemberIds.size,
         };
     }
     async getTeamMeetingNotes(projectId, reportDate) {
@@ -204,6 +206,8 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
         const handovers = await this.shiftHandoversRepository.findByProjectAndDate(projectId, reportDate);
         return handovers.map((handover) => ({
             id: handover.id,
+            senderId: handover.senderId,
+            receiverId: handover.receiverId,
             taskCode: handover.task?.taskCode ?? null,
             taskTitle: handover.task?.title ?? null,
             status: handover.status,
@@ -212,6 +216,12 @@ let AiTeamReportDataBuilderService = class AiTeamReportDataBuilderService {
             completedWork: handover.completedWork ?? null,
             remainingWork: handover.remainingWork ?? null,
             blockers: handover.blockers ?? null,
+            nextSteps: handover.nextSteps ?? null,
+            changeRequest: handover.changeRequest ?? null,
+            rejectionReason: handover.rejectionReason ?? null,
+            submittedAt: handover.submittedAt?.toISOString() ?? null,
+            acknowledgedAt: handover.acknowledgedAt?.toISOString() ?? null,
+            rejectedAt: handover.rejectedAt?.toISOString() ?? null,
         }));
     }
     getHandoverStats(handovers) {

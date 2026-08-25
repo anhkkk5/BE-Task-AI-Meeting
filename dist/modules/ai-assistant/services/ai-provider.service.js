@@ -1001,101 +1001,182 @@ let AiProviderService = class AiProviderService {
     }
     generateTeamMockResponse(prompt, inputData, provider) {
         const model = process.env.AI_MODEL || `${provider}-team-report`;
-        const completedWork = inputData.tasks
-            .filter((task) => task.status === 'DONE')
-            .map((task) => `${task.taskCode} - ${task.title}`);
-        const todayFocus = inputData.dailyUpdates
-            .map((dailyUpdate) => `${dailyUpdate.fullName}: ${dailyUpdate.todayPlan || 'Chua co du lieu'}`)
-            .slice(0, 10);
-        const blockers = inputData.blockers.map((blocker) => `${blocker.fullName}: ${blocker.blocker}`);
-        const missingDailyUpdates = inputData.missingDailyUpdateMembers.map((member) => `${member.fullName} chua gui daily update.`);
-        const risks = [
-            ...inputData.overdueTasks.map((task) => `${task.taskCode} - ${task.title} qua han tu ${task.dueDate ?? 'khong ro ngay'}.`),
-        ].slice(0, 12);
-        const recommendations = [
-            ...(blockers.length
-                ? ['Scrum Master can xu ly cac blocker truoc daily tiep theo.']
-                : []),
-            ...(inputData.overdueTasks.length
-                ? ['Uu tien ra soat va cap nhat cac task qua han.']
-                : []),
-            ...(missingDailyUpdates.length
-                ? ['Nhac cac member con thieu daily update trong hom nay.']
-                : []),
-            'Tiep tuc cap nhat task va daily update de bao cao AI chinh xac hon.',
-        ];
-        const sprintName = inputData.sprint?.name ?? inputData.project.name;
-        const summaryParts = [
-            `Team co ${inputData.members.length} member, ${inputData.dailyUpdates.length} daily update va ${inputData.tasks.length} task trong du lieu cung cap.`,
-            completedWork.length
-                ? `Da hoan thanh: ${completedWork.join(', ')}.`
-                : 'Chua co task DONE trong du lieu cung cap.',
-            blockers.length
-                ? `Co blocker: ${blockers.join('; ')}.`
-                : 'Chua ghi nhan blocker.',
-        ];
-        const teamProgress = [
-            `Task DONE: ${inputData.taskStats.DONE}.`,
-            `IN_PROGRESS/REVIEW: ${inputData.taskStats.IN_PROGRESS + inputData.taskStats.REVIEW}.`,
-            `TODO/BACKLOG: ${inputData.taskStats.TODO + inputData.taskStats.BACKLOG}.`,
-        ].join(' ');
-        const memberSummaries = inputData.members.map((member) => {
-            const dailyUpdate = inputData.dailyUpdates.find((item) => item.userId === member.userId);
-            const memberBlockers = inputData.blockers
-                .filter((blocker) => blocker.userId === member.userId)
-                .map((blocker) => blocker.blocker);
+        const statusLabels = {
+            ACKNOWLEDGED: 'Đã tiếp nhận',
+            PENDING: 'Chờ người nhận phản hồi',
+            CHANGES_REQUESTED: 'Yêu cầu bổ sung',
+            REJECTED: 'Đã từ chối',
+            DRAFT: 'Chưa gửi',
+            CANCELLED: 'Đã hủy',
+        };
+        const describeHandover = (handover) => `${handover.senderName ?? 'Chưa rõ người giao'} → ${handover.receiverName ?? 'Chưa rõ người nhận'}: ${handover.taskCode ?? ''}${handover.taskCode ? ' - ' : ''}${handover.taskTitle ?? 'Công việc chưa có tên'} — ${statusLabels[handover.status] ?? handover.status}`;
+        const accepted = inputData.handovers.filter((handover) => handover.status === 'ACKNOWLEDGED');
+        const waiting = inputData.handovers.filter((handover) => ['DRAFT', 'PENDING', 'CHANGES_REQUESTED'].includes(handover.status));
+        const blockers = inputData.handovers.flatMap((handover) => [handover.blockers, handover.changeRequest, handover.rejectionReason]
+            .filter((value) => Boolean(value?.trim()))
+            .map((value) => `${describeHandover(handover)}: ${value}`));
+        const risks = inputData.handovers
+            .filter((handover) => ['PENDING', 'CHANGES_REQUESTED', 'REJECTED'].includes(handover.status))
+            .map(describeHandover);
+        const involvedMembers = inputData.members.filter((member) => inputData.handovers.some((handover) => handover.senderId === member.userId ||
+            handover.receiverId === member.userId));
+        const memberSummaries = involvedMembers.map((member) => {
+            const related = inputData.handovers.filter((handover) => handover.senderId === member.userId ||
+                handover.receiverId === member.userId);
             return {
                 userId: member.userId,
                 fullName: member.fullName,
-                summary: dailyUpdate
-                    ? `${dailyUpdate.yesterdayWork || 'Chua co du lieu hom qua'} Hom nay: ${dailyUpdate.todayPlan || 'Chua co du lieu'}`
-                    : 'Chua gui daily update trong ngay bao cao.',
-                blockers: memberBlockers,
+                summary: related
+                    .map((handover) => {
+                    const role = handover.senderId === member.userId
+                        ? `Đã giao cho ${handover.receiverName ?? 'người nhận chưa xác định'}`
+                        : `Được ${handover.senderName ?? 'người giao chưa xác định'} bàn giao`;
+                    return `${role}: ${handover.taskCode ?? ''}${handover.taskCode ? ' - ' : ''}${handover.taskTitle ?? 'Công việc chưa có tên'} (${statusLabels[handover.status] ?? handover.status}).`;
+                })
+                    .join(' '),
+                blockers: related
+                    .flatMap((handover) => [
+                    handover.blockers,
+                    handover.changeRequest,
+                    handover.rejectionReason,
+                ])
+                    .filter((value) => Boolean(value?.trim())),
             };
         });
+        const total = inputData.handoverStats.total;
+        const summary = total
+            ? `Trong ngày có ${total} lượt bàn giao: ${inputData.handoverStats.acknowledged} đã tiếp nhận, ${inputData.handoverStats.pending} đang chờ, ${inputData.handoverStats.changesRequested} yêu cầu bổ sung và ${inputData.handoverStats.rejected} bị từ chối.`
+            : 'Không có bàn giao công việc trong ngày.';
+        const teamProgress = total
+            ? `Tỷ lệ tiếp nhận bàn giao: ${Math.round((inputData.handoverStats.acknowledged / total) * 100)}% (${inputData.handoverStats.acknowledged}/${total}).`
+            : 'Chưa phát sinh bàn giao để tính tỷ lệ tiếp nhận.';
+        const handoverSummary = inputData.handovers.length
+            ? inputData.handovers.map(describeHandover).join('\n')
+            : 'Không có bàn giao công việc trong ngày.';
+        const recommendations = waiting.length
+            ? ['Phản hồi các bàn giao đang chờ và bổ sung thông tin theo yêu cầu.']
+            : ['Không có bàn giao đang chờ xử lý.'];
         const output = {
-            title: `Bao cao giao ban nhom - ${sprintName}`,
-            summary: summaryParts.join(' '),
+            title: `Báo cáo bàn giao công việc - ${inputData.project.name}`,
+            summary,
             teamProgress,
-            completedWork,
-            todayFocus,
+            completedWork: accepted.map(describeHandover),
+            todayFocus: waiting.map(describeHandover),
             blockers,
             risks,
-            missingDailyUpdates,
+            missingDailyUpdates: [],
+            handoverSummary,
             memberSummaries,
             recommendations,
             generatedText: [
-                `Bao cao giao ban nhom - ${sprintName}`,
-                '',
-                `Tong quan: ${summaryParts.join(' ')}`,
-                `Tien do: ${teamProgress}`,
-                completedWork.length
-                    ? `Da hoan thanh: ${completedWork.join(', ')}.`
-                    : 'Da hoan thanh: Chua co du lieu.',
-                todayFocus.length
-                    ? `Trong tam hom nay: ${todayFocus.join('; ')}.`
-                    : 'Trong tam hom nay: Chua co du lieu.',
-                blockers.length
-                    ? `Blocker: ${blockers.join('; ')}.`
-                    : 'Blocker: Chua co du lieu.',
-                risks.length
-                    ? `Rui ro: ${risks.join('; ')}.`
-                    : 'Rui ro: Chua co du lieu.',
-                missingDailyUpdates.length
-                    ? `Thieu daily update: ${missingDailyUpdates.join(' ')}`
-                    : 'Tat ca member trong du lieu da co daily update hoac chua co danh sach member.',
-                `De xuat: ${recommendations.join(' ')}`,
-            ].join('\n'),
+                `Báo cáo bàn giao công việc - ${inputData.project.name}`,
+                summary,
+                teamProgress,
+                handoverSummary,
+            ].join('\n\n'),
         };
         return {
             model,
             output,
-            rawResponse: JSON.stringify({
-                provider,
-                promptLength: prompt.length,
-                ...output,
-            }),
+            rawResponse: JSON.stringify({ provider, promptLength: prompt.length, ...output }),
         };
+        {
+            const completedWork = inputData.tasks
+                .filter((task) => task.status === 'DONE')
+                .map((task) => `${task.taskCode} - ${task.title}`);
+            const todayFocus = inputData.dailyUpdates
+                .map((dailyUpdate) => `${dailyUpdate.fullName}: ${dailyUpdate.todayPlan || 'Chua co du lieu'}`)
+                .slice(0, 10);
+            const blockers = inputData.blockers.map((blocker) => `${blocker.fullName}: ${blocker.blocker}`);
+            const missingDailyUpdates = inputData.missingDailyUpdateMembers.map((member) => `${member.fullName} chua gui daily update.`);
+            const risks = [
+                ...inputData.overdueTasks.map((task) => `${task.taskCode} - ${task.title} qua han tu ${task.dueDate ?? 'khong ro ngay'}.`),
+            ].slice(0, 12);
+            const recommendations = [
+                ...(blockers.length
+                    ? ['Scrum Master can xu ly cac blocker truoc daily tiep theo.']
+                    : []),
+                ...(inputData.overdueTasks.length
+                    ? ['Uu tien ra soat va cap nhat cac task qua han.']
+                    : []),
+                ...(missingDailyUpdates.length
+                    ? ['Nhac cac member con thieu daily update trong hom nay.']
+                    : []),
+                'Tiep tuc cap nhat task va daily update de bao cao AI chinh xac hon.',
+            ];
+            const sprintName = inputData.sprint?.name ?? inputData.project.name;
+            const summaryParts = [
+                `Team co ${inputData.members.length} member, ${inputData.dailyUpdates.length} daily update va ${inputData.tasks.length} task trong du lieu cung cap.`,
+                completedWork.length
+                    ? `Da hoan thanh: ${completedWork.join(', ')}.`
+                    : 'Chua co task DONE trong du lieu cung cap.',
+                blockers.length
+                    ? `Co blocker: ${blockers.join('; ')}.`
+                    : 'Chua ghi nhan blocker.',
+            ];
+            const teamProgress = [
+                `Task DONE: ${inputData.taskStats.DONE}.`,
+                `IN_PROGRESS/REVIEW: ${inputData.taskStats.IN_PROGRESS + inputData.taskStats.REVIEW}.`,
+                `TODO/BACKLOG: ${inputData.taskStats.TODO + inputData.taskStats.BACKLOG}.`,
+            ].join(' ');
+            const memberSummaries = inputData.members.map((member) => {
+                const dailyUpdate = inputData.dailyUpdates.find((item) => item.userId === member.userId);
+                const memberBlockers = inputData.blockers
+                    .filter((blocker) => blocker.userId === member.userId)
+                    .map((blocker) => blocker.blocker);
+                return {
+                    userId: member.userId,
+                    fullName: member.fullName,
+                    summary: dailyUpdate
+                        ? `${dailyUpdate.yesterdayWork || 'Chua co du lieu hom qua'} Hom nay: ${dailyUpdate.todayPlan || 'Chua co du lieu'}`
+                        : 'Chua gui daily update trong ngay bao cao.',
+                    blockers: memberBlockers,
+                };
+            });
+            const output = {
+                title: `Bao cao giao ban nhom - ${sprintName}`,
+                summary: summaryParts.join(' '),
+                teamProgress,
+                completedWork,
+                todayFocus,
+                blockers,
+                risks,
+                missingDailyUpdates,
+                memberSummaries,
+                recommendations,
+                generatedText: [
+                    `Bao cao giao ban nhom - ${sprintName}`,
+                    '',
+                    `Tong quan: ${summaryParts.join(' ')}`,
+                    `Tien do: ${teamProgress}`,
+                    completedWork.length
+                        ? `Da hoan thanh: ${completedWork.join(', ')}.`
+                        : 'Da hoan thanh: Chua co du lieu.',
+                    todayFocus.length
+                        ? `Trong tam hom nay: ${todayFocus.join('; ')}.`
+                        : 'Trong tam hom nay: Chua co du lieu.',
+                    blockers.length
+                        ? `Blocker: ${blockers.join('; ')}.`
+                        : 'Blocker: Chua co du lieu.',
+                    risks.length
+                        ? `Rui ro: ${risks.join('; ')}.`
+                        : 'Rui ro: Chua co du lieu.',
+                    missingDailyUpdates.length
+                        ? `Thieu daily update: ${missingDailyUpdates.join(' ')}`
+                        : 'Tat ca member trong du lieu da co daily update hoac chua co danh sach member.',
+                    `De xuat: ${recommendations.join(' ')}`,
+                ].join('\n'),
+            };
+            return {
+                model,
+                output,
+                rawResponse: JSON.stringify({
+                    provider,
+                    promptLength: prompt.length,
+                    ...output,
+                }),
+            };
+        }
     }
 };
 exports.AiProviderService = AiProviderService;

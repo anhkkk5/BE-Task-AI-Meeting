@@ -43,6 +43,8 @@ type TeamTaskInput = {
 };
 type TeamHandoverInput = {
     id: string;
+    senderId: string;
+    receiverId: string;
     taskCode: string | null;
     taskTitle: string | null;
     status: string;
@@ -51,6 +53,12 @@ type TeamHandoverInput = {
     completedWork: string | null;
     remainingWork: string | null;
     blockers: string | null;
+    nextSteps: string | null;
+    changeRequest: string | null;
+    rejectionReason: string | null;
+    submittedAt: string | null;
+    acknowledgedAt: string | null;
+    rejectedAt: string | null;
 };
 type TeamMeetingNoteInput = {
     meetingId: string;
@@ -198,6 +206,8 @@ export declare class AiTeamReportDataBuilderService {
         }[];
         handovers: {
             id: string;
+            senderId: string;
+            receiverId: string;
             taskCode: string | null;
             taskTitle: string | null;
             status: HandoverStatus;
@@ -206,6 +216,12 @@ export declare class AiTeamReportDataBuilderService {
             completedWork: string | null;
             remainingWork: string | null;
             blockers: string | null;
+            nextSteps: string | null;
+            changeRequest: string | null;
+            rejectionReason: string | null;
+            submittedAt: string | null;
+            acknowledgedAt: string | null;
+            rejectedAt: string | null;
         }[];
         handoverStats: {
             total: number;
@@ -242,6 +258,8 @@ export declare class AiTeamReportDataBuilderService {
     getPreviousTeamReport(workspaceId: string, projectId: string, reportDate: string): Promise<PreviousReportInput | null>;
     getTeamHandovers(projectId: string, reportDate: string): Promise<{
         id: string;
+        senderId: string;
+        receiverId: string;
         taskCode: string | null;
         taskTitle: string | null;
         status: HandoverStatus;
@@ -250,6 +268,12 @@ export declare class AiTeamReportDataBuilderService {
         completedWork: string | null;
         remainingWork: string | null;
         blockers: string | null;
+        nextSteps: string | null;
+        changeRequest: string | null;
+        rejectionReason: string | null;
+        submittedAt: string | null;
+        acknowledgedAt: string | null;
+        rejectedAt: string | null;
     }[]>;
     private getHandoverStats;
     getTeamMembers(workspaceId: string): Promise<{
