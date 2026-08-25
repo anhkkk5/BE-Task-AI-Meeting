@@ -147,10 +147,11 @@ let AiTeamReportService = class AiTeamReportService {
         };
     }
     async getTeamDailyReports(currentUserId, workspaceId, projectId, query) {
-        await this.aiReportAccessService.assertCanUseTeamReports(currentUserId, workspaceId);
+        const role = await this.aiReportAccessService.assertCanViewTeamReport(currentUserId, workspaceId);
+        const canManage = this.aiReportAccessService.isManagerRole(role);
         await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
         await this.assertValidQuery(projectId, query);
-        const result = await this.findReports(workspaceId, projectId, query);
+        const result = await this.findReports(workspaceId, projectId, query, !canManage);
         return {
             success: true,
             message: 'Get team daily reports successfully',
@@ -319,11 +320,16 @@ let AiTeamReportService = class AiTeamReportService {
     resolveReviewStatus(report) {
         return (0, ai_report_review_status_enum_1.normalizeReviewStatus)(report.reviewStatus);
     }
-    async findReports(workspaceId, projectId, query) {
+    async findReports(workspaceId, projectId, query, publishedOnly = false) {
         const reportModel = this.getReportModel();
         const page = query.page ?? 1;
         const limit = query.limit ?? 10;
-        const mongoQuery = this.buildMongoQuery(workspaceId, projectId, query);
+        const mongoQuery = {
+            ...this.buildMongoQuery(workspaceId, projectId, query),
+            ...(publishedOnly
+                ? { reviewStatus: ai_report_review_status_enum_1.AiReportReviewStatus.Published }
+                : {}),
+        };
         const [items, total] = await Promise.all([
             reportModel
                 .find(mongoQuery)

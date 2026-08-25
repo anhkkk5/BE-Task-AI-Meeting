@@ -223,17 +223,23 @@ export class AiTeamReportService {
     projectId: string,
     query: GetAiTeamReportsQueryDto,
   ) {
-    await this.aiReportAccessService.assertCanUseTeamReports(
+    const role = await this.aiReportAccessService.assertCanViewTeamReport(
       currentUserId,
       workspaceId,
     );
+    const canManage = this.aiReportAccessService.isManagerRole(role);
     await this.projectAccessService.assertProjectInWorkspace(
       projectId,
       workspaceId,
     );
     await this.assertValidQuery(projectId, query);
 
-    const result = await this.findReports(workspaceId, projectId, query);
+    const result = await this.findReports(
+      workspaceId,
+      projectId,
+      query,
+      !canManage,
+    );
 
     return {
       success: true,
@@ -567,11 +573,17 @@ export class AiTeamReportService {
     workspaceId: string,
     projectId: string,
     query: GetAiTeamReportsQueryDto,
+    publishedOnly = false,
   ) {
     const reportModel = this.getReportModel();
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
-    const mongoQuery = this.buildMongoQuery(workspaceId, projectId, query);
+    const mongoQuery = {
+      ...this.buildMongoQuery(workspaceId, projectId, query),
+      ...(publishedOnly
+        ? { reviewStatus: AiReportReviewStatus.Published }
+        : {}),
+    };
     const [items, total] = await Promise.all([
       reportModel
         .find(mongoQuery)
