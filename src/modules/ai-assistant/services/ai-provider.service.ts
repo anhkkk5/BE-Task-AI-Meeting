@@ -1289,21 +1289,24 @@ export class AiProviderService {
       risks.length;
     const personalSummary = hasDirectContent
       ? [
-          `${targetName} có nội dung liên quan trong cuộc họp "${inputData.meeting.title}" với vai trò ${inputData.targetUser.workspaceRole ?? inputData.targetUser.meetingRole ?? 'thành viên'}.`,
+          `${targetName} có nội dung cần theo dõi sau cuộc họp “${inputData.meeting.title}”.`,
           myActionItems.length
-            ? `Action items lien quan: ${myActionItems
+            ? `Ưu tiên tiếp theo: ${myActionItems
                 .map((item) => item.title)
+                .slice(0, 2)
                 .join('; ')}.`
-            : '',
-          mentions.length
-            ? `Transcript co nhac den: ${mentions.slice(0, 3).join(' ')}`
+            : relevantDecisions.length
+              ? `Có ${relevantDecisions.length} quyết định liên quan cần lưu ý.`
+              : '',
+          risks.length
+            ? `Có ${risks.length} rủi ro hoặc điểm nghẽn cần theo dõi.`
             : '',
         ]
           .filter(Boolean)
           .join(' ')
-      : 'Chua co noi dung lien quan truc tiep';
+      : 'Chưa có nội dung công việc liên quan trực tiếp đến bạn trong cuộc họp này.';
     const output: PersonalizedMeetingSummaryOutput = {
-      title: `Tom tat cuoc hop ca nhan hoa - ${targetName}`,
+      title: `Tóm tắt dành cho ${targetName}`,
       personalSummary,
       relevantDecisions,
       myActionItems,
@@ -1311,26 +1314,26 @@ export class AiProviderService {
       risks,
       nextSteps,
       generatedText: [
-        `Tom tat cuoc hop ca nhan hoa - ${targetName}`,
+        `Tóm tắt dành cho ${targetName}`,
         '',
         personalSummary,
         relevantDecisions.length
-          ? `Quyet dinh lien quan: ${relevantDecisions.join('; ')}`
-          : 'Quyet dinh lien quan: Chua co du lieu.',
+          ? `Quyết định liên quan: ${relevantDecisions.join('; ')}`
+          : 'Quyết định liên quan: Chưa có dữ liệu.',
         myActionItems.length
-          ? `Viec can lam: ${myActionItems
+          ? `Việc cần làm: ${myActionItems
               .map((item) => item.title)
               .join('; ')}`
-          : 'Viec can lam: Chua co du lieu.',
+          : 'Việc cần làm: Chưa có dữ liệu.',
         mentions.length
-          ? `Mentions: ${mentions.join('; ')}`
-          : 'Mentions: Chua co du lieu.',
+          ? `Nội dung đối chiếu: ${mentions.join('; ')}`
+          : 'Nội dung đối chiếu: Chưa có dữ liệu.',
         risks.length
-          ? `Rui ro: ${risks.join('; ')}`
-          : 'Rui ro: Chua co du lieu.',
+          ? `Rủi ro: ${risks.join('; ')}`
+          : 'Rủi ro: Chưa có dữ liệu.',
         nextSteps.length
-          ? `Next steps: ${nextSteps.join('; ')}`
-          : 'Next steps: Chua co du lieu.',
+          ? `Bước tiếp theo: ${nextSteps.join('; ')}`
+          : 'Bước tiếp theo: Chưa có dữ liệu.',
       ].join('\n'),
     };
 
@@ -1377,12 +1380,24 @@ export class AiProviderService {
   private toPersonalizedMeetingActionItem(
     item: MeetingSummaryActionItem,
   ): PersonalizedMeetingActionItem {
+    const cleanText = item.text
+      .split(/(?<=[.!?])\s+/)
+      .filter((sentence) => !this.isReportingInstruction(sentence))
+      .join(' ')
+      .trim();
+
     return {
-      title: item.text,
+      title: cleanText || item.text,
       assigneeId: item.assigneeUserId ?? null,
       assigneeName: item.assigneeName ?? null,
       deadline: item.dueDate ?? null,
-      source: item.source ?? item.text,
+      source: item.source
+        ? item.source
+            .split(/(?<=[.!?])\s+/)
+            .filter((sentence) => !this.isReportingInstruction(sentence))
+            .join(' ')
+            .trim()
+        : cleanText || item.text,
     };
   }
 
