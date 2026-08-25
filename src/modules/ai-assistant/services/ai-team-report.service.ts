@@ -249,17 +249,27 @@ export class AiTeamReportService {
     query: GetAiTeamReportsQueryDto,
   ) {
     const reportModel = this.getReportModel();
-    await this.aiReportAccessService.assertCanUseTeamReports(
+    const role = await this.aiReportAccessService.assertCanViewTeamReport(
       currentUserId,
       workspaceId,
     );
+    const canManage = this.aiReportAccessService.isManagerRole(role);
     await this.projectAccessService.assertProjectInWorkspace(
       projectId,
       workspaceId,
     );
     await this.assertValidQuery(projectId, query);
 
-    const mongoQuery = this.buildMongoQuery(workspaceId, projectId, query);
+    const mongoQuery = {
+      ...this.buildMongoQuery(workspaceId, projectId, query),
+      ...(canManage
+        ? {}
+        : {
+            reviewStatus: {
+              $in: [AiReportReviewStatus.Published],
+            },
+          }),
+    };
     const report = await reportModel
       .findOne(mongoQuery)
       .sort({ reportDate: -1, createdAt: -1 })

@@ -89,8 +89,7 @@ export class AiTeamReportController {
   }
 
   @Get('team-daily-reports/latest')
-  @WorkspaceRoles(...managerRoles)
-  @UseGuards(WorkspaceRolesGuard)
+  @UseGuards(WorkspaceMemberGuard)
   @ApiOperation({ summary: 'Get latest AI team daily report' })
   @ApiParam({ name: 'workspaceId', example: 'workspace-uuid' })
   @ApiParam({ name: 'projectId', example: 'project-uuid' })

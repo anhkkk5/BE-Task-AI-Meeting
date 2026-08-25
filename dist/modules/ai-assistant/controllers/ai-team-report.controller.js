@@ -97,8 +97,7 @@ __decorate([
 ], AiTeamReportController.prototype, "getTeamDailyReports", null);
 __decorate([
     (0, common_1.Get)('team-daily-reports/latest'),
-    (0, workspace_roles_decorator_1.WorkspaceRoles)(...managerRoles),
-    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
     (0, swagger_1.ApiOperation)({ summary: 'Get latest AI team daily report' }),
     (0, swagger_1.ApiParam)({ name: 'workspaceId', example: 'workspace-uuid' }),
     (0, swagger_1.ApiParam)({ name: 'projectId', example: 'project-uuid' }),
