@@ -130,6 +130,26 @@ let AiPersonalizedMeetingSummaryService = class AiPersonalizedMeetingSummaryServ
             },
         };
     }
+    async generateAutomaticallyForParticipants(currentUserId, workspaceId, projectId, meetingId) {
+        this.getPersonalizedSummaryModel();
+        await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
+        const meeting = await this.meetingAccessService.assertMeetingInProject(meetingId, projectId);
+        const participants = await this.meetingParticipantsRepository.findByMeeting(meetingId);
+        const results = await Promise.allSettled(participants.map((participant) => this.generateForTargetUser({
+            currentUserId,
+            workspaceId,
+            projectId,
+            meeting,
+            targetUserId: participant.userId,
+            forceRegenerate: false,
+        })));
+        return {
+            generated: results.filter((result) => result.status === 'fulfilled')
+                .length,
+            failed: results.filter((result) => result.status === 'rejected').length,
+            total: participants.length,
+        };
+    }
     async getMyPersonalizedMeetingSummary(currentUserId, workspaceId, projectId, meetingId) {
         await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
         await this.meetingAccessService.assertMeetingInProject(meetingId, projectId);

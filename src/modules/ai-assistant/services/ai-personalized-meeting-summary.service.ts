@@ -209,6 +209,50 @@ export class AiPersonalizedMeetingSummaryService {
     };
   }
 
+  /**
+   * System workflow used after the shared meeting summary is ready.
+   * This intentionally does not require a manager role: every participant owns
+   * their personal view and should not have to wait for an owner to create it.
+   */
+  async generateAutomaticallyForParticipants(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    meetingId: string,
+  ) {
+    this.getPersonalizedSummaryModel();
+    await this.projectAccessService.assertProjectInWorkspace(
+      projectId,
+      workspaceId,
+    );
+    const meeting = await this.meetingAccessService.assertMeetingInProject(
+      meetingId,
+      projectId,
+    );
+    const participants =
+      await this.meetingParticipantsRepository.findByMeeting(meetingId);
+
+    const results = await Promise.allSettled(
+      participants.map((participant) =>
+        this.generateForTargetUser({
+          currentUserId,
+          workspaceId,
+          projectId,
+          meeting,
+          targetUserId: participant.userId,
+          forceRegenerate: false,
+        }),
+      ),
+    );
+
+    return {
+      generated: results.filter((result) => result.status === 'fulfilled')
+        .length,
+      failed: results.filter((result) => result.status === 'rejected').length,
+      total: participants.length,
+    };
+  }
+
   async getMyPersonalizedMeetingSummary(
     currentUserId: string,
     workspaceId: string,

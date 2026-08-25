@@ -14,17 +14,20 @@ exports.AutoMeetingSummaryListener = void 0;
 const common_1 = require("@nestjs/common");
 const meeting_lifecycle_service_1 = require("../../meetings/services/meeting-lifecycle.service");
 const ai_meeting_summary_service_1 = require("../services/ai-meeting-summary.service");
+const ai_personalized_meeting_summary_service_1 = require("../services/ai-personalized-meeting-summary.service");
 const MAX_RETRY_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 30_000;
 let AutoMeetingSummaryListener = AutoMeetingSummaryListener_1 = class AutoMeetingSummaryListener {
     meetingLifecycleService;
     aiMeetingSummaryService;
+    personalizedMeetingSummaryService;
     logger = new common_1.Logger(AutoMeetingSummaryListener_1.name);
     unsubscribe;
     pendingRetries = new Set();
-    constructor(meetingLifecycleService, aiMeetingSummaryService) {
+    constructor(meetingLifecycleService, aiMeetingSummaryService, personalizedMeetingSummaryService) {
         this.meetingLifecycleService = meetingLifecycleService;
         this.aiMeetingSummaryService = aiMeetingSummaryService;
+        this.personalizedMeetingSummaryService = personalizedMeetingSummaryService;
     }
     onModuleInit() {
         this.unsubscribe = this.meetingLifecycleService.onMeetingCompleted((event) => this.generateSummary(event));
@@ -40,7 +43,9 @@ let AutoMeetingSummaryListener = AutoMeetingSummaryListener_1 = class AutoMeetin
         const source = event.reason === 'AUTO' ? 'tu dong' : 'thu cong';
         try {
             await this.aiMeetingSummaryService.generateMeetingSummary(event.currentUserId, event.workspaceId, event.projectId, event.meetingId, { forceRegenerate: false });
-            this.logger.log(`Da tao tom tat cho cuoc hop ${event.meetingId} (chot ${source})`);
+            const personalized = await this.personalizedMeetingSummaryService.generateAutomaticallyForParticipants(event.currentUserId, event.workspaceId, event.projectId, event.meetingId);
+            this.logger.log(`Da tao tom tat cho cuoc hop ${event.meetingId} (chot ${source}); ` +
+                `ca nhan: ${personalized.generated}/${personalized.total}, loi: ${personalized.failed}`);
         }
         catch (error) {
             if (this.isMissingTranscript(error)) {
@@ -76,6 +81,7 @@ exports.AutoMeetingSummaryListener = AutoMeetingSummaryListener;
 exports.AutoMeetingSummaryListener = AutoMeetingSummaryListener = AutoMeetingSummaryListener_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [meeting_lifecycle_service_1.MeetingLifecycleService,
-        ai_meeting_summary_service_1.AiMeetingSummaryService])
+        ai_meeting_summary_service_1.AiMeetingSummaryService,
+        ai_personalized_meeting_summary_service_1.AiPersonalizedMeetingSummaryService])
 ], AutoMeetingSummaryListener);
 //# sourceMappingURL=auto-meeting-summary.listener.js.map

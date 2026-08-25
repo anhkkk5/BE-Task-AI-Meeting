@@ -8,6 +8,7 @@ import {
 import { MeetingCompletedEvent } from '../../meetings/events/meeting-completed.event';
 import { MeetingLifecycleService } from '../../meetings/services/meeting-lifecycle.service';
 import { AiMeetingSummaryService } from '../services/ai-meeting-summary.service';
+import { AiPersonalizedMeetingSummaryService } from '../services/ai-personalized-meeting-summary.service';
 
 /** So lan thu lai khi loi la loi ha tang (AI provider chet, Mongo loi). */
 const MAX_RETRY_ATTEMPTS = 2;
@@ -24,6 +25,7 @@ export class AutoMeetingSummaryListener
   constructor(
     private readonly meetingLifecycleService: MeetingLifecycleService,
     private readonly aiMeetingSummaryService: AiMeetingSummaryService,
+    private readonly personalizedMeetingSummaryService: AiPersonalizedMeetingSummaryService,
   ) {}
 
   onModuleInit() {
@@ -53,8 +55,16 @@ export class AutoMeetingSummaryListener
         event.meetingId,
         { forceRegenerate: false },
       );
+      const personalized =
+        await this.personalizedMeetingSummaryService.generateAutomaticallyForParticipants(
+          event.currentUserId,
+          event.workspaceId,
+          event.projectId,
+          event.meetingId,
+        );
       this.logger.log(
-        `Da tao tom tat cho cuoc hop ${event.meetingId} (chot ${source})`,
+        `Da tao tom tat cho cuoc hop ${event.meetingId} (chot ${source}); ` +
+          `ca nhan: ${personalized.generated}/${personalized.total}, loi: ${personalized.failed}`,
       );
     } catch (error) {
       // Khong co bien ban la tinh huong binh thuong, khong phai loi he thong:

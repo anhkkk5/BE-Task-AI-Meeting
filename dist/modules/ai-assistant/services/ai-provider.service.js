@@ -723,7 +723,7 @@ let AiProviderService = class AiProviderService {
         return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
     }
     generateMeetingSummaryMockResponse(prompt, inputData, provider) {
-        const model = process.env.AI_MODEL || `${provider}-meeting-summary`;
+        const model = `${provider}-meeting-summary`;
         const transcriptLines = this.getTranscriptLines(inputData);
         const workLines = transcriptLines.filter((line) => !this.isOffTopicMeetingLine(line));
         const keyPoints = workLines
@@ -858,7 +858,7 @@ let AiProviderService = class AiProviderService {
         return /task|sprint|api|backend|frontend|test|pull request|review|demo|phat hanh|deadline|han |blocker|staging|database|devops|transcript|audio|dependency|quyet dinh|thong nhat|phu trach|hoan thanh|dang lam|loi/.test(value);
     }
     generatePersonalizedMeetingSummaryMockResponse(prompt, inputData, provider) {
-        const model = process.env.AI_MODEL || `${provider}-personalized-meeting-summary`;
+        const model = `${provider}-personalized-meeting-summary`;
         const targetName = inputData.targetUser.fullName || inputData.targetUser.email;
         const mentions = inputData.relatedTranscriptSnippets
             .filter((item) => !this.isOffTopicMeetingLine(item) &&

@@ -100,6 +100,11 @@ export declare class AiPersonalizedMeetingSummaryService {
             }[];
         };
     }>;
+    generateAutomaticallyForParticipants(currentUserId: string, workspaceId: string, projectId: string, meetingId: string): Promise<{
+        generated: number;
+        failed: number;
+        total: number;
+    }>;
     getMyPersonalizedMeetingSummary(currentUserId: string, workspaceId: string, projectId: string, meetingId: string): Promise<{
         success: boolean;
         message: string;
