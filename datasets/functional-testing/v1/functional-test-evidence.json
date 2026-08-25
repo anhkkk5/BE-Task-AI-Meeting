@@ -1,6 +1,6 @@
 {
   "summary": {
-    "generatedAt": "2026-08-23T21:06:07.527Z",
+    "generatedAt": "2026-08-25T12:46:30.522Z",
     "methodology": {
       "unit": "File *.spec.ts trong src; dependency duoc mock/isolate.",
       "integrationE2e": "File *.e2e-spec.ts trong test; khoi tao Nest TestingModule va kiem tra luong HTTP/module.",
@@ -9,10 +9,10 @@
     },
     "files": 55,
     "suites": 61,
-    "testCases": 356,
+    "testCases": 357,
     "unit": {
       "files": 41,
-      "testCases": 246
+      "testCases": 247
     },
     "integrationE2e": {
       "files": 14,
@@ -119,7 +119,7 @@
     {
       "path": "src/modules/ai-assistant/services/ai-provider.service.spec.ts",
       "layer": "unit",
-      "testCases": 7,
+      "testCases": 8,
       "suites": 1,
       "rbac": false,
       "multiTenancy": false

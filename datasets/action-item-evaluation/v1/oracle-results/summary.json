@@ -1,0 +1,67 @@
+{
+  "evaluatedAt": "2026-08-25T12:48:19.123Z",
+  "datasetPath": "D:\\task-metting-AI-managerment\\backend\\datasets\\action-item-evaluation\\v1\\transcripts.jsonl",
+  "predictionsPath": "D:\\task-metting-AI-managerment\\backend\\datasets\\action-item-evaluation\\v1\\oracle-predictions.jsonl",
+  "split": "test",
+  "matchThreshold": 0.5,
+  "transcriptCount": 48,
+  "predictionRecordCount": 48,
+  "missingPredictionCount": 0,
+  "failedPredictionCount": 0,
+  "extraction": {
+    "groundTruth": 240,
+    "predicted": 240,
+    "truePositive": 240,
+    "falsePositive": 0,
+    "falseNegative": 0,
+    "precision": 1,
+    "recall": 1,
+    "f1": 1
+  },
+  "matchedFieldQuality": {
+    "matchedCount": 240,
+    "assigneeUserIdAccuracy": 1,
+    "assigneeNameAccuracy": 1,
+    "dueDateAccuracy": 1,
+    "sourceSupportRate": 1
+  },
+  "performance": {
+    "averageLatencyMs": 0,
+    "p95LatencyMs": 0,
+    "inputTokens": 0,
+    "outputTokens": 0
+  },
+  "byMeetingType": {
+    "SPRINT_REVIEW": {
+      "transcripts": 10,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "RETROSPECTIVE": {
+      "transcripts": 10,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "TECHNICAL_DISCUSSION": {
+      "transcripts": 10,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "DAILY_STANDUP": {
+      "transcripts": 9,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "SPRINT_PLANNING": {
+      "transcripts": 9,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    }
+  },
+  "warning": "SYNTHETIC_DRAFT chỉ phù hợp kiểm thử pipeline; cần duyệt nhãn độc lập trước khi công bố là ground truth thực nghiệm."
+}

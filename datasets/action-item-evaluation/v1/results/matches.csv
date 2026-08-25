@@ -1,0 +1,241 @@
+transcriptId,meetingType,result,similarity,groundTruthText,predictedText,assigneeUserIdCorrect,assigneeNameCorrect,dueDateCorrect,sourceSupported
+transcript-013,SPRINT_REVIEW,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,false
+transcript-013,SPRINT_REVIEW,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,false
+transcript-013,SPRINT_REVIEW,TP,1,Sửa lỗi hiển thị avatar trong backlog,Sửa lỗi hiển thị avatar trong backlog.,true,true,true,false
+transcript-013,SPRINT_REVIEW,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,false
+transcript-013,SPRINT_REVIEW,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint.,true,true,true,false
+transcript-014,RETROSPECTIVE,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-014,RETROSPECTIVE,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint.,true,true,true,true
+transcript-014,RETROSPECTIVE,TP,1,Tối ưu truy vấn danh sách cuộc họp,Tối ưu truy vấn danh sách cuộc họp.,true,true,true,true
+transcript-014,RETROSPECTIVE,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-014,RETROSPECTIVE,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-015,TECHNICAL_DISCUSSION,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ,true,true,true,true
+transcript-015,TECHNICAL_DISCUSSION,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard,true,true,true,true
+transcript-015,TECHNICAL_DISCUSSION,TP,1,Kiểm thử tải cho API trợ lý dự án,Kiểm thử tải cho API trợ lý dự án,true,true,true,true
+transcript-015,TECHNICAL_DISCUSSION,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn,true,true,true,true
+transcript-015,TECHNICAL_DISCUSSION,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt,true,true,true,true
+transcript-016,DAILY_STANDUP,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-016,DAILY_STANDUP,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-016,DAILY_STANDUP,TP,1,Xác nhận tiêu chí nghiệm thu với khách hàng,Xác nhận tiêu chí nghiệm thu với khách hàng.,true,true,true,true
+transcript-016,DAILY_STANDUP,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-016,DAILY_STANDUP,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-017,SPRINT_PLANNING,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-017,SPRINT_PLANNING,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-017,SPRINT_PLANNING,TP,1,Sửa lỗi hiển thị avatar trong backlog,Sửa lỗi hiển thị avatar trong backlog.,true,true,true,true
+transcript-017,SPRINT_PLANNING,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-017,SPRINT_PLANNING,FN,0,Kiểm tra luồng tạo và hoàn thành sprint,,,,,
+transcript-018,SPRINT_REVIEW,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-018,SPRINT_REVIEW,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint.,true,true,true,true
+transcript-018,SPRINT_REVIEW,TP,1,Tối ưu truy vấn danh sách cuộc họp,Tối ưu truy vấn danh sách cuộc họp.,true,true,true,true
+transcript-018,SPRINT_REVIEW,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-018,SPRINT_REVIEW,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-019,RETROSPECTIVE,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-019,RETROSPECTIVE,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-019,RETROSPECTIVE,TP,1,Kiểm thử tải cho API trợ lý dự án,Kiểm thử tải cho API trợ lý dự án.,true,true,true,true
+transcript-019,RETROSPECTIVE,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-019,RETROSPECTIVE,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-020,TECHNICAL_DISCUSSION,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-020,TECHNICAL_DISCUSSION,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-020,TECHNICAL_DISCUSSION,TP,1,Xác nhận tiêu chí nghiệm thu với khách hàng,Xác nhận tiêu chí nghiệm thu với khách hàng.,true,true,true,true
+transcript-020,TECHNICAL_DISCUSSION,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-020,TECHNICAL_DISCUSSION,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-021,DAILY_STANDUP,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc,true,true,true,false
+transcript-021,DAILY_STANDUP,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace,true,true,true,false
+transcript-021,DAILY_STANDUP,TP,1,Sửa lỗi hiển thị avatar trong backlog,Sửa lỗi hiển thị avatar trong backlog,true,true,true,false
+transcript-021,DAILY_STANDUP,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng,true,true,true,false
+transcript-021,DAILY_STANDUP,FN,0,Kiểm tra luồng tạo và hoàn thành sprint,,,,,
+transcript-022,SPRINT_PLANNING,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-022,SPRINT_PLANNING,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint.,true,true,true,true
+transcript-022,SPRINT_PLANNING,TP,1,Tối ưu truy vấn danh sách cuộc họp,Tối ưu truy vấn danh sách cuộc họp.,true,true,true,true
+transcript-022,SPRINT_PLANNING,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-022,SPRINT_PLANNING,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-023,SPRINT_REVIEW,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-023,SPRINT_REVIEW,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-023,SPRINT_REVIEW,TP,1,Kiểm thử tải cho API trợ lý dự án,Kiểm thử tải cho API trợ lý dự án.,true,true,true,true
+transcript-023,SPRINT_REVIEW,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-023,SPRINT_REVIEW,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-024,RETROSPECTIVE,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-024,RETROSPECTIVE,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-024,RETROSPECTIVE,TP,1,Xác nhận tiêu chí nghiệm thu với khách hàng,Xác nhận tiêu chí nghiệm thu với khách hàng.,true,true,true,true
+transcript-024,RETROSPECTIVE,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-024,RETROSPECTIVE,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-025,TECHNICAL_DISCUSSION,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-025,TECHNICAL_DISCUSSION,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-025,TECHNICAL_DISCUSSION,TP,1,Sửa lỗi hiển thị avatar trong backlog,Sửa lỗi hiển thị avatar trong backlog.,true,true,true,true
+transcript-025,TECHNICAL_DISCUSSION,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-025,TECHNICAL_DISCUSSION,FN,0,Kiểm tra luồng tạo và hoàn thành sprint,,,,,
+transcript-026,DAILY_STANDUP,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng,true,true,true,false
+transcript-026,DAILY_STANDUP,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint,true,true,true,false
+transcript-026,DAILY_STANDUP,TP,1,Tối ưu truy vấn danh sách cuộc họp,Tối ưu truy vấn danh sách cuộc họp,true,true,true,false
+transcript-026,DAILY_STANDUP,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ,true,true,true,false
+transcript-026,DAILY_STANDUP,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard,true,true,true,false
+transcript-027,SPRINT_PLANNING,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-027,SPRINT_PLANNING,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-027,SPRINT_PLANNING,TP,1,Kiểm thử tải cho API trợ lý dự án,Kiểm thử tải cho API trợ lý dự án.,true,true,true,true
+transcript-027,SPRINT_PLANNING,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-027,SPRINT_PLANNING,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-028,SPRINT_REVIEW,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-028,SPRINT_REVIEW,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-028,SPRINT_REVIEW,TP,1,Xác nhận tiêu chí nghiệm thu với khách hàng,Xác nhận tiêu chí nghiệm thu với khách hàng.,true,true,true,true
+transcript-028,SPRINT_REVIEW,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-028,SPRINT_REVIEW,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-029,RETROSPECTIVE,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-029,RETROSPECTIVE,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-029,RETROSPECTIVE,TP,1,Sửa lỗi hiển thị avatar trong backlog,Sửa lỗi hiển thị avatar trong backlog.,true,true,true,true
+transcript-029,RETROSPECTIVE,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-029,RETROSPECTIVE,FN,0,Kiểm tra luồng tạo và hoàn thành sprint,,,,,
+transcript-030,TECHNICAL_DISCUSSION,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,false
+transcript-030,TECHNICAL_DISCUSSION,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint.,true,true,true,false
+transcript-030,TECHNICAL_DISCUSSION,TP,1,Tối ưu truy vấn danh sách cuộc họp,Tối ưu truy vấn danh sách cuộc họp.,true,true,true,false
+transcript-030,TECHNICAL_DISCUSSION,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,false
+transcript-030,TECHNICAL_DISCUSSION,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,false
+transcript-031,DAILY_STANDUP,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-031,DAILY_STANDUP,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-031,DAILY_STANDUP,TP,1,Kiểm thử tải cho API trợ lý dự án,Kiểm thử tải cho API trợ lý dự án.,true,true,true,true
+transcript-031,DAILY_STANDUP,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-031,DAILY_STANDUP,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-032,SPRINT_PLANNING,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-032,SPRINT_PLANNING,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-032,SPRINT_PLANNING,TP,1,Xác nhận tiêu chí nghiệm thu với khách hàng,Xác nhận tiêu chí nghiệm thu với khách hàng.,true,true,true,true
+transcript-032,SPRINT_PLANNING,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-032,SPRINT_PLANNING,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-033,SPRINT_REVIEW,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc,true,true,true,true
+transcript-033,SPRINT_REVIEW,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace,true,true,true,true
+transcript-033,SPRINT_REVIEW,TP,1,Sửa lỗi hiển thị avatar trong backlog,Sửa lỗi hiển thị avatar trong backlog,true,true,true,true
+transcript-033,SPRINT_REVIEW,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng,true,true,true,true
+transcript-033,SPRINT_REVIEW,FN,0,Kiểm tra luồng tạo và hoàn thành sprint,,,,,
+transcript-034,RETROSPECTIVE,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng,true,true,true,false
+transcript-034,RETROSPECTIVE,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint,true,true,true,false
+transcript-034,RETROSPECTIVE,TP,1,Tối ưu truy vấn danh sách cuộc họp,Tối ưu truy vấn danh sách cuộc họp,true,true,true,false
+transcript-034,RETROSPECTIVE,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ,true,true,true,false
+transcript-034,RETROSPECTIVE,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard,true,true,true,false
+transcript-035,TECHNICAL_DISCUSSION,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ,true,true,true,true
+transcript-035,TECHNICAL_DISCUSSION,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard,true,true,true,true
+transcript-035,TECHNICAL_DISCUSSION,TP,1,Kiểm thử tải cho API trợ lý dự án,Kiểm thử tải cho API trợ lý dự án,true,true,true,true
+transcript-035,TECHNICAL_DISCUSSION,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn,true,true,true,true
+transcript-035,TECHNICAL_DISCUSSION,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt,true,true,true,true
+transcript-036,DAILY_STANDUP,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-036,DAILY_STANDUP,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-036,DAILY_STANDUP,TP,1,Xác nhận tiêu chí nghiệm thu với khách hàng,Xác nhận tiêu chí nghiệm thu với khách hàng.,true,true,true,true
+transcript-036,DAILY_STANDUP,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-036,DAILY_STANDUP,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-037,SPRINT_PLANNING,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-037,SPRINT_PLANNING,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-037,SPRINT_PLANNING,TP,1,Sửa lỗi hiển thị avatar trong backlog,Sửa lỗi hiển thị avatar trong backlog.,true,true,true,true
+transcript-037,SPRINT_PLANNING,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-037,SPRINT_PLANNING,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint.,true,true,true,true
+transcript-038,SPRINT_REVIEW,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,false
+transcript-038,SPRINT_REVIEW,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint.,true,true,true,false
+transcript-038,SPRINT_REVIEW,TP,1,Tối ưu truy vấn danh sách cuộc họp,Tối ưu truy vấn danh sách cuộc họp.,true,true,true,false
+transcript-038,SPRINT_REVIEW,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,false
+transcript-038,SPRINT_REVIEW,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,false
+transcript-039,RETROSPECTIVE,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-039,RETROSPECTIVE,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-039,RETROSPECTIVE,TP,1,Kiểm thử tải cho API trợ lý dự án,Kiểm thử tải cho API trợ lý dự án.,true,true,true,true
+transcript-039,RETROSPECTIVE,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-039,RETROSPECTIVE,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-040,TECHNICAL_DISCUSSION,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,false
+transcript-040,TECHNICAL_DISCUSSION,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,false
+transcript-040,TECHNICAL_DISCUSSION,TP,1,Xác nhận tiêu chí nghiệm thu với khách hàng,Xác nhận tiêu chí nghiệm thu với khách hàng.,true,true,true,false
+transcript-040,TECHNICAL_DISCUSSION,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,false
+transcript-040,TECHNICAL_DISCUSSION,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,false
+transcript-041,DAILY_STANDUP,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-041,DAILY_STANDUP,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-041,DAILY_STANDUP,TP,1,Sửa lỗi hiển thị avatar trong backlog,Sửa lỗi hiển thị avatar trong backlog.,true,true,true,true
+transcript-041,DAILY_STANDUP,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-041,DAILY_STANDUP,FN,0,Kiểm tra luồng tạo và hoàn thành sprint,,,,,
+transcript-042,SPRINT_PLANNING,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-042,SPRINT_PLANNING,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint.,true,true,true,true
+transcript-042,SPRINT_PLANNING,TP,1,Tối ưu truy vấn danh sách cuộc họp,Tối ưu truy vấn danh sách cuộc họp.,true,true,true,true
+transcript-042,SPRINT_PLANNING,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-042,SPRINT_PLANNING,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-043,SPRINT_REVIEW,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-043,SPRINT_REVIEW,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-043,SPRINT_REVIEW,TP,1,Kiểm thử tải cho API trợ lý dự án,Kiểm thử tải cho API trợ lý dự án.,true,true,true,true
+transcript-043,SPRINT_REVIEW,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-043,SPRINT_REVIEW,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-044,RETROSPECTIVE,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-044,RETROSPECTIVE,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-044,RETROSPECTIVE,TP,1,Xác nhận tiêu chí nghiệm thu với khách hàng,Xác nhận tiêu chí nghiệm thu với khách hàng.,true,true,true,true
+transcript-044,RETROSPECTIVE,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-044,RETROSPECTIVE,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-045,TECHNICAL_DISCUSSION,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,false
+transcript-045,TECHNICAL_DISCUSSION,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,false
+transcript-045,TECHNICAL_DISCUSSION,TP,1,Sửa lỗi hiển thị avatar trong backlog,Sửa lỗi hiển thị avatar trong backlog.,true,true,true,false
+transcript-045,TECHNICAL_DISCUSSION,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,false
+transcript-045,TECHNICAL_DISCUSSION,FN,0,Kiểm tra luồng tạo và hoàn thành sprint,,,,,
+transcript-046,DAILY_STANDUP,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng,true,true,true,true
+transcript-046,DAILY_STANDUP,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint,true,true,true,true
+transcript-046,DAILY_STANDUP,TP,1,Tối ưu truy vấn danh sách cuộc họp,Tối ưu truy vấn danh sách cuộc họp,true,true,true,true
+transcript-046,DAILY_STANDUP,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ,true,true,true,true
+transcript-046,DAILY_STANDUP,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard,true,true,true,true
+transcript-047,SPRINT_PLANNING,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ,true,true,true,false
+transcript-047,SPRINT_PLANNING,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard,true,true,true,false
+transcript-047,SPRINT_PLANNING,TP,1,Kiểm thử tải cho API trợ lý dự án,Kiểm thử tải cho API trợ lý dự án,true,true,true,false
+transcript-047,SPRINT_PLANNING,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn,true,true,true,false
+transcript-047,SPRINT_PLANNING,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt,true,true,true,false
+transcript-048,SPRINT_REVIEW,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-048,SPRINT_REVIEW,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-048,SPRINT_REVIEW,TP,1,Xác nhận tiêu chí nghiệm thu với khách hàng,Xác nhận tiêu chí nghiệm thu với khách hàng.,true,true,true,true
+transcript-048,SPRINT_REVIEW,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-048,SPRINT_REVIEW,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-049,RETROSPECTIVE,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,false
+transcript-049,RETROSPECTIVE,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,false
+transcript-049,RETROSPECTIVE,TP,1,Sửa lỗi hiển thị avatar trong backlog,Sửa lỗi hiển thị avatar trong backlog.,true,true,true,false
+transcript-049,RETROSPECTIVE,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,false
+transcript-049,RETROSPECTIVE,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint.,true,true,true,false
+transcript-050,TECHNICAL_DISCUSSION,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-050,TECHNICAL_DISCUSSION,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint.,true,true,true,true
+transcript-050,TECHNICAL_DISCUSSION,TP,1,Tối ưu truy vấn danh sách cuộc họp,Tối ưu truy vấn danh sách cuộc họp.,true,true,true,true
+transcript-050,TECHNICAL_DISCUSSION,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-050,TECHNICAL_DISCUSSION,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-051,DAILY_STANDUP,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-051,DAILY_STANDUP,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-051,DAILY_STANDUP,TP,1,Kiểm thử tải cho API trợ lý dự án,Kiểm thử tải cho API trợ lý dự án.,true,true,true,true
+transcript-051,DAILY_STANDUP,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-051,DAILY_STANDUP,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-052,SPRINT_PLANNING,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-052,SPRINT_PLANNING,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-052,SPRINT_PLANNING,TP,1,Xác nhận tiêu chí nghiệm thu với khách hàng,Xác nhận tiêu chí nghiệm thu với khách hàng.,true,true,true,true
+transcript-052,SPRINT_PLANNING,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-052,SPRINT_PLANNING,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-053,SPRINT_REVIEW,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-053,SPRINT_REVIEW,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-053,SPRINT_REVIEW,TP,1,Sửa lỗi hiển thị avatar trong backlog,Sửa lỗi hiển thị avatar trong backlog.,true,true,true,true
+transcript-053,SPRINT_REVIEW,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-053,SPRINT_REVIEW,FN,0,Kiểm tra luồng tạo và hoàn thành sprint,,,,,
+transcript-054,RETROSPECTIVE,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-054,RETROSPECTIVE,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint.,true,true,true,true
+transcript-054,RETROSPECTIVE,TP,1,Tối ưu truy vấn danh sách cuộc họp,Tối ưu truy vấn danh sách cuộc họp.,true,true,true,true
+transcript-054,RETROSPECTIVE,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-054,RETROSPECTIVE,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-055,TECHNICAL_DISCUSSION,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-055,TECHNICAL_DISCUSSION,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-055,TECHNICAL_DISCUSSION,TP,1,Kiểm thử tải cho API trợ lý dự án,Kiểm thử tải cho API trợ lý dự án.,true,true,true,true
+transcript-055,TECHNICAL_DISCUSSION,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-055,TECHNICAL_DISCUSSION,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-056,DAILY_STANDUP,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-056,DAILY_STANDUP,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-056,DAILY_STANDUP,TP,1,Xác nhận tiêu chí nghiệm thu với khách hàng,Xác nhận tiêu chí nghiệm thu với khách hàng.,true,true,true,true
+transcript-056,DAILY_STANDUP,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-056,DAILY_STANDUP,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-057,SPRINT_PLANNING,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,true
+transcript-057,SPRINT_PLANNING,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,true
+transcript-057,SPRINT_PLANNING,TP,1,Sửa lỗi hiển thị avatar trong backlog,Sửa lỗi hiển thị avatar trong backlog.,true,true,true,true
+transcript-057,SPRINT_PLANNING,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-057,SPRINT_PLANNING,FN,0,Kiểm tra luồng tạo và hoàn thành sprint,,,,,
+transcript-058,SPRINT_REVIEW,TP,1,Cập nhật tài liệu hướng dẫn người dùng,Cập nhật tài liệu hướng dẫn người dùng.,true,true,true,true
+transcript-058,SPRINT_REVIEW,TP,1,Kiểm tra luồng tạo và hoàn thành sprint,Kiểm tra luồng tạo và hoàn thành sprint.,true,true,true,true
+transcript-058,SPRINT_REVIEW,TP,1,Tối ưu truy vấn danh sách cuộc họp,Tối ưu truy vấn danh sách cuộc họp.,true,true,true,true
+transcript-058,SPRINT_REVIEW,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-058,SPRINT_REVIEW,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-059,RETROSPECTIVE,TP,1,Đối chiếu số liệu báo cáo tiến độ,Đối chiếu số liệu báo cáo tiến độ.,true,true,true,true
+transcript-059,RETROSPECTIVE,TP,1,Thiết kế lại trạng thái rỗng của dashboard,Thiết kế lại trạng thái rỗng của dashboard.,true,true,true,true
+transcript-059,RETROSPECTIVE,TP,1,Kiểm thử tải cho API trợ lý dự án,Kiểm thử tải cho API trợ lý dự án.,true,true,true,true
+transcript-059,RETROSPECTIVE,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,true
+transcript-059,RETROSPECTIVE,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,true
+transcript-060,TECHNICAL_DISCUSSION,TP,1,Rà soát cảnh báo công việc quá hạn,Rà soát cảnh báo công việc quá hạn.,true,true,true,false
+transcript-060,TECHNICAL_DISCUSSION,TP,1,Chuẩn hóa dữ liệu transcript tiếng Việt,Chuẩn hóa dữ liệu transcript tiếng Việt.,true,true,true,false
+transcript-060,TECHNICAL_DISCUSSION,TP,1,Xác nhận tiêu chí nghiệm thu với khách hàng,Xác nhận tiêu chí nghiệm thu với khách hàng.,true,true,true,false
+transcript-060,TECHNICAL_DISCUSSION,TP,1,Hoàn thiện API quản lý công việc,Hoàn thiện API quản lý công việc.,true,true,true,false
+transcript-060,TECHNICAL_DISCUSSION,TP,1,Bổ sung kiểm thử phân quyền workspace,Bổ sung kiểm thử phân quyền workspace.,true,true,true,false

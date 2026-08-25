@@ -1,16 +1,16 @@
 # Bang chung kiem thu chuc nang - Chuong 4
 
-Bao cao duoc sinh tu ma test luc: 2026-08-23T21:06:07.527Z.
+Bao cao duoc sinh tu ma test luc: 2026-08-25T12:46:30.522Z.
 
 ## Quy mo tu dong
 
 | Nhom | So file | So test case |
 |---|---:|---:|
-| Unit | 41 | 246 |
+| Unit | 41 | 247 |
 | Integration + E2E | 14 | 110 |
 | Co bang chung RBAC | 27 | 222 |
 | Co bang chung Multi-tenancy | 2 | 15 |
-| Tong | 55 | 356 |
+| Tong | 55 | 357 |
 
 Luu y: cot RBAC/Multi-tenancy la tap con cua Unit va Integration/E2E, khong cong vao tong lan hai.
 

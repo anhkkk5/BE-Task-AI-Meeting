@@ -1,0 +1,67 @@
+{
+  "evaluatedAt": "2026-08-25T13:03:31.550Z",
+  "datasetPath": "D:\\task-metting-AI-managerment\\backend\\datasets\\action-item-evaluation\\v1\\transcripts.jsonl",
+  "predictionsPath": "D:\\task-metting-AI-managerment\\backend\\datasets\\action-item-evaluation\\v1\\predictions.jsonl",
+  "split": "test",
+  "matchThreshold": 0.5,
+  "transcriptCount": 48,
+  "predictionRecordCount": 48,
+  "missingPredictionCount": 0,
+  "failedPredictionCount": 0,
+  "extraction": {
+    "groundTruth": 240,
+    "predicted": 231,
+    "truePositive": 231,
+    "falsePositive": 0,
+    "falseNegative": 9,
+    "precision": 1,
+    "recall": 0.9625,
+    "f1": 0.9809
+  },
+  "matchedFieldQuality": {
+    "matchedCount": 231,
+    "assigneeUserIdAccuracy": 1,
+    "assigneeNameAccuracy": 1,
+    "dueDateAccuracy": 1,
+    "sourceSupportRate": 0.7706
+  },
+  "performance": {
+    "averageLatencyMs": 11897,
+    "p95LatencyMs": 16246,
+    "inputTokens": 0,
+    "outputTokens": 0
+  },
+  "byMeetingType": {
+    "SPRINT_REVIEW": {
+      "transcripts": 10,
+      "precision": 1,
+      "recall": 0.96,
+      "f1": 0.9796
+    },
+    "RETROSPECTIVE": {
+      "transcripts": 10,
+      "precision": 1,
+      "recall": 0.98,
+      "f1": 0.9899
+    },
+    "TECHNICAL_DISCUSSION": {
+      "transcripts": 10,
+      "precision": 1,
+      "recall": 0.96,
+      "f1": 0.9796
+    },
+    "DAILY_STANDUP": {
+      "transcripts": 9,
+      "precision": 1,
+      "recall": 0.9556,
+      "f1": 0.9773
+    },
+    "SPRINT_PLANNING": {
+      "transcripts": 9,
+      "precision": 1,
+      "recall": 0.9556,
+      "f1": 0.9773
+    }
+  },
+  "warning": "SYNTHETIC_DRAFT chỉ phù hợp kiểm thử pipeline; cần duyệt nhãn độc lập trước khi công bố là ground truth thực nghiệm."
+}
