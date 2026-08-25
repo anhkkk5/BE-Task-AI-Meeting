@@ -61,6 +61,7 @@ export declare class AiProviderService {
     private hasActionSignal;
     private hasRiskSignal;
     private toMeetingActionItem;
+    private stripMeetingSpeakerPrefix;
     private normalizeForMatching;
     private isOffTopicMeetingLine;
     private isReportingInstruction;

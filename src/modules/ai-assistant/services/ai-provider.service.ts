@@ -988,8 +988,9 @@ export class AiProviderService {
           .map((item) => {
           const assignee = this.resolveMeetingAssignee(item, inputData);
 
+          const cleanText = this.stripMeetingSpeakerPrefix(item.text, inputData);
           return {
-            text: item.text,
+            text: cleanText,
             assigneeName: assignee.assigneeName,
             assigneeUserId: assignee.assigneeUserId,
             dueDate: item.dueDate ?? null,
@@ -1224,14 +1225,35 @@ export class AiProviderService {
         item.email?.split('@')[0].toLowerCase() === assigneeName?.toLowerCase(),
     );
 
+    const cleanText = rest.length ? rest.join(':').trim() : line.trim();
+
     return {
-      text: line,
+      text: cleanText,
       assigneeName: (participant?.fullName ?? assigneeName) || null,
       assigneeUserId: participant?.userId ?? null,
       dueDate: null,
       status: 'OPEN',
       source: line,
     };
+  }
+
+  private stripMeetingSpeakerPrefix(
+    text: string,
+    inputData: MeetingSummaryInputData,
+  ) {
+    const separator = text.indexOf(':');
+    if (separator < 1) return text.trim();
+    const prefix = text.slice(0, separator).trim();
+    const isParticipant = inputData.participants.some((participant) => {
+      const aliases = [
+        participant.fullName,
+        participant.email?.split('@')[0],
+      ]
+        .filter((value): value is string => Boolean(value))
+        .map((value) => this.normalizeForMatching(value));
+      return aliases.includes(this.normalizeForMatching(prefix));
+    });
+    return isParticipant ? text.slice(separator + 1).trim() : text.trim();
   }
 
   private normalizeForMatching(value: string) {

@@ -654,8 +654,9 @@ let AiProviderService = class AiProviderService {
                 !this.isReportingInstruction(item.text))
                 .map((item) => {
                 const assignee = this.resolveMeetingAssignee(item, inputData);
+                const cleanText = this.stripMeetingSpeakerPrefix(item.text, inputData);
                 return {
-                    text: item.text,
+                    text: cleanText,
                     assigneeName: assignee.assigneeName,
                     assigneeUserId: assignee.assigneeUserId,
                     dueDate: item.dueDate ?? null,
@@ -833,14 +834,31 @@ let AiProviderService = class AiProviderService {
         const assigneeName = rest.length ? maybeSpeaker.trim() : null;
         const participant = inputData.participants.find((item) => item.fullName?.toLowerCase() === assigneeName?.toLowerCase() ||
             item.email?.split('@')[0].toLowerCase() === assigneeName?.toLowerCase());
+        const cleanText = rest.length ? rest.join(':').trim() : line.trim();
         return {
-            text: line,
+            text: cleanText,
             assigneeName: (participant?.fullName ?? assigneeName) || null,
             assigneeUserId: participant?.userId ?? null,
             dueDate: null,
             status: 'OPEN',
             source: line,
         };
+    }
+    stripMeetingSpeakerPrefix(text, inputData) {
+        const separator = text.indexOf(':');
+        if (separator < 1)
+            return text.trim();
+        const prefix = text.slice(0, separator).trim();
+        const isParticipant = inputData.participants.some((participant) => {
+            const aliases = [
+                participant.fullName,
+                participant.email?.split('@')[0],
+            ]
+                .filter((value) => Boolean(value))
+                .map((value) => this.normalizeForMatching(value));
+            return aliases.includes(this.normalizeForMatching(prefix));
+        });
+        return isParticipant ? text.slice(separator + 1).trim() : text.trim();
     }
     normalizeForMatching(value) {
         return value
