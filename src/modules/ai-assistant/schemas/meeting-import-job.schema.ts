@@ -14,7 +14,7 @@ export type MeetingImportJobStatus =
 export class MeetingImportJob {
   @Prop({ required: true }) workspaceId: string;
   @Prop({ required: true }) projectId: string;
-  @Prop({ required: true }) meetingId: string;
+  @Prop({ type: String }) meetingId?: string | null;
   @Prop({ required: true }) createdBy: string;
   @Prop({ required: true }) fileName: string;
   @Prop({ required: true }) mimeType: string;
@@ -26,7 +26,10 @@ export class MeetingImportJob {
   @Prop({ type: String }) error?: string | null;
   @Prop({ type: String }) transcriptId?: string | null;
   @Prop({ type: String }) summaryId?: string | null;
+  @Prop({ type: String }) transcript?: string | null;
+  @Prop({ type: Object }) summary?: Record<string, unknown> | null;
 }
 
 export const MeetingImportJobSchema = SchemaFactory.createForClass(MeetingImportJob);
 MeetingImportJobSchema.index({ meetingId: 1, createdAt: -1 });
+MeetingImportJobSchema.index({ projectId: 1, createdAt: -1 });

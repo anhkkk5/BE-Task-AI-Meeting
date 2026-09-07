@@ -1,17 +1,17 @@
 import { Model } from 'mongoose';
-import { MeetingTranscriptsService } from '../../meetings/services/meeting-transcripts.service';
 import { GroqTranscriptionService } from '../../meetings/services/groq-transcription.service';
-import { AiMeetingSummaryService } from './ai-meeting-summary.service';
+import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { AiProviderService } from './ai-provider.service';
 import { MeetingImportJobDocument, MeetingImportJobStatus } from '../schemas/meeting-import-job.schema';
 type UploadedMeetingFile = Express.Multer.File;
 export declare class MeetingImportService {
     private readonly jobModel;
-    private readonly transcriptsService;
     private readonly transcriptionService;
-    private readonly summaryService;
+    private readonly projectAccessService;
+    private readonly aiProviderService;
     private readonly logger;
-    constructor(jobModel: Model<MeetingImportJobDocument> | null, transcriptsService: MeetingTranscriptsService, transcriptionService: GroqTranscriptionService, summaryService: AiMeetingSummaryService);
-    createJob(userId: string, workspaceId: string, projectId: string, meetingId: string, file?: UploadedMeetingFile): Promise<{
+    constructor(jobModel: Model<MeetingImportJobDocument> | null, transcriptionService: GroqTranscriptionService, projectAccessService: ProjectAccessService, aiProviderService: AiProviderService);
+    createJob(userId: string, workspaceId: string, projectId: string, file?: UploadedMeetingFile): Promise<{
         success: boolean;
         message: string;
         data: {
@@ -21,7 +21,7 @@ export declare class MeetingImportService {
                 __v: undefined;
                 workspaceId: string;
                 projectId: string;
-                meetingId: string;
+                meetingId?: string | null;
                 createdBy: string;
                 fileName: string;
                 mimeType: string;
@@ -33,10 +33,12 @@ export declare class MeetingImportService {
                 error?: string | null;
                 transcriptId?: string | null;
                 summaryId?: string | null;
+                transcript?: string | null;
+                summary?: Record<string, unknown> | null;
             };
         };
     }>;
-    getJob(userId: string, workspaceId: string, projectId: string, meetingId: string, jobId: string): Promise<{
+    getJob(userId: string, workspaceId: string, projectId: string, jobId: string): Promise<{
         success: boolean;
         message: string;
         data: {
@@ -46,7 +48,7 @@ export declare class MeetingImportService {
                 __v: undefined;
                 workspaceId: string;
                 projectId: string;
-                meetingId: string;
+                meetingId?: string | null;
                 createdBy: string;
                 fileName: string;
                 mimeType: string;
@@ -58,10 +60,12 @@ export declare class MeetingImportService {
                 error?: string | null;
                 transcriptId?: string | null;
                 summaryId?: string | null;
+                transcript?: string | null;
+                summary?: Record<string, unknown> | null;
             };
         };
     }>;
-    getLatestJob(userId: string, workspaceId: string, projectId: string, meetingId: string): Promise<{
+    getLatestJob(userId: string, workspaceId: string, projectId: string): Promise<{
         success: boolean;
         message: string;
         data: {
@@ -71,7 +75,7 @@ export declare class MeetingImportService {
                 __v: undefined;
                 workspaceId: string;
                 projectId: string;
-                meetingId: string;
+                meetingId?: string | null;
                 createdBy: string;
                 fileName: string;
                 mimeType: string;
@@ -83,7 +87,36 @@ export declare class MeetingImportService {
                 error?: string | null;
                 transcriptId?: string | null;
                 summaryId?: string | null;
+                transcript?: string | null;
+                summary?: Record<string, unknown> | null;
             } | null;
+        };
+    }>;
+    listJobs(userId: string, workspaceId: string, projectId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            items: {
+                id: string;
+                _id: undefined;
+                __v: undefined;
+                workspaceId: string;
+                projectId: string;
+                meetingId?: string | null;
+                createdBy: string;
+                fileName: string;
+                mimeType: string;
+                fileSize: number;
+                kind: "DOCUMENT" | "MEDIA";
+                status: MeetingImportJobStatus;
+                progress: number;
+                message?: string | null;
+                error?: string | null;
+                transcriptId?: string | null;
+                summaryId?: string | null;
+                transcript?: string | null;
+                summary?: Record<string, unknown> | null;
+            }[];
         };
     }>;
     private process;

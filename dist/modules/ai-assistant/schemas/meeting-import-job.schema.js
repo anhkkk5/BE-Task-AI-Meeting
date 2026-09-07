@@ -26,6 +26,8 @@ let MeetingImportJob = class MeetingImportJob {
     error;
     transcriptId;
     summaryId;
+    transcript;
+    summary;
 };
 exports.MeetingImportJob = MeetingImportJob;
 __decorate([
@@ -37,8 +39,8 @@ __decorate([
     __metadata("design:type", String)
 ], MeetingImportJob.prototype, "projectId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
+    (0, mongoose_1.Prop)({ type: String }),
+    __metadata("design:type", Object)
 ], MeetingImportJob.prototype, "meetingId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
@@ -84,9 +86,18 @@ __decorate([
     (0, mongoose_1.Prop)({ type: String }),
     __metadata("design:type", Object)
 ], MeetingImportJob.prototype, "summaryId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String }),
+    __metadata("design:type", Object)
+], MeetingImportJob.prototype, "transcript", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: Object }),
+    __metadata("design:type", Object)
+], MeetingImportJob.prototype, "summary", void 0);
 exports.MeetingImportJob = MeetingImportJob = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true, collection: 'meeting_import_jobs' })
 ], MeetingImportJob);
 exports.MeetingImportJobSchema = mongoose_1.SchemaFactory.createForClass(MeetingImportJob);
 exports.MeetingImportJobSchema.index({ meetingId: 1, createdAt: -1 });
+exports.MeetingImportJobSchema.index({ projectId: 1, createdAt: -1 });
 //# sourceMappingURL=meeting-import-job.schema.js.map

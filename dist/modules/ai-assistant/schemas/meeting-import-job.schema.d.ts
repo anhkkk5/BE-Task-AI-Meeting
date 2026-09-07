@@ -4,7 +4,7 @@ export type MeetingImportJobStatus = 'QUEUED' | 'EXTRACTING' | 'TRANSCRIBING' | 
 export declare class MeetingImportJob {
     workspaceId: string;
     projectId: string;
-    meetingId: string;
+    meetingId?: string | null;
     createdBy: string;
     fileName: string;
     mimeType: string;
@@ -16,6 +16,8 @@ export declare class MeetingImportJob {
     error?: string | null;
     transcriptId?: string | null;
     summaryId?: string | null;
+    transcript?: string | null;
+    summary?: Record<string, unknown> | null;
 }
 export declare const MeetingImportJobSchema: import("mongoose").Schema<MeetingImportJob, import("mongoose").Model<MeetingImportJob, any, any, any, any, any, MeetingImportJob>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, MeetingImportJob, import("mongoose").Document<unknown, {}, MeetingImportJob, {
     id: string;
@@ -44,7 +46,7 @@ export declare const MeetingImportJobSchema: import("mongoose").Schema<MeetingIm
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
-    meetingId?: import("mongoose").SchemaDefinitionProperty<string, MeetingImportJob, import("mongoose").Document<unknown, {}, MeetingImportJob, {
+    meetingId?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, MeetingImportJob, import("mongoose").Document<unknown, {}, MeetingImportJob, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingImportJob & {
         _id: import("mongoose").Types.ObjectId;
@@ -144,6 +146,24 @@ export declare const MeetingImportJobSchema: import("mongoose").Schema<MeetingIm
         id: string;
     }>> | undefined;
     summaryId?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, MeetingImportJob, import("mongoose").Document<unknown, {}, MeetingImportJob, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingImportJob & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    transcript?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, MeetingImportJob, import("mongoose").Document<unknown, {}, MeetingImportJob, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingImportJob & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    summary?: import("mongoose").SchemaDefinitionProperty<Record<string, unknown> | null | undefined, MeetingImportJob, import("mongoose").Document<unknown, {}, MeetingImportJob, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<MeetingImportJob & {
         _id: import("mongoose").Types.ObjectId;

@@ -3,7 +3,7 @@ import { MeetingImportService } from '../services/meeting-import.service';
 export declare class MeetingImportController {
     private readonly service;
     constructor(service: MeetingImportService);
-    create(user: AuthUser, workspaceId: string, projectId: string, meetingId: string, file: Express.Multer.File): Promise<{
+    create(user: AuthUser, workspaceId: string, projectId: string, file: Express.Multer.File): Promise<{
         success: boolean;
         message: string;
         data: {
@@ -13,7 +13,7 @@ export declare class MeetingImportController {
                 __v: undefined;
                 workspaceId: string;
                 projectId: string;
-                meetingId: string;
+                meetingId?: string | null;
                 createdBy: string;
                 fileName: string;
                 mimeType: string;
@@ -25,10 +25,12 @@ export declare class MeetingImportController {
                 error?: string | null;
                 transcriptId?: string | null;
                 summaryId?: string | null;
+                transcript?: string | null;
+                summary?: Record<string, unknown> | null;
             };
         };
     }>;
-    latest(user: AuthUser, workspaceId: string, projectId: string, meetingId: string): Promise<{
+    latest(user: AuthUser, workspaceId: string, projectId: string): Promise<{
         success: boolean;
         message: string;
         data: {
@@ -38,7 +40,7 @@ export declare class MeetingImportController {
                 __v: undefined;
                 workspaceId: string;
                 projectId: string;
-                meetingId: string;
+                meetingId?: string | null;
                 createdBy: string;
                 fileName: string;
                 mimeType: string;
@@ -50,20 +52,22 @@ export declare class MeetingImportController {
                 error?: string | null;
                 transcriptId?: string | null;
                 summaryId?: string | null;
+                transcript?: string | null;
+                summary?: Record<string, unknown> | null;
             } | null;
         };
     }>;
-    get(user: AuthUser, workspaceId: string, projectId: string, meetingId: string, jobId: string): Promise<{
+    list(user: AuthUser, workspaceId: string, projectId: string): Promise<{
         success: boolean;
         message: string;
         data: {
-            job: {
+            items: {
                 id: string;
                 _id: undefined;
                 __v: undefined;
                 workspaceId: string;
                 projectId: string;
-                meetingId: string;
+                meetingId?: string | null;
                 createdBy: string;
                 fileName: string;
                 mimeType: string;
@@ -75,6 +79,35 @@ export declare class MeetingImportController {
                 error?: string | null;
                 transcriptId?: string | null;
                 summaryId?: string | null;
+                transcript?: string | null;
+                summary?: Record<string, unknown> | null;
+            }[];
+        };
+    }>;
+    get(user: AuthUser, workspaceId: string, projectId: string, jobId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            job: {
+                id: string;
+                _id: undefined;
+                __v: undefined;
+                workspaceId: string;
+                projectId: string;
+                meetingId?: string | null;
+                createdBy: string;
+                fileName: string;
+                mimeType: string;
+                fileSize: number;
+                kind: "DOCUMENT" | "MEDIA";
+                status: import("../schemas/meeting-import-job.schema").MeetingImportJobStatus;
+                progress: number;
+                message?: string | null;
+                error?: string | null;
+                transcriptId?: string | null;
+                summaryId?: string | null;
+                transcript?: string | null;
+                summary?: Record<string, unknown> | null;
             };
         };
     }>;

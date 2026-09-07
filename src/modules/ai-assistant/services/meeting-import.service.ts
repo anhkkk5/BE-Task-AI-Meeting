@@ -15,9 +15,10 @@ import { spawn } from 'child_process';
 import { mkdtemp, readFile, readdir, rm, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { extname, join } from 'path';
-import { MeetingTranscriptsService } from '../../meetings/services/meeting-transcripts.service';
 import { GroqTranscriptionService } from '../../meetings/services/groq-transcription.service';
-import { AiMeetingSummaryService } from './ai-meeting-summary.service';
+import { ProjectAccessService } from '../../projects/services/project-access.service';
+import { AiProviderService } from './ai-provider.service';
+import { MeetingSummaryInputData } from './ai-meeting-summary-data-builder.service';
 import {
   MeetingImportJob,
   MeetingImportJobDocument,
@@ -42,40 +43,49 @@ export class MeetingImportService {
   constructor(
     @Optional() @InjectModel(MeetingImportJob.name)
     private readonly jobModel: Model<MeetingImportJobDocument> | null,
-    private readonly transcriptsService: MeetingTranscriptsService,
     private readonly transcriptionService: GroqTranscriptionService,
-    private readonly summaryService: AiMeetingSummaryService,
+    private readonly projectAccessService: ProjectAccessService,
+    private readonly aiProviderService: AiProviderService,
   ) {}
 
-  async createJob(userId: string, workspaceId: string, projectId: string, meetingId: string, file?: UploadedMeetingFile) {
+  async createJob(userId: string, workspaceId: string, projectId: string, file?: UploadedMeetingFile) {
     const model = this.getModel();
+    const project = await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
     const kind = this.validateFile(file);
     file!.originalname = this.normalizeFileName(file!.originalname);
     const job = await model.create({
-      workspaceId, projectId, meetingId, createdBy: userId,
+      workspaceId, projectId, meetingId: null, createdBy: userId,
       fileName: file!.originalname, mimeType: file!.mimetype,
       fileSize: file!.size, kind, status: 'QUEUED', progress: 5,
       message: 'Đã tiếp nhận tệp, đang chờ xử lý',
     });
     const jobId = String(job._id);
-    setImmediate(() => void this.process(jobId, userId, workspaceId, projectId, meetingId, file!).catch((error) => {
+    setImmediate(() => void this.process(jobId, userId, workspaceId, projectId, project, file!).catch((error) => {
       this.logger.error(`Meeting import ${jobId} failed`, error instanceof Error ? error.stack : String(error));
     }));
     return { success: true, message: 'Tệp đã được đưa vào hàng đợi xử lý', data: { job: this.toResponse(job) } };
   }
 
-  async getJob(userId: string, workspaceId: string, projectId: string, meetingId: string, jobId: string) {
-    const job = await this.getModel().findOne({ _id: jobId, workspaceId, projectId, meetingId, createdBy: userId }).exec();
+  async getJob(userId: string, workspaceId: string, projectId: string, jobId: string) {
+    await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
+    const job = await this.getModel().findOne({ _id: jobId, workspaceId, projectId, meetingId: null, createdBy: userId }).exec();
     if (!job) throw new NotFoundException('Không tìm thấy tiến trình xử lý tệp');
     return { success: true, message: 'Lấy trạng thái xử lý thành công', data: { job: this.toResponse(job) } };
   }
 
-  async getLatestJob(userId: string, workspaceId: string, projectId: string, meetingId: string) {
-    const job = await this.getModel().findOne({ workspaceId, projectId, meetingId, createdBy: userId }).sort({ createdAt: -1 }).exec();
+  async getLatestJob(userId: string, workspaceId: string, projectId: string) {
+    await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
+    const job = await this.getModel().findOne({ workspaceId, projectId, meetingId: null, createdBy: userId }).sort({ createdAt: -1 }).exec();
     return { success: true, message: 'Lấy tiến trình gần nhất thành công', data: { job: job ? this.toResponse(job) : null } };
   }
 
-  private async process(jobId: string, userId: string, workspaceId: string, projectId: string, meetingId: string, file: UploadedMeetingFile) {
+  async listJobs(userId: string, workspaceId: string, projectId: string) {
+    await this.projectAccessService.assertProjectInWorkspace(projectId, workspaceId);
+    const jobs = await this.getModel().find({ workspaceId, projectId, meetingId: null, createdBy: userId }).sort({ createdAt: -1 }).limit(30).exec();
+    return { success: true, message: 'Lấy lịch sử phân tích thành công', data: { items: jobs.map((job) => this.toResponse(job)) } };
+  }
+
+  private async process(jobId: string, userId: string, workspaceId: string, projectId: string, project: { id: string; name: string; keyCode: string; status: string }, file: UploadedMeetingFile) {
     try {
       await this.update(jobId, 'EXTRACTING', 15, 'Đang đọc nội dung tệp');
       const kind = this.fileKind(file.originalname);
@@ -84,16 +94,26 @@ export class MeetingImportService {
         : await this.transcribeMedia(jobId, file);
       if (transcript.trim().length < 20) throw new BadRequestException('Không tìm thấy đủ nội dung để tóm tắt');
 
-      await this.update(jobId, 'SUMMARIZING', 78, 'Đang tạo transcript và tóm tắt bằng AI');
-      const transcriptResult = await this.transcriptsService.saveTranscript(userId, workspaceId, projectId, meetingId, {
-        rawTranscript: transcript,
-        speakers: [],
+      await this.update(jobId, 'SUMMARIZING', 78, 'Đang tạo bản tóm tắt độc lập bằng AI');
+      const now = new Date();
+      const inputData: MeetingSummaryInputData = {
+        workspace: { id: workspaceId },
+        project: { id: project.id, name: project.name, keyCode: project.keyCode, status: project.status },
+        meeting: { id: jobId, title: file.originalname, description: 'Tài liệu hoặc media được tải lên để phân tích độc lập', meetingType: 'IMPORTED_CONTENT', meetingDate: now.toISOString().slice(0, 10), status: 'COMPLETED', startTime: null, endTime: null },
+        sprint: null, participants: [],
+        transcript: { id: jobId, rawTranscript: transcript, normalizedTranscript: transcript, speakers: [] },
+        generatedAt: now.toISOString(),
+      };
+      const prompt = JSON.stringify({
+        instruction: 'Tóm tắt nội dung file độc lập. Không suy diễn đây là biên bản của một cuộc họp trong hệ thống. Trả về tiêu đề, tóm tắt, ý chính, quyết định, việc cần làm, rủi ro, câu hỏi mở và bước tiếp theo.',
+        fileName: file.originalname,
+        transcript,
       });
-      const summaryResult = await this.summaryService.generateMeetingSummary(userId, workspaceId, projectId, meetingId, { forceRegenerate: true });
+      const summaryResult = await this.aiProviderService.generateMeetingSummary(prompt, inputData);
       await this.getModel().findByIdAndUpdate(jobId, {
         status: 'COMPLETED', progress: 100, message: 'Đã phân tích và tóm tắt xong', error: null,
-        transcriptId: transcriptResult.data.transcript.id,
-        summaryId: summaryResult.data.summary.id,
+        transcript,
+        summary: summaryResult.output,
       }).exec();
     } catch (error) {
       await this.getModel().findByIdAndUpdate(jobId, {

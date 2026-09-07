@@ -28,14 +28,17 @@ let MeetingImportController = class MeetingImportController {
     constructor(service) {
         this.service = service;
     }
-    create(user, workspaceId, projectId, meetingId, file) {
-        return this.service.createJob(user.id, workspaceId, projectId, meetingId, file);
+    create(user, workspaceId, projectId, file) {
+        return this.service.createJob(user.id, workspaceId, projectId, file);
     }
-    latest(user, workspaceId, projectId, meetingId) {
-        return this.service.getLatestJob(user.id, workspaceId, projectId, meetingId);
+    latest(user, workspaceId, projectId) {
+        return this.service.getLatestJob(user.id, workspaceId, projectId);
     }
-    get(user, workspaceId, projectId, meetingId, jobId) {
-        return this.service.getJob(user.id, workspaceId, projectId, meetingId, jobId);
+    list(user, workspaceId, projectId) {
+        return this.service.listJobs(user.id, workspaceId, projectId);
+    }
+    get(user, workspaceId, projectId, jobId) {
+        return this.service.getJob(user.id, workspaceId, projectId, jobId);
     }
 };
 exports.MeetingImportController = MeetingImportController;
@@ -47,10 +50,9 @@ __decorate([
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('workspaceId')),
     __param(2, (0, common_1.Param)('projectId')),
-    __param(3, (0, common_1.Param)('meetingId')),
-    __param(4, (0, common_1.UploadedFile)()),
+    __param(3, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, String, String, Object]),
+    __metadata("design:paramtypes", [Object, String, String, Object]),
     __metadata("design:returntype", void 0)
 ], MeetingImportController.prototype, "create", null);
 __decorate([
@@ -58,24 +60,31 @@ __decorate([
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('workspaceId')),
     __param(2, (0, common_1.Param)('projectId')),
-    __param(3, (0, common_1.Param)('meetingId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, String, String]),
+    __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", void 0)
 ], MeetingImportController.prototype, "latest", null);
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], MeetingImportController.prototype, "list", null);
 __decorate([
     (0, common_1.Get)(':jobId'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('workspaceId')),
     __param(2, (0, common_1.Param)('projectId')),
-    __param(3, (0, common_1.Param)('meetingId')),
-    __param(4, (0, common_1.Param)('jobId')),
+    __param(3, (0, common_1.Param)('jobId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, String, String, String]),
+    __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", void 0)
 ], MeetingImportController.prototype, "get", null);
 exports.MeetingImportController = MeetingImportController = __decorate([
-    (0, common_1.Controller)('workspaces/:workspaceId/projects/:projectId/meetings/:meetingId/ai/imports'),
+    (0, common_1.Controller)('workspaces/:workspaceId/projects/:projectId/ai/content-analysis'),
     (0, swagger_1.ApiTags)('AI Meeting Imports'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard, workspace_roles_guard_1.WorkspaceRolesGuard),

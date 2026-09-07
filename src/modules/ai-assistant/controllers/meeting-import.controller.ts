@@ -11,7 +11,7 @@ import { MeetingImportService } from '../services/meeting-import.service';
 
 const managerRoles = [WorkspaceRole.Owner, WorkspaceRole.ScrumMaster, WorkspaceRole.ProjectManager];
 
-@Controller('workspaces/:workspaceId/projects/:projectId/meetings/:meetingId/ai/imports')
+@Controller('workspaces/:workspaceId/projects/:projectId/ai/content-analysis')
 @ApiTags('AI Meeting Imports')
 @ApiBearerAuth()
 @UseGuards(AccessTokenGuard, WorkspaceRolesGuard)
@@ -23,17 +23,22 @@ export class MeetingImportController {
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 200 * 1024 * 1024 } }))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload tài liệu, audio hoặc video và tạo tóm tắt cuộc họp' })
-  create(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('projectId') projectId: string, @Param('meetingId') meetingId: string, @UploadedFile() file: Express.Multer.File) {
-    return this.service.createJob(user.id, workspaceId, projectId, meetingId, file);
+  create(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('projectId') projectId: string, @UploadedFile() file: Express.Multer.File) {
+    return this.service.createJob(user.id, workspaceId, projectId, file);
   }
 
   @Get('latest')
-  latest(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('projectId') projectId: string, @Param('meetingId') meetingId: string) {
-    return this.service.getLatestJob(user.id, workspaceId, projectId, meetingId);
+  latest(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('projectId') projectId: string) {
+    return this.service.getLatestJob(user.id, workspaceId, projectId);
+  }
+
+  @Get()
+  list(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('projectId') projectId: string) {
+    return this.service.listJobs(user.id, workspaceId, projectId);
   }
 
   @Get(':jobId')
-  get(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('projectId') projectId: string, @Param('meetingId') meetingId: string, @Param('jobId') jobId: string) {
-    return this.service.getJob(user.id, workspaceId, projectId, meetingId, jobId);
+  get(@CurrentUser() user: AuthUser, @Param('workspaceId') workspaceId: string, @Param('projectId') projectId: string, @Param('jobId') jobId: string) {
+    return this.service.getJob(user.id, workspaceId, projectId, jobId);
   }
 }
