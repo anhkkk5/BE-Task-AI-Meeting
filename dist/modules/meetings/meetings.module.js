@@ -81,6 +81,7 @@ exports.MeetingsModule = MeetingsModule = __decorate([
             meeting_participants_repository_1.MeetingParticipantsRepository,
             meetings_repository_1.MeetingsRepository,
             meeting_transcripts_service_1.MeetingTranscriptsService,
+            groq_transcription_service_1.GroqTranscriptionService,
             meeting_lifecycle_service_1.MeetingLifecycleService,
         ],
     })

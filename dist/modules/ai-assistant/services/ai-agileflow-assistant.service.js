@@ -151,14 +151,7 @@ let AiAgileFlowAssistantService = class AiAgileFlowAssistantService {
     }
     needsSprint(question) {
         const normalized = this.normalize(question);
-        return [
-            'sprint',
-            'backlog',
-            'tien do',
-            'qua han',
-            'cong viec',
-            'task',
-        ].some((term) => normalized.includes(term));
+        return normalized.includes('sprint');
     }
     normalize(value) {
         return value

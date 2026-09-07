@@ -73,6 +73,7 @@ const mongoImports = mongodbConfig().enabled
     MeetingParticipantsRepository,
     MeetingsRepository,
     MeetingTranscriptsService,
+    GroqTranscriptionService,
     MeetingLifecycleService,
   ],
 })

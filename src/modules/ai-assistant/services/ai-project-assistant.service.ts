@@ -667,7 +667,15 @@ export class AiProjectAssistantService {
       answer = `${risk.levelLabel}: ${risk.score}/100. ${risk.summary}`;
     } else if (normalized.includes('quá hạn')) {
       answer = overdue.length
-        ? `Có ${overdue.length} công việc quá hạn: ${overdue.map((task) => `${task.taskCode} - ${task.title} — phụ trách: ${task.assignee?.fullName ?? task.assignee?.email ?? 'chưa phân công'}`).join('; ')}.`
+        ? [
+            `Có ${overdue.length} công việc đang quá hạn:`,
+            ...overdue.map(
+              (task) =>
+                `• ${task.taskCode} — ${task.title}\n  Phụ trách: ${task.assignee?.fullName ?? task.assignee?.email ?? 'Chưa phân công'}${task.dueDate ? ` · Hạn: ${task.dueDate}` : ''}`,
+            ),
+            '',
+            'Đề xuất: rà soát người phụ trách và cập nhật lại hạn xử lý trong buổi Daily gần nhất.',
+          ].join('\n')
         : asksMine
           ? 'Bạn không có công việc quá hạn trong Sprint đang xem.'
           : 'Không có công việc quá hạn trong phạm vi đang xem.';
@@ -690,7 +698,14 @@ export class AiProjectAssistantService {
       normalized.includes('trở ngại')
     ) {
       answer = blockers.length
-        ? `Có ${blockers.length} cập nhật chứa trở ngại: ${blockers.map((item) => `${item.user?.fullName ?? item.userId}: ${item.blockers}`).join('; ')}.`
+        ? [
+            `Có ${blockers.length} thành viên đang báo trở ngại:`,
+            ...blockers.map(
+              (item) => `• ${item.user?.fullName ?? item.userId}: ${item.blockers}`,
+            ),
+            '',
+            'Đề xuất: xác nhận người hỗ trợ và thời điểm xử lý cho từng trở ngại.',
+          ].join('\n')
         : 'Chưa có thành viên báo trở ngại trong phạm vi đang xem.';
     } else if (
       normalized.includes('chưa gán') ||
@@ -698,7 +713,12 @@ export class AiProjectAssistantService {
     ) {
       const unassigned = openTasks.filter((task) => !task.assigneeId);
       answer = unassigned.length
-        ? `Có ${unassigned.length} công việc chưa có người phụ trách: ${unassigned.map((task) => task.taskCode).join(', ')}.`
+        ? [
+            `Có ${unassigned.length} công việc chưa có người phụ trách:`,
+            ...unassigned.map((task) => `• ${task.taskCode} — ${task.title}`),
+            '',
+            'Đề xuất: phân công người chịu trách nhiệm trước khi đưa công việc vào thực hiện.',
+          ].join('\n')
         : 'Tất cả công việc đang mở đều đã có người phụ trách.';
     } else if (
       /(?:sprint hiện tại|sprint này).*(?:bao nhiêu|còn bao nhiêu).*(?:ngày|công việc)|(?:còn bao nhiêu ngày)/iu.test(normalized) &&

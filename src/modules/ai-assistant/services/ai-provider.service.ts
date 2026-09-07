@@ -782,7 +782,7 @@ export class AiProviderService {
   private getGroqModel() {
     if (process.env.AI_MODEL) return process.env.AI_MODEL;
     return process.env.AI_PROVIDER === 'openai'
-      ? 'gpt-5.6-luna'
+      ? 'gpt-5.6-terra'
       : 'llama-3.3-70b-versatile';
   }
 

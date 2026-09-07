@@ -1,0 +1,674 @@
+[
+  {
+    "stt": 1,
+    "caseId": "assistant-case-001",
+    "category": "TASK",
+    "question": "PA-001 đang ở trạng thái nào, ai phụ trách và hạn khi nào?",
+    "answer": "Dự án Dự án project-2 có 13 công việc trong phạm vi đang xem, 7 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-2; [SPRINT] Sprint 2; [TASK] PA-001 - Hoàn thiện chức năng 1; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] OPEN-2 - Task đang làm 2",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 2,
+    "caseId": "assistant-case-002",
+    "category": "TASK",
+    "question": "PA-002 đang ở trạng thái nào, ai phụ trách và hạn khi nào?",
+    "answer": "Dự án Dự án project-3 có 14 công việc trong phạm vi đang xem, 7 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-3; [SPRINT] Sprint 3; [TASK] PA-002 - Hoàn thiện chức năng 2; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 3,
+    "caseId": "assistant-case-003",
+    "category": "TASK",
+    "question": "PA-003 đang ở trạng thái nào, ai phụ trách và hạn khi nào?",
+    "answer": "Dự án Dự án project-4 có 15 công việc trong phạm vi đang xem, 7 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-4; [SPRINT] Sprint 4; [TASK] PA-003 - Hoàn thiện chức năng 3; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 4,
+    "caseId": "assistant-case-004",
+    "category": "TASK",
+    "question": "PA-004 đang ở trạng thái nào, ai phụ trách và hạn khi nào?",
+    "answer": "Dự án Dự án project-1 có 16 công việc trong phạm vi đang xem, 11 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-1; [SPRINT] Sprint 1; [TASK] PA-004 - Hoàn thiện chức năng 4; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] OPEN-2 - Task đang làm 2; [TASK] OPEN-3 - Task đang làm 3",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 5,
+    "caseId": "assistant-case-005",
+    "category": "TASK",
+    "question": "PA-005 đang ở trạng thái nào, ai phụ trách và hạn khi nào?",
+    "answer": "Dự án Dự án project-2 có 12 công việc trong phạm vi đang xem, 6 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-2; [SPRINT] Sprint 2; [TASK] PA-005 - Hoàn thiện chức năng 5; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] OPEN-2 - Task đang làm 2",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 6,
+    "caseId": "assistant-case-006",
+    "category": "TASK",
+    "question": "PA-006 đang ở trạng thái nào, ai phụ trách và hạn khi nào?",
+    "answer": "Dự án Dự án project-3 có 13 công việc trong phạm vi đang xem, 6 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-3; [SPRINT] Sprint 3; [TASK] PA-006 - Hoàn thiện chức năng 6; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 7,
+    "caseId": "assistant-case-007",
+    "category": "TASK",
+    "question": "PA-007 đang ở trạng thái nào, ai phụ trách và hạn khi nào?",
+    "answer": "Dự án Dự án project-4 có 14 công việc trong phạm vi đang xem, 6 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-4; [SPRINT] Sprint 4; [TASK] PA-007 - Hoàn thiện chức năng 7; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 8,
+    "caseId": "assistant-case-008",
+    "category": "SPRINT",
+    "question": "Sprint hiện tại tiến độ ra sao và còn bao nhiêu ngày?",
+    "answer": "Sprint 1 đã hoàn thành 5/15 công việc; còn 10 công việc và -10 ngày đến hạn kết thúc.",
+    "sources": "[PROJECT] Dự án project-1; [SPRINT] Sprint 1; [TASK] PA-008 - Hoàn thiện chức năng 8; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] OPEN-2 - Task đang làm 2; [TASK] OPEN-3 - Task đang làm 3",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 9,
+    "caseId": "assistant-case-009",
+    "category": "SPRINT",
+    "question": "Sprint hiện tại tiến độ ra sao và còn bao nhiêu ngày?",
+    "answer": "Sprint 2 đã hoàn thành 6/16 công việc; còn 10 công việc và -9 ngày đến hạn kết thúc.",
+    "sources": "[PROJECT] Dự án project-2; [SPRINT] Sprint 2; [TASK] PA-009 - Hoàn thiện chức năng 9; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] OPEN-2 - Task đang làm 2",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 10,
+    "caseId": "assistant-case-010",
+    "category": "SPRINT",
+    "question": "Sprint hiện tại tiến độ ra sao và còn bao nhiêu ngày?",
+    "answer": "Sprint 3 đã hoàn thành 7/12 công việc; còn 5 công việc và -13 ngày đến hạn kết thúc.",
+    "sources": "[PROJECT] Dự án project-3; [SPRINT] Sprint 3; [TASK] PA-010 - Hoàn thiện chức năng 10; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 11,
+    "caseId": "assistant-case-011",
+    "category": "SPRINT",
+    "question": "Sprint hiện tại tiến độ ra sao và còn bao nhiêu ngày?",
+    "answer": "Sprint 4 đã hoàn thành 8/13 công việc; còn 5 công việc và -12 ngày đến hạn kết thúc.",
+    "sources": "[PROJECT] Dự án project-4; [SPRINT] Sprint 4; [TASK] PA-011 - Hoàn thiện chức năng 11; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 12,
+    "caseId": "assistant-case-012",
+    "category": "SPRINT",
+    "question": "Sprint hiện tại tiến độ ra sao và còn bao nhiêu ngày?",
+    "answer": "Sprint 1 đã hoàn thành 5/14 công việc; còn 9 công việc và -11 ngày đến hạn kết thúc.",
+    "sources": "[PROJECT] Dự án project-1; [SPRINT] Sprint 1; [TASK] PA-012 - Hoàn thiện chức năng 12; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] OPEN-2 - Task đang làm 2; [TASK] OPEN-3 - Task đang làm 3",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 13,
+    "caseId": "assistant-case-013",
+    "category": "SPRINT",
+    "question": "Sprint hiện tại tiến độ ra sao và còn bao nhiêu ngày?",
+    "answer": "Sprint 2 đã hoàn thành 6/15 công việc; còn 9 công việc và -10 ngày đến hạn kết thúc.",
+    "sources": "[PROJECT] Dự án project-2; [SPRINT] Sprint 2; [TASK] PA-013 - Hoàn thiện chức năng 13; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] OPEN-2 - Task đang làm 2",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 14,
+    "caseId": "assistant-case-014",
+    "category": "SPRINT",
+    "question": "Sprint hiện tại tiến độ ra sao và còn bao nhiêu ngày?",
+    "answer": "Sprint 3 đã hoàn thành 7/16 công việc; còn 9 công việc và -9 ngày đến hạn kết thúc.",
+    "sources": "[PROJECT] Dự án project-3; [SPRINT] Sprint 3; [TASK] PA-014 - Hoàn thiện chức năng 14; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 15,
+    "caseId": "assistant-case-015",
+    "category": "MEETING",
+    "question": "Cuộc họp gần nhất đã thống nhất quyết định gì?",
+    "answer": "Cuộc họp gần nhất “Họp tiến độ 15” đã thống nhất: Ưu tiên xử lý PA-015 trước thứ Sáu.",
+    "sources": "[PROJECT] Dự án project-4; [SPRINT] Sprint 4; [TASK] PA-015 - Hoàn thiện chức năng 15; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 16,
+    "caseId": "assistant-case-016",
+    "category": "MEETING",
+    "question": "Cuộc họp gần nhất đã thống nhất quyết định gì?",
+    "answer": "Cuộc họp gần nhất “Họp tiến độ 16” đã thống nhất: Ưu tiên xử lý PA-016 trước thứ Sáu.",
+    "sources": "[PROJECT] Dự án project-1; [SPRINT] Sprint 1; [TASK] PA-016 - Hoàn thiện chức năng 16; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] OPEN-2 - Task đang làm 2; [TASK] OPEN-3 - Task đang làm 3",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 17,
+    "caseId": "assistant-case-017",
+    "category": "MEETING",
+    "question": "Cuộc họp gần nhất đã thống nhất quyết định gì?",
+    "answer": "Cuộc họp gần nhất “Họp tiến độ 17” đã thống nhất: Ưu tiên xử lý PA-017 trước thứ Sáu.",
+    "sources": "[PROJECT] Dự án project-2; [SPRINT] Sprint 2; [TASK] PA-017 - Hoàn thiện chức năng 17; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] OPEN-2 - Task đang làm 2",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 18,
+    "caseId": "assistant-case-018",
+    "category": "MEETING",
+    "question": "Cuộc họp gần nhất đã thống nhất quyết định gì?",
+    "answer": "Cuộc họp gần nhất “Họp tiến độ 18” đã thống nhất: Ưu tiên xử lý PA-018 trước thứ Sáu.",
+    "sources": "[PROJECT] Dự án project-3; [SPRINT] Sprint 3; [TASK] PA-018 - Hoàn thiện chức năng 18; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 19,
+    "caseId": "assistant-case-019",
+    "category": "MEETING",
+    "question": "Cuộc họp gần nhất đã thống nhất quyết định gì?",
+    "answer": "Cuộc họp gần nhất “Họp tiến độ 19” đã thống nhất: Ưu tiên xử lý PA-019 trước thứ Sáu.",
+    "sources": "[PROJECT] Dự án project-4; [SPRINT] Sprint 4; [TASK] PA-019 - Hoàn thiện chức năng 19; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 20,
+    "caseId": "assistant-case-020",
+    "category": "MEETING",
+    "question": "Cuộc họp gần nhất đã thống nhất quyết định gì?",
+    "answer": "Cuộc họp gần nhất “Họp tiến độ 20” đã thống nhất: Ưu tiên xử lý PA-020 trước thứ Sáu.",
+    "sources": "[PROJECT] Dự án project-1; [SPRINT] Sprint 1; [TASK] PA-020 - Hoàn thiện chức năng 20; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] OPEN-2 - Task đang làm 2; [TASK] OPEN-3 - Task đang làm 3",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 21,
+    "caseId": "assistant-case-021",
+    "category": "MEETING",
+    "question": "Cuộc họp gần nhất đã thống nhất quyết định gì?",
+    "answer": "Cuộc họp gần nhất “Họp tiến độ 21” đã thống nhất: Ưu tiên xử lý PA-021 trước thứ Sáu.",
+    "sources": "[PROJECT] Dự án project-2; [SPRINT] Sprint 2; [TASK] PA-021 - Hoàn thiện chức năng 21; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] OPEN-2 - Task đang làm 2",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 22,
+    "caseId": "assistant-case-022",
+    "category": "ACTION_ITEM",
+    "question": "Action item của cuộc họp là gì, giao cho ai và hạn khi nào?",
+    "answer": "Có 1 action item liên quan đến bạn: Kiểm thử và nghiệm thu PA-022 — hạn 2026-08-15. Hệ thống hiện chưa có trạng thái hoàn tất riêng cho action item nên chưa thể khẳng định mục nào đã được xử lý.",
+    "sources": "[PROJECT] Dự án project-3; [SPRINT] Sprint 3; [TASK] PA-022 - Hoàn thiện chức năng 22; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 23,
+    "caseId": "assistant-case-023",
+    "category": "ACTION_ITEM",
+    "question": "Action item của cuộc họp là gì, giao cho ai và hạn khi nào?",
+    "answer": "Có 1 action item liên quan đến bạn: Kiểm thử và nghiệm thu PA-023 — hạn 2026-08-16. Hệ thống hiện chưa có trạng thái hoàn tất riêng cho action item nên chưa thể khẳng định mục nào đã được xử lý.",
+    "sources": "[PROJECT] Dự án project-4; [SPRINT] Sprint 4; [TASK] PA-023 - Hoàn thiện chức năng 23; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 24,
+    "caseId": "assistant-case-024",
+    "category": "ACTION_ITEM",
+    "question": "Action item của cuộc họp là gì, giao cho ai và hạn khi nào?",
+    "answer": "Có 1 action item liên quan đến bạn: Kiểm thử và nghiệm thu PA-024 — hạn 2026-08-17. Hệ thống hiện chưa có trạng thái hoàn tất riêng cho action item nên chưa thể khẳng định mục nào đã được xử lý.",
+    "sources": "[PROJECT] Dự án project-1; [SPRINT] Sprint 1; [TASK] PA-024 - Hoàn thiện chức năng 24; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] OPEN-2 - Task đang làm 2; [TASK] OPEN-3 - Task đang làm 3",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 25,
+    "caseId": "assistant-case-025",
+    "category": "ACTION_ITEM",
+    "question": "Action item của cuộc họp là gì, giao cho ai và hạn khi nào?",
+    "answer": "Có 1 action item liên quan đến bạn: Kiểm thử và nghiệm thu PA-025 — hạn 2026-08-18. Hệ thống hiện chưa có trạng thái hoàn tất riêng cho action item nên chưa thể khẳng định mục nào đã được xử lý.",
+    "sources": "[PROJECT] Dự án project-2; [SPRINT] Sprint 2; [TASK] PA-025 - Hoàn thiện chức năng 25; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] OPEN-2 - Task đang làm 2",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 26,
+    "caseId": "assistant-case-026",
+    "category": "ACTION_ITEM",
+    "question": "Action item của cuộc họp là gì, giao cho ai và hạn khi nào?",
+    "answer": "Có 1 action item liên quan đến bạn: Kiểm thử và nghiệm thu PA-026 — hạn 2026-08-19. Hệ thống hiện chưa có trạng thái hoàn tất riêng cho action item nên chưa thể khẳng định mục nào đã được xử lý.",
+    "sources": "[PROJECT] Dự án project-3; [SPRINT] Sprint 3; [TASK] PA-026 - Hoàn thiện chức năng 26; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 27,
+    "caseId": "assistant-case-027",
+    "category": "ACTION_ITEM",
+    "question": "Action item của cuộc họp là gì, giao cho ai và hạn khi nào?",
+    "answer": "Có 1 action item liên quan đến bạn: Kiểm thử và nghiệm thu PA-027 — hạn 2026-08-20. Hệ thống hiện chưa có trạng thái hoàn tất riêng cho action item nên chưa thể khẳng định mục nào đã được xử lý.",
+    "sources": "[PROJECT] Dự án project-4; [SPRINT] Sprint 4; [TASK] PA-027 - Hoàn thiện chức năng 27; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 28,
+    "caseId": "assistant-case-028",
+    "category": "ACTION_ITEM",
+    "question": "Action item của cuộc họp là gì, giao cho ai và hạn khi nào?",
+    "answer": "Có 1 action item liên quan đến bạn: Kiểm thử và nghiệm thu PA-028 — hạn 2026-08-21. Hệ thống hiện chưa có trạng thái hoàn tất riêng cho action item nên chưa thể khẳng định mục nào đã được xử lý.",
+    "sources": "[PROJECT] Dự án project-1; [SPRINT] Sprint 1; [TASK] PA-028 - Hoàn thiện chức năng 28; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] OPEN-2 - Task đang làm 2; [TASK] OPEN-3 - Task đang làm 3",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 29,
+    "caseId": "assistant-case-029",
+    "category": "CROSS_SOURCE",
+    "question": "Kết hợp Task, Sprint, cuộc họp và cập nhật hằng ngày để đánh giá rủi ro tiến độ.",
+    "answer": "Rủi ro nghiêm trọng: 100/100. Phát hiện 5 dấu hiệu cần theo dõi. Ưu tiên xử lý tiến độ thấp hơn kế hoạch.",
+    "sources": "[PROJECT] Dự án project-2; [SPRINT] Sprint 2; [TASK] PA-029 - Hoàn thiện chức năng 29; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] OPEN-2 - Task đang làm 2",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 30,
+    "caseId": "assistant-case-030",
+    "category": "CROSS_SOURCE",
+    "question": "Kết hợp Task, Sprint, cuộc họp và cập nhật hằng ngày để đánh giá rủi ro tiến độ.",
+    "answer": "Rủi ro nghiêm trọng: 90/100. Phát hiện 5 dấu hiệu cần theo dõi. Ưu tiên xử lý tiến độ thấp hơn kế hoạch.",
+    "sources": "[PROJECT] Dự án project-3; [SPRINT] Sprint 3; [TASK] PA-030 - Hoàn thiện chức năng 30; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 31,
+    "caseId": "assistant-case-031",
+    "category": "CROSS_SOURCE",
+    "question": "Kết hợp Task, Sprint, cuộc họp và cập nhật hằng ngày để đánh giá rủi ro tiến độ.",
+    "answer": "Rủi ro nghiêm trọng: 90/100. Phát hiện 5 dấu hiệu cần theo dõi. Ưu tiên xử lý tiến độ thấp hơn kế hoạch.",
+    "sources": "[PROJECT] Dự án project-4; [SPRINT] Sprint 4; [TASK] PA-031 - Hoàn thiện chức năng 31; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 32,
+    "caseId": "assistant-case-032",
+    "category": "CROSS_SOURCE",
+    "question": "Kết hợp Task, Sprint, cuộc họp và cập nhật hằng ngày để đánh giá rủi ro tiến độ.",
+    "answer": "Rủi ro nghiêm trọng: 100/100. Phát hiện 5 dấu hiệu cần theo dõi. Ưu tiên xử lý tiến độ thấp hơn kế hoạch.",
+    "sources": "[PROJECT] Dự án project-1; [SPRINT] Sprint 1; [TASK] PA-032 - Hoàn thiện chức năng 32; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] OPEN-2 - Task đang làm 2; [TASK] OPEN-3 - Task đang làm 3",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 33,
+    "caseId": "assistant-case-033",
+    "category": "CROSS_SOURCE",
+    "question": "Kết hợp Task, Sprint, cuộc họp và cập nhật hằng ngày để đánh giá rủi ro tiến độ.",
+    "answer": "Rủi ro nghiêm trọng: 100/100. Phát hiện 5 dấu hiệu cần theo dõi. Ưu tiên xử lý tiến độ thấp hơn kế hoạch.",
+    "sources": "[PROJECT] Dự án project-2; [SPRINT] Sprint 2; [TASK] PA-033 - Hoàn thiện chức năng 33; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] OPEN-2 - Task đang làm 2",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 34,
+    "caseId": "assistant-case-034",
+    "category": "CROSS_SOURCE",
+    "question": "Kết hợp Task, Sprint, cuộc họp và cập nhật hằng ngày để đánh giá rủi ro tiến độ.",
+    "answer": "Rủi ro nghiêm trọng: 98/100. Phát hiện 5 dấu hiệu cần theo dõi. Ưu tiên xử lý tiến độ thấp hơn kế hoạch.",
+    "sources": "[PROJECT] Dự án project-3; [SPRINT] Sprint 3; [TASK] PA-034 - Hoàn thiện chức năng 34; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 35,
+    "caseId": "assistant-case-035",
+    "category": "CROSS_SOURCE",
+    "question": "Kết hợp Task, Sprint, cuộc họp và cập nhật hằng ngày để đánh giá rủi ro tiến độ.",
+    "answer": "Rủi ro nghiêm trọng: 86/100. Phát hiện 5 dấu hiệu cần theo dõi. Ưu tiên xử lý tiến độ thấp hơn kế hoạch.",
+    "sources": "[PROJECT] Dự án project-4; [SPRINT] Sprint 4; [TASK] PA-035 - Hoàn thiện chức năng 35; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": false,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 36,
+    "caseId": "assistant-case-036",
+    "category": "SUGGESTED_QUESTIONS",
+    "question": "Hãy đề xuất các câu hỏi tiếp theo hữu ích dựa trên dữ liệu dự án hiện tại.",
+    "answer": "Dự án Dự án project-1 có 13 công việc trong phạm vi đang xem, 8 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-1; [SPRINT] Sprint 1; [TASK] PA-036 - Hoàn thiện chức năng 36; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] OPEN-2 - Task đang làm 2; [TASK] OPEN-3 - Task đang làm 3",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 37,
+    "caseId": "assistant-case-037",
+    "category": "SUGGESTED_QUESTIONS",
+    "question": "Hãy đề xuất các câu hỏi tiếp theo hữu ích dựa trên dữ liệu dự án hiện tại.",
+    "answer": "Dự án Dự án project-2 có 14 công việc trong phạm vi đang xem, 8 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-2; [SPRINT] Sprint 2; [TASK] PA-037 - Hoàn thiện chức năng 37; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] OPEN-2 - Task đang làm 2",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 38,
+    "caseId": "assistant-case-038",
+    "category": "SUGGESTED_QUESTIONS",
+    "question": "Hãy đề xuất các câu hỏi tiếp theo hữu ích dựa trên dữ liệu dự án hiện tại.",
+    "answer": "Dự án Dự án project-3 có 15 công việc trong phạm vi đang xem, 8 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-3; [SPRINT] Sprint 3; [TASK] PA-038 - Hoàn thiện chức năng 38; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 39,
+    "caseId": "assistant-case-039",
+    "category": "SUGGESTED_QUESTIONS",
+    "question": "Hãy đề xuất các câu hỏi tiếp theo hữu ích dựa trên dữ liệu dự án hiện tại.",
+    "answer": "Dự án Dự án project-4 có 16 công việc trong phạm vi đang xem, 8 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-4; [SPRINT] Sprint 4; [TASK] PA-039 - Hoàn thiện chức năng 39; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 40,
+    "caseId": "assistant-case-040",
+    "category": "SUGGESTED_QUESTIONS",
+    "question": "Hãy đề xuất các câu hỏi tiếp theo hữu ích dựa trên dữ liệu dự án hiện tại.",
+    "answer": "Dự án Dự án project-1 có 12 công việc trong phạm vi đang xem, 7 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-1; [SPRINT] Sprint 1; [TASK] PA-040 - Hoàn thiện chức năng 40; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] OPEN-2 - Task đang làm 2; [TASK] OPEN-3 - Task đang làm 3",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 41,
+    "caseId": "assistant-case-041",
+    "category": "SUGGESTED_QUESTIONS",
+    "question": "Hãy đề xuất các câu hỏi tiếp theo hữu ích dựa trên dữ liệu dự án hiện tại.",
+    "answer": "Dự án Dự án project-2 có 13 công việc trong phạm vi đang xem, 7 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-2; [SPRINT] Sprint 2; [TASK] PA-041 - Hoàn thiện chức năng 41; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] OPEN-2 - Task đang làm 2",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  },
+  {
+    "stt": 42,
+    "caseId": "assistant-case-042",
+    "category": "SUGGESTED_QUESTIONS",
+    "question": "Hãy đề xuất các câu hỏi tiếp theo hữu ích dựa trên dữ liệu dự án hiện tại.",
+    "answer": "Dự án Dự án project-3 có 14 công việc trong phạm vi đang xem, 7 công việc chưa hoàn thành.",
+    "sources": "[PROJECT] Dự án project-3; [SPRINT] Sprint 3; [TASK] PA-042 - Hoàn thiện chức năng 42; [TASK] DONE-1 - Task hoàn thành 1; [TASK] DONE-2 - Task hoàn thành 2; [TASK] DONE-3 - Task hoàn thành 3; [TASK] DONE-4 - Task hoàn thành 4; [TASK] DONE-5 - Task hoàn thành 5; [TASK] DONE-6 - Task hoàn thành 6; [TASK] DONE-7 - Task hoàn thành 7",
+    "suggestedQuestions": [
+      "Sprint hiện tại có rủi ro nào?",
+      "Công việc nào đang quá hạn?",
+      "Ai đang gặp trở ngại?",
+      "Công việc nào chưa có người phụ trách?"
+    ],
+    "isCorrect": true,
+    "hasValidCitation": true
+  }
+]

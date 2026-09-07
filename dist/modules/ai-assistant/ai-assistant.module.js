@@ -64,6 +64,9 @@ const meeting_transcript_schema_1 = require("../meetings/schemas/meeting-transcr
 const project_assistant_message_schema_1 = require("./schemas/project-assistant-message.schema");
 const mongodb_observability_scheduler_1 = require("./schedulers/mongodb-observability.scheduler");
 const notifications_module_1 = require("../notifications/notifications.module");
+const meeting_import_controller_1 = require("./controllers/meeting-import.controller");
+const meeting_import_job_schema_1 = require("./schemas/meeting-import-job.schema");
+const meeting_import_service_1 = require("./services/meeting-import.service");
 const mongoImports = (0, mongodb_config_1.mongodbConfig)().enabled
     ? [
         mongoose_1.MongooseModule.forFeature([
@@ -71,6 +74,7 @@ const mongoImports = (0, mongodb_config_1.mongodbConfig)().enabled
             { name: ai_prompt_log_schema_1.AiPromptLog.name, schema: ai_prompt_log_schema_1.AiPromptLogSchema },
             { name: meeting_summary_schema_1.MeetingSummary.name, schema: meeting_summary_schema_1.MeetingSummarySchema },
             { name: meeting_transcript_schema_1.MeetingTranscript.name, schema: meeting_transcript_schema_1.MeetingTranscriptSchema },
+            { name: meeting_import_job_schema_1.MeetingImportJob.name, schema: meeting_import_job_schema_1.MeetingImportJobSchema },
             {
                 name: project_assistant_message_schema_1.ProjectAssistantMessage.name,
                 schema: project_assistant_message_schema_1.ProjectAssistantMessageSchema,
@@ -111,6 +115,7 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
             ai_meeting_summary_controller_1.AiMeetingSummaryDetailController,
             ai_personalized_meeting_summary_controller_1.AiPersonalizedMeetingSummaryController,
             ai_personalized_meeting_summary_controller_1.AiPersonalizedMeetingSummaryProjectController,
+            meeting_import_controller_1.MeetingImportController,
         ],
         providers: [
             ai_draft_service_1.AiDraftService,
@@ -138,6 +143,7 @@ exports.AiAssistantModule = AiAssistantModule = __decorate([
             meeting_action_item_reviews_repository_1.MeetingActionItemReviewsRepository,
             ai_team_report_action_item_service_1.AiTeamReportActionItemService,
             team_report_action_items_repository_1.TeamReportActionItemsRepository,
+            meeting_import_service_1.MeetingImportService,
             workspace_member_guard_1.WorkspaceMemberGuard,
             workspace_roles_guard_1.WorkspaceRolesGuard,
             ...((0, mongodb_config_1.mongodbConfig)().enabled ? [mongodb_observability_scheduler_1.MongodbObservabilityScheduler] : []),

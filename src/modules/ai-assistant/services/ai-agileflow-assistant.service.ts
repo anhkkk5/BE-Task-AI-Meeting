@@ -197,14 +197,10 @@ export class AiAgileFlowAssistantService {
 
   private needsSprint(question: string) {
     const normalized = this.normalize(question);
-    return [
-      'sprint',
-      'backlog',
-      'tien do',
-      'qua han',
-      'cong viec',
-      'task',
-    ].some((term) => normalized.includes(term));
+    // Chỉ yêu cầu chọn Sprint khi người dùng nhắc trực tiếp đến Sprint.
+    // Các câu hỏi về task, quá hạn hoặc tiến độ vẫn trả lời được bằng phạm vi
+    // mặc định của dự án, tránh chuỗi câu hỏi làm gián đoạn hội thoại.
+    return normalized.includes('sprint');
   }
 
   private normalize(value: string) {

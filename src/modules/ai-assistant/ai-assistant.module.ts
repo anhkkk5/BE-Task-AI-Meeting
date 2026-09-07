@@ -73,6 +73,9 @@ import {
 } from './schemas/project-assistant-message.schema';
 import { MongodbObservabilityScheduler } from './schedulers/mongodb-observability.scheduler';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { MeetingImportController } from './controllers/meeting-import.controller';
+import { MeetingImportJob, MeetingImportJobSchema } from './schemas/meeting-import-job.schema';
+import { MeetingImportService } from './services/meeting-import.service';
 
 const mongoImports = mongodbConfig().enabled
   ? [
@@ -81,6 +84,7 @@ const mongoImports = mongodbConfig().enabled
         { name: AiPromptLog.name, schema: AiPromptLogSchema },
         { name: MeetingSummary.name, schema: MeetingSummarySchema },
         { name: MeetingTranscript.name, schema: MeetingTranscriptSchema },
+        { name: MeetingImportJob.name, schema: MeetingImportJobSchema },
         {
           name: ProjectAssistantMessage.name,
           schema: ProjectAssistantMessageSchema,
@@ -118,6 +122,7 @@ const mongoImports = mongodbConfig().enabled
     AiMeetingSummaryDetailController,
     AiPersonalizedMeetingSummaryController,
     AiPersonalizedMeetingSummaryProjectController,
+    MeetingImportController,
   ],
   providers: [
     AiDraftService,
@@ -145,6 +150,7 @@ const mongoImports = mongodbConfig().enabled
     MeetingActionItemReviewsRepository,
     AiTeamReportActionItemService,
     TeamReportActionItemsRepository,
+    MeetingImportService,
     WorkspaceMemberGuard,
     WorkspaceRolesGuard,
     ...(mongodbConfig().enabled ? [MongodbObservabilityScheduler] : []),
