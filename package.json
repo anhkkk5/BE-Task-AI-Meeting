@@ -67,6 +67,7 @@
     "class-validator": "^0.15.1",
     "cloudinary": "^2.10.0",
     "exceljs": "^4.4.0",
+    "iconv-lite": "^0.7.3",
     "ioredis": "^5.11.1",
     "mammoth": "^1.12.2",
     "mongoose": "^9.7.0",

@@ -10,6 +10,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as mammoth from 'mammoth';
 import pdf from 'pdf-parse';
+import iconv from 'iconv-lite';
 import { spawn } from 'child_process';
 import { mkdtemp, readFile, readdir, rm, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
@@ -29,6 +30,10 @@ const MEDIA_EXTENSIONS = new Set(['.mp3', '.wav', '.m4a', '.ogg', '.webm', '.mp4
 const MAX_DOCUMENT_BYTES = 25 * 1024 * 1024;
 const MAX_MEDIA_BYTES = 200 * 1024 * 1024;
 const DIRECT_TRANSCRIPTION_BYTES = 24 * 1024 * 1024;
+const DIRECT_MEDIA_TYPES = new Set([
+  'audio/webm', 'video/webm', 'audio/mp4', 'video/mp4', 'audio/mpeg',
+  'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/x-m4a',
+]);
 
 @Injectable()
 export class MeetingImportService {
@@ -45,6 +50,7 @@ export class MeetingImportService {
   async createJob(userId: string, workspaceId: string, projectId: string, meetingId: string, file?: UploadedMeetingFile) {
     const model = this.getModel();
     const kind = this.validateFile(file);
+    file!.originalname = this.normalizeFileName(file!.originalname);
     const job = await model.create({
       workspaceId, projectId, meetingId, createdBy: userId,
       fileName: file!.originalname, mimeType: file!.mimetype,
@@ -106,7 +112,8 @@ export class MeetingImportService {
 
   private async transcribeMedia(jobId: string, file: UploadedMeetingFile) {
     await this.update(jobId, 'TRANSCRIBING', 30, 'Đang chuyển giọng nói thành văn bản');
-    if (file.size <= DIRECT_TRANSCRIPTION_BYTES) {
+    const mimeType = file.mimetype.split(';')[0].toLowerCase();
+    if (file.size <= DIRECT_TRANSCRIPTION_BYTES && DIRECT_MEDIA_TYPES.has(mimeType)) {
       return (await this.transcriptionService.transcribe(file)).text;
     }
     const chunks = await this.splitMedia(file);
@@ -156,6 +163,14 @@ export class MeetingImportService {
     if (DOCUMENT_EXTENSIONS.has(extension)) return 'DOCUMENT';
     if (MEDIA_EXTENSIONS.has(extension)) return 'MEDIA';
     throw new BadRequestException('Chỉ hỗ trợ PDF, DOCX, TXT, MD, MP3, WAV, M4A, OGG, WEBM, MP4, MOV và MKV');
+  }
+
+  private normalizeFileName(name: string) {
+    // Trinh duyet gui ten UTF-8, nhung Busboy co the doc header multipart theo
+    // Windows-1252. Ma hoa nguoc ve byte roi giai ma UTF-8 de giu dung tieng Viet.
+    if (!/[\u0080-\uFFFF]/.test(name)) return name;
+    const decoded = iconv.decode(iconv.encode(name, 'windows-1252'), 'utf8');
+    return decoded.includes('\uFFFD') ? name : decoded;
   }
 
   private update(id: string, status: MeetingImportJobStatus, progress: number, message: string) {

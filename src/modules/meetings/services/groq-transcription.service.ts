@@ -52,6 +52,7 @@ const MAX_PROMPT_CHARS = 600;
 const SUPPORTED_AUDIO_TYPES = new Set([
   'audio/webm',
   'video/webm',
+  'video/mp4',
   'audio/mp4',
   'audio/mpeg',
   'audio/wav',
@@ -63,6 +64,7 @@ const SUPPORTED_AUDIO_TYPES = new Set([
 const AUDIO_EXTENSIONS: Record<string, string> = {
   'audio/webm': 'webm',
   'video/webm': 'webm',
+  'video/mp4': 'mp4',
   'audio/mp4': 'm4a',
   'audio/x-m4a': 'm4a',
   'audio/mpeg': 'mp3',

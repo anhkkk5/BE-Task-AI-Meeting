@@ -54,6 +54,7 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mammoth = __importStar(require("mammoth"));
 const pdf_parse_1 = __importDefault(require("pdf-parse"));
+const iconv_lite_1 = __importDefault(require("iconv-lite"));
 const child_process_1 = require("child_process");
 const promises_1 = require("fs/promises");
 const os_1 = require("os");
@@ -67,6 +68,10 @@ const MEDIA_EXTENSIONS = new Set(['.mp3', '.wav', '.m4a', '.ogg', '.webm', '.mp4
 const MAX_DOCUMENT_BYTES = 25 * 1024 * 1024;
 const MAX_MEDIA_BYTES = 200 * 1024 * 1024;
 const DIRECT_TRANSCRIPTION_BYTES = 24 * 1024 * 1024;
+const DIRECT_MEDIA_TYPES = new Set([
+    'audio/webm', 'video/webm', 'audio/mp4', 'video/mp4', 'audio/mpeg',
+    'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/x-m4a',
+]);
 let MeetingImportService = MeetingImportService_1 = class MeetingImportService {
     jobModel;
     transcriptsService;
@@ -82,6 +87,7 @@ let MeetingImportService = MeetingImportService_1 = class MeetingImportService {
     async createJob(userId, workspaceId, projectId, meetingId, file) {
         const model = this.getModel();
         const kind = this.validateFile(file);
+        file.originalname = this.normalizeFileName(file.originalname);
         const job = await model.create({
             workspaceId, projectId, meetingId, createdBy: userId,
             fileName: file.originalname, mimeType: file.mimetype,
@@ -142,7 +148,8 @@ let MeetingImportService = MeetingImportService_1 = class MeetingImportService {
     }
     async transcribeMedia(jobId, file) {
         await this.update(jobId, 'TRANSCRIBING', 30, 'Đang chuyển giọng nói thành văn bản');
-        if (file.size <= DIRECT_TRANSCRIPTION_BYTES) {
+        const mimeType = file.mimetype.split(';')[0].toLowerCase();
+        if (file.size <= DIRECT_TRANSCRIPTION_BYTES && DIRECT_MEDIA_TYPES.has(mimeType)) {
             return (await this.transcriptionService.transcribe(file)).text;
         }
         const chunks = await this.splitMedia(file);
@@ -200,6 +207,12 @@ let MeetingImportService = MeetingImportService_1 = class MeetingImportService {
         if (MEDIA_EXTENSIONS.has(extension))
             return 'MEDIA';
         throw new common_1.BadRequestException('Chỉ hỗ trợ PDF, DOCX, TXT, MD, MP3, WAV, M4A, OGG, WEBM, MP4, MOV và MKV');
+    }
+    normalizeFileName(name) {
+        if (!/[\u0080-\uFFFF]/.test(name))
+            return name;
+        const decoded = iconv_lite_1.default.decode(iconv_lite_1.default.encode(name, 'windows-1252'), 'utf8');
+        return decoded.includes('\uFFFD') ? name : decoded;
     }
     update(id, status, progress, message) {
         return this.getModel().findByIdAndUpdate(id, { status, progress, message }).exec();

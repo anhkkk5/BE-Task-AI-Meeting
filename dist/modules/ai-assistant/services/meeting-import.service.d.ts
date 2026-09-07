@@ -92,6 +92,7 @@ export declare class MeetingImportService {
     private splitMedia;
     private validateFile;
     private fileKind;
+    private normalizeFileName;
     private update;
     private getModel;
     private toResponse;
