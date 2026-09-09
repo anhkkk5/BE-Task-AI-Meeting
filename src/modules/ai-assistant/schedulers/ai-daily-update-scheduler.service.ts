@@ -297,7 +297,11 @@ export class AiDailyUpdateSchedulerService
 
   async expireUndeliveredDrafts(now = new Date()) {
     const today = this.formatDateInTimeZone(now, this.getTimeZone());
-    return this.dailyUpdatesRepository.markPendingAsMissed(this.nextDate(today));
+    // Nếu người dùng chưa kịp duyệt trước cuối ngày, dùng nguyên bản nháp AI
+    // làm Daily Update chính thức thay vì làm mất báo cáo bằng trạng thái MISSED.
+    return this.dailyUpdatesRepository.submitPendingBeforeDate(
+      this.nextDate(today),
+    );
   }
 
   async remindUndeliveredDrafts(now = new Date()) {

@@ -999,6 +999,7 @@ export declare class TasksService {
     private requireOwnComment;
     private resolveMentionedUserIds;
     private toCommentResponse;
+    private normalizeExcelXmlNamespaces;
     private recordActivity;
     private pickTaskFields;
     private buildChanges;

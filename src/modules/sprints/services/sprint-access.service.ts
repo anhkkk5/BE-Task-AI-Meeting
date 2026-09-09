@@ -50,7 +50,9 @@ export class SprintAccessService {
       await this.sprintsRepository.findActiveByProject(projectId);
 
     if (activeSprint && activeSprint.id !== sprintId) {
-      throw new ConflictException('This project already has an active sprint');
+      throw new ConflictException(
+        `Dự án đang có Sprint “${activeSprint.name}” hoạt động. Hãy hoàn thành Sprint này trước khi bắt đầu Sprint khác.`,
+      );
     }
   }
 }

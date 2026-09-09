@@ -4,6 +4,7 @@ import {
   Logger,
   NotFoundException,
   Optional,
+  PayloadTooLargeException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -174,7 +175,7 @@ export class MeetingImportService {
     if (!file?.buffer?.length) throw new BadRequestException('Vui lòng chọn tệp cuộc họp');
     const kind = this.fileKind(file.originalname);
     const limit = kind === 'DOCUMENT' ? MAX_DOCUMENT_BYTES : MAX_MEDIA_BYTES;
-    if (file.size > limit) throw new BadRequestException(`Tệp vượt quá giới hạn ${limit / 1024 / 1024} MB`);
+    if (file.size > limit) throw new PayloadTooLargeException(`Tệp vượt quá giới hạn ${limit / 1024 / 1024} MB`);
     return kind;
   }
 
@@ -202,6 +203,14 @@ export class MeetingImportService {
   }
   private toResponse(job: MeetingImportJobDocument) {
     const item = job.toObject();
-    return { ...item, id: String(job._id), _id: undefined, __v: undefined };
+    // Chuẩn hóa cả dữ liệu cũ đã được lưu trước khi sửa encoding multipart.
+    // Nhờ vậy người dùng không cần tải lại video chỉ để tên file hiển thị đúng.
+    return {
+      ...item,
+      fileName: this.normalizeFileName(item.fileName),
+      id: String(job._id),
+      _id: undefined,
+      __v: undefined,
+    };
   }
 }

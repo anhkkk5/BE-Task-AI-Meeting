@@ -45,7 +45,7 @@ let SprintAccessService = class SprintAccessService {
     async assertProjectHasNoActiveSprint(projectId, sprintId) {
         const activeSprint = await this.sprintsRepository.findActiveByProject(projectId);
         if (activeSprint && activeSprint.id !== sprintId) {
-            throw new common_1.ConflictException('This project already has an active sprint');
+            throw new common_1.ConflictException(`Dự án đang có Sprint “${activeSprint.name}” hoạt động. Hãy hoàn thành Sprint này trước khi bắt đầu Sprint khác.`);
         }
     }
 };

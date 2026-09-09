@@ -10,6 +10,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
 import { WorkspaceRolesGuard } from '../src/common/guards/workspace-roles.guard';
+import { WorkspaceMemberGuard } from '../src/common/guards/workspace-member.guard';
 import { AiTeamReportController } from '../src/modules/ai-assistant/controllers/ai-team-report.controller';
 import { AiTeamReportService } from '../src/modules/ai-assistant/services/ai-team-report.service';
 import { AccessTokenGuard } from '../src/modules/auth/guards/access-token.guard';
@@ -145,6 +146,8 @@ describe('AiTeamReportController (e2e)', () => {
       .overrideGuard(AccessTokenGuard)
       .useClass(MockAccessTokenGuard)
       .overrideGuard(WorkspaceRolesGuard)
+      .useClass(AllowGuard)
+      .overrideGuard(WorkspaceMemberGuard)
       .useClass(AllowGuard)
       .compile();
 

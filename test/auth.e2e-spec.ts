@@ -1,4 +1,5 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { CanActivate, INestApplication, ValidationPipe } from '@nestjs/common';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -18,6 +19,12 @@ type AuthSuccessResponse = {
     };
   };
 };
+
+class AllowGuard implements CanActivate {
+  canActivate() {
+    return true;
+  }
+}
 
 describe('AuthController validation (e2e)', () => {
   let app: INestApplication<App>;
@@ -43,21 +50,12 @@ describe('AuthController validation (e2e)', () => {
         refreshToken: 'refresh-token',
       }),
       register: jest.fn().mockResolvedValue({
-        body: {
-          success: true,
-          message: 'Register successfully',
-          data: {
-            user: {
-              id: 'user-id',
-              email: 'member@example.com',
-              fullName: 'Nguyen Van A',
-            },
-            tokens: {
-              accessToken: 'access-token',
-            },
-          },
+        success: true,
+        message: 'Verification code sent',
+        data: {
+          email: 'member@example.com',
+          expiresInSeconds: 600,
         },
-        refreshToken: 'refresh-token',
       }),
     };
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -68,7 +66,10 @@ describe('AuthController validation (e2e)', () => {
           useValue: authService,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(ThrottlerGuard)
+      .useClass(AllowGuard)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api/v1');
@@ -139,17 +140,13 @@ describe('AuthController validation (e2e)', () => {
       })
       .expect(201)
       .expect((response) => {
-        const body = response.body as AuthSuccessResponse;
-
         expect(authService.register).toHaveBeenCalledWith({
           email: 'member@example.com',
           fullName: 'Nguyen Van A',
           password: 'password123',
         });
-        expect(body.data.tokens).toEqual({
-          accessToken: 'access-token',
-        });
-        expect(response.headers['set-cookie']?.[0]).toContain('HttpOnly');
+        expect(response.body.data.email).toBe('member@example.com');
+        expect(response.headers['set-cookie']).toBeUndefined();
       });
   });
 
@@ -185,10 +182,13 @@ describe('AuthController validation (e2e)', () => {
       .expect((response) => {
         const body = response.body as AuthSuccessResponse;
 
-        expect(authService.login).toHaveBeenCalledWith({
-          email: 'member@example.com',
-          password: 'password123',
-        });
+        expect(authService.login).toHaveBeenCalledWith(
+          {
+            email: 'member@example.com',
+            password: 'password123',
+          },
+          expect.objectContaining({ ipAddress: expect.any(String) }),
+        );
         expect(body.data.tokens).toEqual({
           accessToken: 'access-token',
         });

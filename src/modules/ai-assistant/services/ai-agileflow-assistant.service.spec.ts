@@ -39,6 +39,19 @@ describe('AiAgileFlowAssistantService', () => {
     expect(memberships.findActiveByUser).not.toHaveBeenCalled();
   });
 
+  it('politely redirects an out-of-scope question before requesting workspace', async () => {
+    const result = await service.ask('user-1', {
+      question: 'code thuật tón',
+    });
+
+    expect(result.data.state).toBe('GLOBAL');
+    expect(result.data.choices).toEqual([]);
+    expect(result.data.answer).toContain('chưa thể viết code');
+    expect(result.data.answer).toContain('Mình có thể hỗ trợ bạn ngay với:');
+    expect(result.data.suggestedQuestions).toHaveLength(3);
+    expect(memberships.findActiveByUser).not.toHaveBeenCalled();
+  });
+
   it('offers only workspaces accessible to the current user', async () => {
     memberships.findActiveByUser.mockResolvedValue([
       {

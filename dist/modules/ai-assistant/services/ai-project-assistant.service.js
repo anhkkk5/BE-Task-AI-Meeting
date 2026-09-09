@@ -91,10 +91,12 @@ let AiProjectAssistantService = class AiProjectAssistantService {
         const fallback = this.buildFallbackAnswer(dto.question, userId, project, sprint, tasks, updates, risk, latestMeetingSummary, personalMeetingSummaries);
         const sources = this.buildSources(userId, project, sprint, tasks, updates, dto.question);
         const actionDraft = this.buildActionDraft(dto.question, sprint, tasks);
+        const conversationHistory = await this.getRecentConversation(userId, workspaceId, projectId);
         let output = fallback;
-        if (!this.isDeterministicQuestion(dto.question)) {
+        if (!this.isUsageHelpQuestion(dto.question) &&
+            !this.isOutOfScopeQuestion(dto.question)) {
             try {
-                output = (await this.aiProviderService.generateProjectAssistantAnswer(this.buildPrompt(dto.question, project, sprint, tasks, updates, risk, latestMeetingSummary, personalMeetingSummaries), fallback)).output;
+                output = (await this.aiProviderService.generateProjectAssistantAnswer(this.buildPrompt(dto.question, project, sprint, tasks, updates, risk, latestMeetingSummary, personalMeetingSummaries, conversationHistory, fallback.answer), fallback)).output;
             }
             catch {
                 output = fallback;
@@ -444,12 +446,36 @@ let AiProjectAssistantService = class AiProjectAssistantService {
             ].join('\n');
         }
         else if (this.isOutOfScopeQuestion(normalized)) {
-            answer =
-                'Mình là trợ lý dự án AgileFlow nên không viết thuật toán hoặc mã nguồn chung không liên quan đến dữ liệu và thao tác trong dự án. Bạn có thể hỏi mình về task, Sprint, cuộc họp, bàn giao, Daily Update hoặc cách sử dụng AgileFlow.';
+            answer = [
+                'Mình hiểu bạn đang cần hỗ trợ một nội dung nằm ngoài phạm vi quản lý dự án.',
+                'Hiện tại mình chỉ sử dụng dữ liệu trong AgileFlow nên chưa thể viết code, giải thuật toán hoặc tư vấn các chủ đề không liên quan ngay trong cửa sổ này.',
+                'Mình vẫn có thể giúp bạn theo hướng gần nhất:',
+                '• Phân tích task, tiến độ và rủi ro của Sprint.',
+                '• Tìm công việc quá hạn, blocker hoặc người đang cần hỗ trợ.',
+                '• Đề xuất thứ tự ưu tiên và hướng xử lý dựa trên dữ liệu dự án.',
+                '• Tóm tắt cuộc họp, quyết định và các việc cần làm tiếp theo.',
+                'Bạn hãy thử hỏi: “Sprint hiện tại có rủi ro nào và nên xử lý ra sao?”',
+            ].join('\n');
         }
         else if ((normalized.includes('rủi ro') || normalized.includes('risk')) &&
             risk) {
-            answer = `${risk.levelLabel}: ${risk.score}/100. ${risk.summary}`;
+            const mainSignals = risk.signals.slice(0, 4);
+            const recommendedActions = risk.recommendations.slice(0, 4);
+            answer = [
+                `Kết luận: ${risk.levelLabel} — ${risk.score}/100. ${risk.summary}`,
+                ...(mainSignals.length
+                    ? [
+                        'Nguyên nhân chính:',
+                        ...mainSignals.map((signal) => `• ${signal.title}: ${signal.detail}`),
+                    ]
+                    : ['Nguyên nhân chính:', '• Chưa phát hiện dấu hiệu bất thường trong dữ liệu hiện tại.']),
+                'Hướng xử lý đề xuất:',
+                ...(recommendedActions.length
+                    ? recommendedActions.map((recommendation, index) => `${index + 1}. ${recommendation}`)
+                    : [
+                        '1. Duy trì nhịp cập nhật hằng ngày và tiếp tục theo dõi tiến độ Sprint.',
+                    ]),
+            ].join('\n');
         }
         else if (normalized.includes('quá hạn')) {
             answer = overdue.length
@@ -510,26 +536,35 @@ let AiProjectAssistantService = class AiProjectAssistantService {
             const rate = scopedTasks.length ? Math.round((done / scopedTasks.length) * 100) : 0;
             answer = `${sprint?.name ?? project?.name ?? 'Phạm vi hiện tại'} đã hoàn thành ${done}/${scopedTasks.length} công việc, tương đương ${rate}%.`;
         }
+        const suggestedQuestions = [
+            ...(overdue.length
+                ? [`Vì sao ${overdue[0].taskCode} đang trễ và nên xử lý thế nào?`]
+                : []),
+            ...(blockers.length
+                ? ['Ai có thể hỗ trợ các trở ngại đang tồn tại?']
+                : []),
+            ...(risk && risk.level !== 'LOW'
+                ? ['Việc nào cần ưu tiên để giảm rủi ro Sprint?']
+                : []),
+            ...(latestMeetingSummary
+                ? ['Cuộc họp gần nhất đã chốt điều gì?']
+                : []),
+            'Tôi nên ưu tiên công việc nào hôm nay?',
+            'Công việc nào chưa có người phụ trách?',
+        ].slice(0, 4);
         return {
             answer,
-            suggestedQuestions: [
-                'Sprint hiện tại có rủi ro nào?',
-                'Công việc nào đang quá hạn?',
-                'Ai đang gặp trở ngại?',
-                'Công việc nào chưa có người phụ trách?',
-            ],
+            suggestedQuestions,
         };
-    }
-    isDeterministicQuestion(question) {
-        return (this.isUsageHelpQuestion(question) ||
-            this.isOutOfScopeQuestion(question) ||
-            /quá hạn|rủi ro|risk|blocker|trở ngại|chưa gán|chưa giao|tiến độ|hoàn thành|còn bao nhiêu ngày|cuộc họp.*(?:quyết định|đã chốt)|quyết định.*cuộc họp|action item|việc sau họp|đầu việc.*cuộc họp/iu.test(question));
     }
     isUsageHelpQuestion(question) {
         return /hướng dẫn.*(?:sử dụng|dùng).*(?:hệ thống|agileflow)|(?:sử dụng|dùng).*agileflow|hệ thống.*(?:dùng|hoạt động).*như thế nào/iu.test(question);
     }
     isOutOfScopeQuestion(question) {
-        return /(?:code|viết mã|lập trình).*(?:cho tôi|giúp tôi)|thuật toán.*(?:bot|website|ứng dụng)|(?:nấu ăn|thời tiết|giải trí|tình yêu)/iu.test(question);
+        const normalized = question.toLocaleLowerCase('vi').trim();
+        const asksForUnrelatedBuild = /(?:code|viết|lập trình|tạo|xây).*(?:thuật (?:toán|tón)|mã nguồn|website|web|app|ứng dụng|game|bot)|(?:thuật (?:toán|tón)|mã nguồn|website|web|app|ứng dụng|game|bot).*(?:code|viết|lập trình|tạo|xây)/iu.test(normalized);
+        const unrelatedTopic = /(?:nấu ăn|thời tiết|giải trí|tình yêu|xem bói|dịch thuật|giải bài|làm bài tập)/iu.test(normalized);
+        return asksForUnrelatedBuild || unrelatedTopic;
     }
     buildSources(userId, project, sprint, tasks, updates, question) {
         if (this.isUsageHelpQuestion(question) ||
@@ -586,9 +621,12 @@ let AiProjectAssistantService = class AiProjectAssistantService {
         }
         return sources;
     }
-    buildPrompt(question, project, sprint, tasks, updates, risk, latestMeetingSummary, personalMeetingSummaries = []) {
+    buildPrompt(question, project, sprint, tasks, updates, risk, latestMeetingSummary, personalMeetingSummaries = [], conversationHistory = [], verifiedAnswer = '') {
         return JSON.stringify({
+            instruction: 'Diễn đạt tự nhiên như một trợ lý dự án. Giữ nguyên mọi số liệu, mã task, người phụ trách, ngày hạn, kết luận và hướng xử lý trong verifiedAnswer. Không thêm dữ kiện không có trong dữ liệu. Với câu hỏi phân tích vấn đề, luôn trình bày đủ: Kết luận, Nguyên nhân chính hoặc bằng chứng, và Hướng xử lý đề xuất theo thứ tự ưu tiên. Nếu tình trạng tốt, nêu cách duy trì. Không được lược bỏ đề xuất và không dùng một mẫu câu lặp lại máy móc.',
             question,
+            conversationHistory,
+            verifiedAnswer,
             project: project
                 ? {
                     id: project.id,
@@ -635,6 +673,19 @@ let AiProjectAssistantService = class AiProjectAssistantService {
             myMeetingActionItems: personalMeetingSummaries.flatMap((summary) => summary.aiOutput?.actionItems ?? []),
             risk,
         });
+    }
+    async getRecentConversation(userId, workspaceId, projectId) {
+        if (!this.messageModel?.find)
+            return [];
+        const items = await this.messageModel
+            .find({ workspaceId, projectId, userId })
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .lean()
+            .exec();
+        return [...items]
+            .reverse()
+            .map((item) => ({ role: item.role, content: item.content }));
     }
     calculateSchedule(sprint, today) {
         const start = this.toUtcDate(sprint.startDate);

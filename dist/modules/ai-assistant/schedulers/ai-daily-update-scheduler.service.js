@@ -226,7 +226,7 @@ let AiDailyUpdateSchedulerService = class AiDailyUpdateSchedulerService {
     }
     async expireUndeliveredDrafts(now = new Date()) {
         const today = this.formatDateInTimeZone(now, this.getTimeZone());
-        return this.dailyUpdatesRepository.markPendingAsMissed(this.nextDate(today));
+        return this.dailyUpdatesRepository.submitPendingBeforeDate(this.nextDate(today));
     }
     async remindUndeliveredDrafts(now = new Date()) {
         const updateDate = this.formatDateInTimeZone(now, this.getTimeZone());

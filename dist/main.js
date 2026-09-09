@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
+const path_1 = require("path");
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const swagger_1 = require("@nestjs/swagger");
@@ -13,6 +14,7 @@ async function bootstrap() {
     const apiPrefix = configService.get('app.apiPrefix') ?? 'api';
     const apiVersion = configService.get('app.apiVersion') ?? 'v1';
     app.setGlobalPrefix(`${apiPrefix}/${apiVersion}`);
+    app.useStaticAssets((0, path_1.join)(process.cwd(), 'uploads'), { prefix: '/uploads/' });
     app.enableCors({
         credentials: true,
         origin: true,

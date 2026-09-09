@@ -39,4 +39,15 @@ export declare const buildTeamReportApprovedMail: (params: {
     blockers: string[];
     reportUrl: string;
 }) => MailContent;
+export declare const buildMeetingInvitationMail: (params: {
+    recipientName: string;
+    organizerName: string;
+    projectName: string;
+    meetingTitle: string;
+    description?: string | null;
+    meetingDate: string;
+    startTime: string;
+    endTime: string;
+    meetingUrl: string;
+}) => MailContent;
 export {};

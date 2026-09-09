@@ -62,6 +62,9 @@ let DailyUpdatesController = class DailyUpdatesController {
     archiveDailyUpdate(user, workspaceId, projectId, dailyUpdateId) {
         return this.dailyUpdatesService.archiveDailyUpdate(user.id, workspaceId, projectId, dailyUpdateId);
     }
+    restoreDailyUpdate(user, workspaceId, projectId, dailyUpdateId) {
+        return this.dailyUpdatesService.restoreDailyUpdate(user.id, workspaceId, projectId, dailyUpdateId);
+    }
 };
 exports.DailyUpdatesController = DailyUpdatesController;
 __decorate([
@@ -188,6 +191,18 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", void 0)
 ], DailyUpdatesController.prototype, "archiveDailyUpdate", null);
+__decorate([
+    (0, common_1.Patch)(':dailyUpdateId/restore'),
+    (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore my archived daily update' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('workspaceId')),
+    __param(2, (0, common_1.Param)('projectId')),
+    __param(3, (0, common_1.Param)('dailyUpdateId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String, String]),
+    __metadata("design:returntype", void 0)
+], DailyUpdatesController.prototype, "restoreDailyUpdate", null);
 exports.DailyUpdatesController = DailyUpdatesController = __decorate([
     (0, common_1.Controller)('workspaces/:workspaceId/projects/:projectId/daily-updates'),
     (0, swagger_1.ApiTags)('Daily Updates'),

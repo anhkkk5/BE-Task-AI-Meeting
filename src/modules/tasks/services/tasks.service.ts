@@ -6,6 +6,7 @@ import {
   Optional,
 } from '@nestjs/common';
 import ExcelJS from 'exceljs';
+import JSZip from 'jszip';
 import { SprintStatus } from '../../../common/enums/sprint-status.enum';
 import { TaskStatus } from '../../../common/enums/task-status.enum';
 import { TaskType } from '../../../common/enums/task-type.enum';
@@ -400,8 +401,30 @@ export class TasksService {
       throw new BadRequestException('File Excel không được vượt quá 2MB.');
     }
 
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(Uint8Array.from(file.buffer).buffer);
+    let workbook = new ExcelJS.Workbook();
+    try {
+      // ExcelJS/JSZip cần Buffer gốc của Multer. Chuyển sang ArrayBuffer làm mất
+      // metadata ZIP trong một số phiên bản và gây lỗi `reading 'sheets'`.
+      await workbook.xlsx.load(
+        file.buffer as unknown as Parameters<typeof workbook.xlsx.load>[0],
+      );
+    } catch {
+      try {
+        const normalizedBuffer = await this.normalizeExcelXmlNamespaces(
+          file.buffer,
+        );
+        workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(
+          normalizedBuffer as unknown as Parameters<
+            typeof workbook.xlsx.load
+          >[0],
+        );
+      } catch {
+        throw new BadRequestException(
+          'Không đọc được file Excel. Hãy dùng file .xlsx hợp lệ hoặc tải file mẫu của hệ thống.',
+        );
+      }
+    }
     const worksheet =
       workbook.getWorksheet('Backlog import') ?? workbook.worksheets[0];
 
@@ -1823,6 +1846,40 @@ export class TasksService {
       createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,
     };
+  }
+
+  /**
+   * Một số trình tạo XLSX (đặc biệt openpyxl) ghi namespace SpreadsheetML
+   * bằng tiền tố `x:`. Excel chấp nhận nhưng parser SAX của ExcelJS 4 không
+   * nhận ra các node đó. Chuẩn hóa riêng XML trong thư mục xl/ rồi đọc lại.
+   */
+  private async normalizeExcelXmlNamespaces(buffer: Buffer) {
+    const zip = await JSZip.loadAsync(buffer);
+    const xmlEntries = Object.keys(zip.files).filter(
+      (name) => name.startsWith('xl/') && name.endsWith('.xml'),
+    );
+
+    await Promise.all(
+      xmlEntries.map(async (name) => {
+        const entry = zip.file(name);
+        if (!entry) return;
+
+        const source = await entry.async('string');
+        const normalized = source
+          .replace(/(<\/?)(?:x):/gu, '$1')
+          .replace(
+            /\sxmlns:x=("http:\/\/schemas\.openxmlformats\.org\/spreadsheetml\/2006\/main")/gu,
+            ' xmlns=$1',
+          )
+          // Bảng định dạng không ảnh hưởng dữ liệu import. Một số generator
+          // ghi Target của table dạng tuyệt đối khiến ExcelJS tạo model rỗng.
+          .replace(/<tableParts\b[^>]*>[\s\S]*?<\/tableParts>/gu, '');
+
+        if (normalized !== source) zip.file(name, normalized);
+      }),
+    );
+
+    return zip.generateAsync({ type: 'nodebuffer' });
   }
 
   private recordActivity(

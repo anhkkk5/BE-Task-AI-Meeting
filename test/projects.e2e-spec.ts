@@ -215,7 +215,6 @@ describe('ProjectsController (e2e)', () => {
       .set('Authorization', 'Bearer access-token')
       .send({
         name: 'Agile AI',
-        keyCode: 'AGILEAI',
         description: 'Project demo',
         startDate: '2026-06-18',
         endDate: '2026-07-18',
@@ -229,7 +228,6 @@ describe('ProjectsController (e2e)', () => {
           'workspace-id',
           {
             name: 'Agile AI',
-            keyCode: 'AGILEAI',
             description: 'Project demo',
             startDate: '2026-06-18',
             endDate: '2026-07-18',

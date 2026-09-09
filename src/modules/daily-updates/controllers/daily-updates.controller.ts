@@ -210,4 +210,21 @@ export class DailyUpdatesController {
       dailyUpdateId,
     );
   }
+
+  @Patch(':dailyUpdateId/restore')
+  @UseGuards(WorkspaceMemberGuard)
+  @ApiOperation({ summary: 'Restore my archived daily update' })
+  restoreDailyUpdate(
+    @CurrentUser() user: AuthUser,
+    @Param('workspaceId') workspaceId: string,
+    @Param('projectId') projectId: string,
+    @Param('dailyUpdateId') dailyUpdateId: string,
+  ) {
+    return this.dailyUpdatesService.restoreDailyUpdate(
+      user.id,
+      workspaceId,
+      projectId,
+      dailyUpdateId,
+    );
+  }
 }

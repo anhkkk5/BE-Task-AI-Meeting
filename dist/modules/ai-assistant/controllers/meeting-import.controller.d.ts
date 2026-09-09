@@ -8,6 +8,7 @@ export declare class MeetingImportController {
         message: string;
         data: {
             job: {
+                fileName: string;
                 id: string;
                 _id: undefined;
                 __v: undefined;
@@ -15,7 +16,6 @@ export declare class MeetingImportController {
                 projectId: string;
                 meetingId?: string | null;
                 createdBy: string;
-                fileName: string;
                 mimeType: string;
                 fileSize: number;
                 kind: "DOCUMENT" | "MEDIA";
@@ -35,6 +35,7 @@ export declare class MeetingImportController {
         message: string;
         data: {
             job: {
+                fileName: string;
                 id: string;
                 _id: undefined;
                 __v: undefined;
@@ -42,7 +43,6 @@ export declare class MeetingImportController {
                 projectId: string;
                 meetingId?: string | null;
                 createdBy: string;
-                fileName: string;
                 mimeType: string;
                 fileSize: number;
                 kind: "DOCUMENT" | "MEDIA";
@@ -62,6 +62,7 @@ export declare class MeetingImportController {
         message: string;
         data: {
             items: {
+                fileName: string;
                 id: string;
                 _id: undefined;
                 __v: undefined;
@@ -69,7 +70,6 @@ export declare class MeetingImportController {
                 projectId: string;
                 meetingId?: string | null;
                 createdBy: string;
-                fileName: string;
                 mimeType: string;
                 fileSize: number;
                 kind: "DOCUMENT" | "MEDIA";
@@ -89,6 +89,7 @@ export declare class MeetingImportController {
         message: string;
         data: {
             job: {
+                fileName: string;
                 id: string;
                 _id: undefined;
                 __v: undefined;
@@ -96,7 +97,6 @@ export declare class MeetingImportController {
                 projectId: string;
                 meetingId?: string | null;
                 createdBy: string;
-                fileName: string;
                 mimeType: string;
                 fileSize: number;
                 kind: "DOCUMENT" | "MEDIA";

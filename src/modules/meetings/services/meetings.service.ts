@@ -24,6 +24,9 @@ import { MeetingParticipantsRepository } from '../repositories/meeting-participa
 import { MeetingsRepository } from '../repositories/meetings.repository';
 import { MeetingAccessService } from './meeting-access.service';
 import { MeetingLifecycleService } from './meeting-lifecycle.service';
+import { MailService } from '../../mail/services/mail.service';
+import { buildMeetingInvitationMail } from '../../mail/templates/mail-templates';
+import { mailConfig } from '../../../config/mail.config';
 
 @Injectable()
 export class MeetingsService {
@@ -39,6 +42,8 @@ export class MeetingsService {
     private readonly meetingLifecycleService: MeetingLifecycleService,
     @Optional()
     private readonly notificationsService?: NotificationsService,
+    @Optional()
+    private readonly mailService?: MailService,
   ) {}
 
   async createMeeting(
@@ -52,7 +57,10 @@ export class MeetingsService {
       currentUserId,
       workspaceId,
     );
-    await this.projectAccessService.assertProjectActive(projectId, workspaceId);
+    const project = await this.projectAccessService.assertProjectActive(
+      projectId,
+      workspaceId,
+    );
     await this.assertSprintFilter(projectId, dto.sprintId ?? undefined);
     this.assertTimeRange(dto.startTime, dto.endTime);
 
@@ -104,6 +112,11 @@ export class MeetingsService {
       'Bạn được mời tham gia cuộc họp',
       `${meeting.title} - Ngày: ${meeting.meetingDate}`,
       meeting,
+    );
+
+    await this.sendMeetingInvitationEmails(
+      meetingWithParticipants ?? meeting,
+      project?.name ?? 'Dự án',
     );
 
     return {
@@ -458,6 +471,59 @@ export class MeetingsService {
           },
         }),
       ),
+    );
+  }
+
+  private async sendMeetingInvitationEmails(
+    meeting: Meeting,
+    projectName: string,
+  ) {
+    if (!this.mailService || !meeting.participants?.length) return;
+
+    const dateFormatter = new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      timeZone: 'Asia/Bangkok',
+    });
+    const timeFormatter = new Intl.DateTimeFormat('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'Asia/Bangkok',
+    });
+    const meetingUrl = `${mailConfig().appUrl.replace(/\/$/, '')}/workspaces/${meeting.workspaceId}/projects/${meeting.projectId}/meetings/${meeting.id}`;
+    const meetingDate = meeting.startTime
+      ? dateFormatter.format(meeting.startTime)
+      : meeting.meetingDate.split('-').reverse().join('/');
+    const startTime = meeting.startTime
+      ? timeFormatter.format(meeting.startTime)
+      : 'Chưa xác định';
+    const endTime = meeting.endTime
+      ? timeFormatter.format(meeting.endTime)
+      : 'Chưa xác định';
+    const organizerName = meeting.creator?.fullName ?? 'Người tổ chức';
+
+    await Promise.all(
+      meeting.participants
+        .filter((participant) => Boolean(participant.user?.email))
+        .map((participant) => {
+          const content = buildMeetingInvitationMail({
+            recipientName: participant.user.fullName || participant.user.email,
+            organizerName,
+            projectName,
+            meetingTitle: meeting.title,
+            description: meeting.description,
+            meetingDate,
+            startTime,
+            endTime,
+            meetingUrl,
+          });
+          return this.mailService!.sendMailSafely({
+            to: participant.user.email,
+            ...content,
+          });
+        }),
     );
   }
 

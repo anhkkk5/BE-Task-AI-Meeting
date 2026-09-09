@@ -14,6 +14,7 @@ import { MeetingParticipantsRepository } from '../repositories/meeting-participa
 import { MeetingsRepository } from '../repositories/meetings.repository';
 import { MeetingAccessService } from './meeting-access.service';
 import { MeetingLifecycleService } from './meeting-lifecycle.service';
+import { MailService } from '../../mail/services/mail.service';
 export declare class MeetingsService {
     private readonly dataSource;
     private readonly meetingsRepository;
@@ -24,7 +25,8 @@ export declare class MeetingsService {
     private readonly sprintAccessService;
     private readonly meetingLifecycleService;
     private readonly notificationsService?;
-    constructor(dataSource: DataSource, meetingsRepository: MeetingsRepository, meetingParticipantsRepository: MeetingParticipantsRepository, meetingAccessService: MeetingAccessService, workspaceAccessService: WorkspaceAccessService, projectAccessService: ProjectAccessService, sprintAccessService: SprintAccessService, meetingLifecycleService: MeetingLifecycleService, notificationsService?: NotificationsService | undefined);
+    private readonly mailService?;
+    constructor(dataSource: DataSource, meetingsRepository: MeetingsRepository, meetingParticipantsRepository: MeetingParticipantsRepository, meetingAccessService: MeetingAccessService, workspaceAccessService: WorkspaceAccessService, projectAccessService: ProjectAccessService, sprintAccessService: SprintAccessService, meetingLifecycleService: MeetingLifecycleService, notificationsService?: NotificationsService | undefined, mailService?: MailService | undefined);
     createMeeting(currentUserId: string, workspaceId: string, projectId: string, dto: CreateMeetingDto): Promise<{
         success: boolean;
         message: string;
@@ -234,6 +236,7 @@ export declare class MeetingsService {
     private changeMeetingStatus;
     private assertValidMeetingFilters;
     private notifyParticipants;
+    private sendMeetingInvitationEmails;
     private assertSprintFilter;
     private assertParticipantsInWorkspace;
     private assertTimeRange;

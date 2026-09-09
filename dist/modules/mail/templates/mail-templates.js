@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildTeamReportApprovedMail = exports.buildHandoverChangesRequestedMail = exports.buildHandoverRejectedMail = exports.buildHandoverAcceptedMail = exports.buildHandoverSubmittedMail = exports.buildOtpMail = void 0;
+exports.buildMeetingInvitationMail = exports.buildTeamReportApprovedMail = exports.buildHandoverChangesRequestedMail = exports.buildHandoverRejectedMail = exports.buildHandoverAcceptedMail = exports.buildHandoverSubmittedMail = exports.buildOtpMail = void 0;
 const BRAND = 'Agile AI';
 const escapeHtml = (value) => value
     .replace(/&/g, '&amp;')
@@ -176,4 +176,25 @@ const buildTeamReportApprovedMail = (params) => {
     };
 };
 exports.buildTeamReportApprovedMail = buildTeamReportApprovedMail;
+const buildMeetingInvitationMail = (params) => {
+    const body = `
+    <p style="margin:0;font-size:15px;line-height:23px;color:#172b4d;">
+      Xin chào <strong>${escapeHtml(params.recipientName)}</strong>,
+    </p>
+    <p style="margin:12px 0 0;font-size:15px;line-height:23px;color:#172b4d;">
+      <strong>${escapeHtml(params.organizerName)}</strong> đã mời bạn tham gia một cuộc họp trong dự án
+      <strong>${escapeHtml(params.projectName)}</strong>.
+    </p>
+    ${infoBlock('Cuộc họp', params.meetingTitle)}
+    ${infoBlock('Ngày họp', params.meetingDate)}
+    ${infoBlock('Thời gian', `${params.startTime} – ${params.endTime}`)}
+    ${params.description ? infoBlock('Nội dung chuẩn bị', params.description) : ''}
+    ${button('Xem lịch cuộc họp', params.meetingUrl)}`;
+    return {
+        subject: `[Lịch họp] ${params.meetingTitle} - ${params.meetingDate}`,
+        html: layout('Bạn có lịch họp mới', body),
+        text: `${params.organizerName} mời bạn tham gia cuộc họp “${params.meetingTitle}” của dự án ${params.projectName}, ngày ${params.meetingDate}, từ ${params.startTime} đến ${params.endTime}. Xem tại: ${params.meetingUrl}`,
+    };
+};
+exports.buildMeetingInvitationMail = buildMeetingInvitationMail;
 //# sourceMappingURL=mail-templates.js.map

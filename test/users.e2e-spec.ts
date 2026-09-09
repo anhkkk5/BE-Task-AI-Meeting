@@ -12,6 +12,8 @@ import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter
 import { AccessTokenGuard } from '../src/modules/auth/guards/access-token.guard';
 import { UsersController } from '../src/modules/users/controllers/users.controller';
 import { UsersService } from '../src/modules/users/services/users.service';
+import { AiUserPreferencesService } from '../src/modules/users/services/ai-user-preferences.service';
+import { AvatarUploadService } from '../src/modules/users/services/avatar-upload.service';
 
 type ErrorResponse = {
   success: boolean;
@@ -76,6 +78,14 @@ describe('UsersController validation (e2e)', () => {
         {
           provide: UsersService,
           useValue: usersService,
+        },
+        {
+          provide: AiUserPreferencesService,
+          useValue: {},
+        },
+        {
+          provide: AvatarUploadService,
+          useValue: {},
         },
       ],
     })

@@ -7,8 +7,18 @@ import {
   Patch,
   Post,
   Query,
+  Req,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes } from '@nestjs/swagger';
+import { randomUUID } from 'crypto';
+import { mkdirSync } from 'fs';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import type { Request } from 'express';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -43,6 +53,44 @@ const contributorRoles = [
 @UseGuards(AccessTokenGuard)
 export class ShiftHandoversController {
   constructor(private readonly service: ShiftHandoversService) {}
+
+  @Post('attachments')
+  @WorkspaceRoles(...contributorRoles)
+  @UseGuards(WorkspaceRolesGuard)
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      limits: { fileSize: 10 * 1024 * 1024 },
+      storage: diskStorage({
+        destination: (_request, _file, callback) => {
+          const directory = join(process.cwd(), 'uploads', 'handovers');
+          mkdirSync(directory, { recursive: true });
+          callback(null, directory);
+        },
+        filename: (_request, file, callback) =>
+          callback(null, `${randomUUID()}${extname(file.originalname).toLowerCase()}`),
+      }),
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Tải nhiều tệp đính kèm cho bản bàn giao' })
+  uploadAttachments(
+    @Req() request: Request,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    const origin = `${request.protocol}://${request.get('host')}`;
+    return {
+      success: true,
+      message: 'Tải tệp đính kèm thành công',
+      data: {
+        files: (files ?? []).map((file) => ({
+          name: Buffer.from(file.originalname, 'latin1').toString('utf8'),
+          size: file.size,
+          mimeType: file.mimetype,
+          url: `${origin}/uploads/handovers/${file.filename}`,
+        })),
+      },
+    };
+  }
 
   @Post('handovers')
   @WorkspaceRoles(...contributorRoles)

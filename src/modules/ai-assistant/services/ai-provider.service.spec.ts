@@ -338,7 +338,7 @@ describe('AiProviderService', () => {
     expect(result.output.generatedText).not.toContain('token');
   });
 
-  it('generates deterministic mock team report from team data only', async () => {
+  it('generates deterministic empty handover report when no handover exists', async () => {
     const service = new AiProviderService();
 
     const result = await service.generateTeamDailyReport(
@@ -347,14 +347,16 @@ describe('AiProviderService', () => {
     );
 
     expect(result.model).toContain('mock');
-    expect(result.output.title).toContain('Sprint 1');
-    expect(result.output.completedWork).toEqual([
-      'AGILEAI-1 - API daily update',
-    ]);
-    expect(result.output.missingDailyUpdates).toEqual([
-      'Nguyen Van B chua gui daily update.',
-    ]);
-    expect(result.output.risks?.join(' ')).toContain('AGILEAI-2');
+    expect(result.output.title).toBe(
+      'Báo cáo bàn giao công việc - Project AI',
+    );
+    expect(result.output.completedWork).toEqual([]);
+    expect(result.output.todayFocus).toEqual([]);
+    expect(result.output.risks).toEqual([]);
+    expect(result.output.handoverSummary).toBe(
+      'Không có bàn giao công việc trong ngày.',
+    );
+    expect(result.output.memberSummaries).toEqual([]);
     expect(result.output.generatedText).not.toContain('password');
     expect(result.output.generatedText).not.toContain('token');
   });

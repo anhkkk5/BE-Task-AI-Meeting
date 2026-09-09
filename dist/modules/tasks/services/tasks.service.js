@@ -18,6 +18,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TasksService = void 0;
 const common_1 = require("@nestjs/common");
 const exceljs_1 = __importDefault(require("exceljs"));
+const jszip_1 = __importDefault(require("jszip"));
 const sprint_status_enum_1 = require("../../../common/enums/sprint-status.enum");
 const task_status_enum_1 = require("../../../common/enums/task-status.enum");
 const task_type_enum_1 = require("../../../common/enums/task-type.enum");
@@ -296,8 +297,20 @@ let TasksService = class TasksService {
         if (file.size && file.size > 2 * 1024 * 1024) {
             throw new common_1.BadRequestException('File Excel không được vượt quá 2MB.');
         }
-        const workbook = new exceljs_1.default.Workbook();
-        await workbook.xlsx.load(Uint8Array.from(file.buffer).buffer);
+        let workbook = new exceljs_1.default.Workbook();
+        try {
+            await workbook.xlsx.load(file.buffer);
+        }
+        catch {
+            try {
+                const normalizedBuffer = await this.normalizeExcelXmlNamespaces(file.buffer);
+                workbook = new exceljs_1.default.Workbook();
+                await workbook.xlsx.load(normalizedBuffer);
+            }
+            catch {
+                throw new common_1.BadRequestException('Không đọc được file Excel. Hãy dùng file .xlsx hợp lệ hoặc tải file mẫu của hệ thống.');
+            }
+        }
         const worksheet = workbook.getWorksheet('Backlog import') ?? workbook.worksheets[0];
         if (!worksheet) {
             throw new common_1.BadRequestException('File Excel không có worksheet dữ liệu.');
@@ -1164,6 +1177,23 @@ let TasksService = class TasksService {
             createdAt: comment.createdAt,
             updatedAt: comment.updatedAt,
         };
+    }
+    async normalizeExcelXmlNamespaces(buffer) {
+        const zip = await jszip_1.default.loadAsync(buffer);
+        const xmlEntries = Object.keys(zip.files).filter((name) => name.startsWith('xl/') && name.endsWith('.xml'));
+        await Promise.all(xmlEntries.map(async (name) => {
+            const entry = zip.file(name);
+            if (!entry)
+                return;
+            const source = await entry.async('string');
+            const normalized = source
+                .replace(/(<\/?)(?:x):/gu, '$1')
+                .replace(/\sxmlns:x=("http:\/\/schemas\.openxmlformats\.org\/spreadsheetml\/2006\/main")/gu, ' xmlns=$1')
+                .replace(/<tableParts\b[^>]*>[\s\S]*?<\/tableParts>/gu, '');
+            if (normalized !== source)
+                zip.file(name, normalized);
+        }));
+        return zip.generateAsync({ type: 'nodebuffer' });
     }
     recordActivity(task, actorId, action, changes = null) {
         if (!this.taskActivityLogsRepository)

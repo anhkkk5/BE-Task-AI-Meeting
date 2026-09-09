@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsDateString,
   IsInt,
   IsOptional,
@@ -10,6 +11,15 @@ import {
 } from 'class-validator';
 
 export class GetDailyUpdatesQueryDto {
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Lay cac ban cap nhat da duoc luu tru.',
+  })
+  @IsOptional()
+  @Transform(({ value }) => value === true || value === 'true')
+  @IsBoolean()
+  archived?: boolean;
+
   @ApiPropertyOptional({
     example: '2026-06-20',
     description: 'Loc dung mot ngay bao cao.',

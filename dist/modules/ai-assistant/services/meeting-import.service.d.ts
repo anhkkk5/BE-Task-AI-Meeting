@@ -16,6 +16,7 @@ export declare class MeetingImportService {
         message: string;
         data: {
             job: {
+                fileName: string;
                 id: string;
                 _id: undefined;
                 __v: undefined;
@@ -23,7 +24,6 @@ export declare class MeetingImportService {
                 projectId: string;
                 meetingId?: string | null;
                 createdBy: string;
-                fileName: string;
                 mimeType: string;
                 fileSize: number;
                 kind: "DOCUMENT" | "MEDIA";
@@ -43,6 +43,7 @@ export declare class MeetingImportService {
         message: string;
         data: {
             job: {
+                fileName: string;
                 id: string;
                 _id: undefined;
                 __v: undefined;
@@ -50,7 +51,6 @@ export declare class MeetingImportService {
                 projectId: string;
                 meetingId?: string | null;
                 createdBy: string;
-                fileName: string;
                 mimeType: string;
                 fileSize: number;
                 kind: "DOCUMENT" | "MEDIA";
@@ -70,6 +70,7 @@ export declare class MeetingImportService {
         message: string;
         data: {
             job: {
+                fileName: string;
                 id: string;
                 _id: undefined;
                 __v: undefined;
@@ -77,7 +78,6 @@ export declare class MeetingImportService {
                 projectId: string;
                 meetingId?: string | null;
                 createdBy: string;
-                fileName: string;
                 mimeType: string;
                 fileSize: number;
                 kind: "DOCUMENT" | "MEDIA";
@@ -97,6 +97,7 @@ export declare class MeetingImportService {
         message: string;
         data: {
             items: {
+                fileName: string;
                 id: string;
                 _id: undefined;
                 __v: undefined;
@@ -104,7 +105,6 @@ export declare class MeetingImportService {
                 projectId: string;
                 meetingId?: string | null;
                 createdBy: string;
-                fileName: string;
                 mimeType: string;
                 fileSize: number;
                 kind: "DOCUMENT" | "MEDIA";

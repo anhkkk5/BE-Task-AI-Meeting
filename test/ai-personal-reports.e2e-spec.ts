@@ -14,6 +14,7 @@ import { WorkspaceRolesGuard } from '../src/common/guards/workspace-roles.guard'
 import { AccessTokenGuard } from '../src/modules/auth/guards/access-token.guard';
 import { AiPersonalReportController } from '../src/modules/ai-assistant/controllers/ai-personal-report.controller';
 import { AiPersonalReportService } from '../src/modules/ai-assistant/services/ai-personal-report.service';
+import { AiDailyReportSchedulerService } from '../src/modules/ai-assistant/schedulers/ai-daily-report-scheduler.service';
 
 type AiReportsE2eResponse = {
   success: boolean;
@@ -156,6 +157,10 @@ describe('AiPersonalReportController (e2e)', () => {
         {
           provide: AiPersonalReportService,
           useValue: aiPersonalReportService,
+        },
+        {
+          provide: AiDailyReportSchedulerService,
+          useValue: { getAutomationStatus: jest.fn() },
         },
       ],
     })

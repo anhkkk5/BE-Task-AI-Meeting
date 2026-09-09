@@ -16,6 +16,7 @@ import {
   AiMeetingSummaryDetailController,
 } from '../src/modules/ai-assistant/controllers/ai-meeting-summary.controller';
 import { AiMeetingSummaryService } from '../src/modules/ai-assistant/services/ai-meeting-summary.service';
+import { AiMeetingActionItemReviewService } from '../src/modules/ai-assistant/services/ai-meeting-action-item-review.service';
 import { AccessTokenGuard } from '../src/modules/auth/guards/access-token.guard';
 
 type AiMeetingSummaryE2eResponse = {
@@ -153,6 +154,14 @@ describe('AiMeetingSummaryController (e2e)', () => {
         {
           provide: AiMeetingSummaryService,
           useValue: aiMeetingSummaryService,
+        },
+        {
+          provide: AiMeetingActionItemReviewService,
+          useValue: {
+            getActionItems: jest.fn(),
+            approveActionItem: jest.fn(),
+            rejectActionItem: jest.fn(),
+          },
         },
       ],
     })

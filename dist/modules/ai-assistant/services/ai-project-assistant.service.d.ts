@@ -129,11 +129,11 @@ export declare class AiProjectAssistantService {
     private assertAccess;
     private findDefaultSprint;
     private buildFallbackAnswer;
-    private isDeterministicQuestion;
     private isUsageHelpQuestion;
     private isOutOfScopeQuestion;
     private buildSources;
     private buildPrompt;
+    private getRecentConversation;
     private calculateSchedule;
     private resolveRiskLevel;
     private buildRecommendations;

@@ -14,7 +14,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShiftHandoversController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const swagger_1 = require("@nestjs/swagger");
+const crypto_1 = require("crypto");
+const fs_1 = require("fs");
+const multer_1 = require("multer");
+const path_1 = require("path");
+const swagger_2 = require("@nestjs/swagger");
 const current_user_decorator_1 = require("../../../common/decorators/current-user.decorator");
 const workspace_roles_decorator_1 = require("../../../common/decorators/workspace-roles.decorator");
 const workspace_role_enum_1 = require("../../../common/enums/workspace-role.enum");
@@ -37,6 +43,21 @@ let ShiftHandoversController = class ShiftHandoversController {
     service;
     constructor(service) {
         this.service = service;
+    }
+    uploadAttachments(request, files) {
+        const origin = `${request.protocol}://${request.get('host')}`;
+        return {
+            success: true,
+            message: 'Tải tệp đính kèm thành công',
+            data: {
+                files: (files ?? []).map((file) => ({
+                    name: Buffer.from(file.originalname, 'latin1').toString('utf8'),
+                    size: file.size,
+                    mimeType: file.mimetype,
+                    url: `${origin}/uploads/handovers/${file.filename}`,
+                })),
+            },
+        };
     }
     createHandover(user, workspaceId, projectId, dto) {
         return this.service.createHandover(user.id, workspaceId, projectId, dto);
@@ -68,15 +89,38 @@ let ShiftHandoversController = class ShiftHandoversController {
 };
 exports.ShiftHandoversController = ShiftHandoversController;
 __decorate([
+    (0, common_1.Post)('attachments'),
+    (0, workspace_roles_decorator_1.WorkspaceRoles)(...contributorRoles),
+    (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('files', 10, {
+        limits: { fileSize: 10 * 1024 * 1024 },
+        storage: (0, multer_1.diskStorage)({
+            destination: (_request, _file, callback) => {
+                const directory = (0, path_1.join)(process.cwd(), 'uploads', 'handovers');
+                (0, fs_1.mkdirSync)(directory, { recursive: true });
+                callback(null, directory);
+            },
+            filename: (_request, file, callback) => callback(null, `${(0, crypto_1.randomUUID)()}${(0, path_1.extname)(file.originalname).toLowerCase()}`),
+        }),
+    })),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, swagger_2.ApiOperation)({ summary: 'Tải nhiều tệp đính kèm cho bản bàn giao' }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.UploadedFiles)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Array]),
+    __metadata("design:returntype", void 0)
+], ShiftHandoversController.prototype, "uploadAttachments", null);
+__decorate([
     (0, common_1.Post)('handovers'),
     (0, workspace_roles_decorator_1.WorkspaceRoles)(...contributorRoles),
     (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
-    (0, swagger_1.ApiOperation)({
+    (0, swagger_2.ApiOperation)({
         summary: 'Tạo bản nháp bàn giao task',
         description: 'Người đang phụ trách task tạo nội dung bàn giao cho một thành viên khác. Task chưa đổi người phụ trách ở bước này.',
     }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Tạo bản nháp thành công.' }),
-    (0, swagger_1.ApiResponse)({
+    (0, swagger_2.ApiResponse)({ status: 201, description: 'Tạo bản nháp thành công.' }),
+    (0, swagger_2.ApiResponse)({
         status: 409,
         description: 'Task đã có yêu cầu bàn giao chưa hoàn tất.',
     }),
@@ -91,7 +135,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('handovers'),
     (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
-    (0, swagger_1.ApiOperation)({ summary: 'Lấy lịch sử bàn giao công việc' }),
+    (0, swagger_2.ApiOperation)({ summary: 'Lấy lịch sử bàn giao công việc' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('workspaceId')),
     __param(2, (0, common_1.Param)('projectId')),
@@ -103,8 +147,8 @@ __decorate([
 __decorate([
     (0, common_1.Get)('handovers/:handoverId'),
     (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
-    (0, swagger_1.ApiOperation)({ summary: 'Lấy chi tiết một bản bàn giao' }),
-    (0, swagger_1.ApiParam)({ name: 'handoverId', description: 'ID bản bàn giao' }),
+    (0, swagger_2.ApiOperation)({ summary: 'Lấy chi tiết một bản bàn giao' }),
+    (0, swagger_2.ApiParam)({ name: 'handoverId', description: 'ID bản bàn giao' }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('workspaceId')),
     __param(2, (0, common_1.Param)('projectId')),
@@ -117,7 +161,7 @@ __decorate([
     (0, common_1.Patch)('handovers/:handoverId'),
     (0, workspace_roles_decorator_1.WorkspaceRoles)(...contributorRoles),
     (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
-    (0, swagger_1.ApiOperation)({
+    (0, swagger_2.ApiOperation)({
         summary: 'Bổ sung bản bàn giao',
         description: 'Người giao được sửa bản nháp hoặc bản đang bị yêu cầu bổ sung.',
     }),
@@ -134,7 +178,7 @@ __decorate([
     (0, common_1.Post)('handovers/:handoverId/submit'),
     (0, workspace_roles_decorator_1.WorkspaceRoles)(...contributorRoles),
     (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
-    (0, swagger_1.ApiOperation)({
+    (0, swagger_2.ApiOperation)({
         summary: 'Gửi yêu cầu bàn giao',
         description: 'Chuyển bản nháp sang trạng thái chờ người nhận xử lý.',
     }),
@@ -150,7 +194,7 @@ __decorate([
     (0, common_1.Post)('handovers/:handoverId/request-changes'),
     (0, workspace_roles_decorator_1.WorkspaceRoles)(...contributorRoles),
     (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
-    (0, swagger_1.ApiOperation)({
+    (0, swagger_2.ApiOperation)({
         summary: 'Yêu cầu bổ sung thông tin',
         description: 'Chỉ người nhận của yêu cầu đang chờ mới thực hiện được.',
     }),
@@ -167,7 +211,7 @@ __decorate([
     (0, common_1.Post)('handovers/:handoverId/reject'),
     (0, workspace_roles_decorator_1.WorkspaceRoles)(...contributorRoles),
     (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
-    (0, swagger_1.ApiOperation)({
+    (0, swagger_2.ApiOperation)({
         summary: 'Từ chối nhận bàn giao',
         description: 'Người nhận từ chối và bắt buộc nêu lý do. Task vẫn thuộc người giao.',
     }),
@@ -184,7 +228,7 @@ __decorate([
     (0, common_1.Post)('handovers/:handoverId/accept'),
     (0, workspace_roles_decorator_1.WorkspaceRoles)(...contributorRoles),
     (0, common_1.UseGuards)(workspace_roles_guard_1.WorkspaceRolesGuard),
-    (0, swagger_1.ApiOperation)({
+    (0, swagger_2.ApiOperation)({
         summary: 'Chấp nhận bàn giao',
         description: 'Chỉ người nhận được chấp nhận. Hệ thống đổi người phụ trách task từ người giao sang người nhận trong cùng transaction.',
     }),
@@ -199,7 +243,7 @@ __decorate([
 __decorate([
     (0, common_1.Delete)('handovers/:handoverId'),
     (0, common_1.UseGuards)(workspace_member_guard_1.WorkspaceMemberGuard),
-    (0, swagger_1.ApiOperation)({
+    (0, swagger_2.ApiOperation)({
         summary: 'Xóa bản bàn giao',
         description: 'Người tạo bản bàn giao hoặc quản lý workspace được xóa mềm.',
     }),
@@ -213,8 +257,8 @@ __decorate([
 ], ShiftHandoversController.prototype, "deleteHandover", null);
 exports.ShiftHandoversController = ShiftHandoversController = __decorate([
     (0, common_1.Controller)('workspaces/:workspaceId/projects/:projectId/shift-handovers'),
-    (0, swagger_1.ApiTags)('Bàn giao công việc'),
-    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_2.ApiTags)('Bàn giao công việc'),
+    (0, swagger_2.ApiBearerAuth)(),
     (0, common_1.UseGuards)(access_token_guard_1.AccessTokenGuard),
     __metadata("design:paramtypes", [shift_handovers_service_1.ShiftHandoversService])
 ], ShiftHandoversController);

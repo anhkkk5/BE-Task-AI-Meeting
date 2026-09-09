@@ -70,8 +70,10 @@ export declare class AiAgileFlowAssistantService {
         message: string;
     }>;
     private answerFeatureQuestion;
+    private answerOutOfScopeQuestion;
     private choiceResponse;
     private isFeatureQuestion;
+    private isOutOfScopeQuestion;
     private needsSprint;
     private normalize;
     private assertWorkspaceMembership;

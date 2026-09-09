@@ -242,3 +242,35 @@ export const buildTeamReportApprovedMail = (params: {
     text: `${params.approverName} da duyet bao cao giao ban ngay ${params.reportDate} cua du an ${params.projectName}. Tom tat: ${params.summary}. Xem tai: ${params.reportUrl}`,
   };
 };
+
+export const buildMeetingInvitationMail = (params: {
+  recipientName: string;
+  organizerName: string;
+  projectName: string;
+  meetingTitle: string;
+  description?: string | null;
+  meetingDate: string;
+  startTime: string;
+  endTime: string;
+  meetingUrl: string;
+}): MailContent => {
+  const body = `
+    <p style="margin:0;font-size:15px;line-height:23px;color:#172b4d;">
+      Xin chào <strong>${escapeHtml(params.recipientName)}</strong>,
+    </p>
+    <p style="margin:12px 0 0;font-size:15px;line-height:23px;color:#172b4d;">
+      <strong>${escapeHtml(params.organizerName)}</strong> đã mời bạn tham gia một cuộc họp trong dự án
+      <strong>${escapeHtml(params.projectName)}</strong>.
+    </p>
+    ${infoBlock('Cuộc họp', params.meetingTitle)}
+    ${infoBlock('Ngày họp', params.meetingDate)}
+    ${infoBlock('Thời gian', `${params.startTime} – ${params.endTime}`)}
+    ${params.description ? infoBlock('Nội dung chuẩn bị', params.description) : ''}
+    ${button('Xem lịch cuộc họp', params.meetingUrl)}`;
+
+  return {
+    subject: `[Lịch họp] ${params.meetingTitle} - ${params.meetingDate}`,
+    html: layout('Bạn có lịch họp mới', body),
+    text: `${params.organizerName} mời bạn tham gia cuộc họp “${params.meetingTitle}” của dự án ${params.projectName}, ngày ${params.meetingDate}, từ ${params.startTime} đến ${params.endTime}. Xem tại: ${params.meetingUrl}`,
+  };
+};

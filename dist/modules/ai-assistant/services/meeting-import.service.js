@@ -215,7 +215,7 @@ let MeetingImportService = MeetingImportService_1 = class MeetingImportService {
         const kind = this.fileKind(file.originalname);
         const limit = kind === 'DOCUMENT' ? MAX_DOCUMENT_BYTES : MAX_MEDIA_BYTES;
         if (file.size > limit)
-            throw new common_1.BadRequestException(`Tệp vượt quá giới hạn ${limit / 1024 / 1024} MB`);
+            throw new common_1.PayloadTooLargeException(`Tệp vượt quá giới hạn ${limit / 1024 / 1024} MB`);
         return kind;
     }
     fileKind(name) {
@@ -242,7 +242,13 @@ let MeetingImportService = MeetingImportService_1 = class MeetingImportService {
     }
     toResponse(job) {
         const item = job.toObject();
-        return { ...item, id: String(job._id), _id: undefined, __v: undefined };
+        return {
+            ...item,
+            fileName: this.normalizeFileName(item.fileName),
+            id: String(job._id),
+            _id: undefined,
+            __v: undefined,
+        };
     }
 };
 exports.MeetingImportService = MeetingImportService;

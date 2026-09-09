@@ -1,3 +1,4 @@
+import type { Request } from 'express';
 import type { AuthUser } from '../../auth/types/auth-user.type';
 import { CreateHandoverDto } from '../dto/create-handover.dto';
 import { GetHandoversQueryDto } from '../dto/get-handovers-query.dto';
@@ -8,6 +9,18 @@ import { ShiftHandoversService } from '../services/shift-handovers.service';
 export declare class ShiftHandoversController {
     private readonly service;
     constructor(service: ShiftHandoversService);
+    uploadAttachments(request: Request, files: Express.Multer.File[]): {
+        success: boolean;
+        message: string;
+        data: {
+            files: {
+                name: string;
+                size: number;
+                mimeType: string;
+                url: string;
+            }[];
+        };
+    };
     createHandover(user: AuthUser, workspaceId: string, projectId: string, dto: CreateHandoverDto): Promise<{
         success: boolean;
         message: string;

@@ -358,6 +358,43 @@ export class DailyUpdatesService {
     };
   }
 
+  async restoreDailyUpdate(
+    currentUserId: string,
+    workspaceId: string,
+    projectId: string,
+    dailyUpdateId: string,
+  ) {
+    await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
+    await this.dailyUpdateAccessService.assertCanWriteDailyUpdate(
+      currentUserId,
+      workspaceId,
+    );
+    await this.projectAccessService.assertProjectInWorkspace(
+      projectId,
+      workspaceId,
+    );
+    const dailyUpdate =
+      await this.dailyUpdatesRepository.findArchivedByIdAndProject(
+        dailyUpdateId,
+        projectId,
+      );
+
+    if (!dailyUpdate || !dailyUpdate.deletedAt) {
+      throw new NotFoundException('Không tìm thấy Daily Update đã lưu trữ');
+    }
+    this.dailyUpdateAccessService.assertCanEditDailyUpdate(
+      currentUserId,
+      dailyUpdate,
+    );
+    const restored = await this.dailyUpdatesRepository.restore(dailyUpdate);
+
+    return {
+      success: true,
+      message: 'Khôi phục Daily Update thành công',
+      data: { dailyUpdate: restored ? this.toDailyUpdateResponse(restored) : null },
+    };
+  }
+
   private async assertValidDailyUpdateFilters(
     projectId: string,
     workspaceId: string,

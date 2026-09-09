@@ -35,10 +35,10 @@ describe('PromptBuilderService personalization', () => {
     const teamPrompt = service.buildTeamDailyReportPrompt({} as never);
     const meetingPrompt = service.buildMeetingSummaryPrompt({} as never);
 
-    expect(teamPrompt).toContain('báo cáo giao ban nhóm');
+    expect(teamPrompt).toContain('báo cáo bàn giao công việc');
     expect(teamPrompt).toContain('tiếng Việt có dấu');
     expect(teamPrompt).not.toContain('Bao cao bang tieng Viet');
-    expect(meetingPrompt).toContain('tóm tắt ngắn gọn');
+    expect(meetingPrompt).toContain('summary chỉ 1 câu kết luận ngắn');
     expect(meetingPrompt).toContain('tiếng Việt có dấu');
   });
 });

@@ -14,6 +14,7 @@ const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 class GetDailyUpdatesQueryDto {
+    archived;
     date;
     fromDate;
     toDate;
@@ -23,6 +24,16 @@ class GetDailyUpdatesQueryDto {
     limit;
 }
 exports.GetDailyUpdatesQueryDto = GetDailyUpdatesQueryDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: false,
+        description: 'Lay cac ban cap nhat da duoc luu tru.',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => value === true || value === 'true'),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], GetDailyUpdatesQueryDto.prototype, "archived", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         example: '2026-06-20',

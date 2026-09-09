@@ -40,6 +40,8 @@ let AiAgileFlowAssistantService = class AiAgileFlowAssistantService {
         this.aiProviderService = aiProviderService;
     }
     async ask(userId, dto) {
+        if (this.isOutOfScopeQuestion(dto.question))
+            return this.answerOutOfScopeQuestion();
         if (this.isFeatureQuestion(dto.question))
             return this.answerFeatureQuestion(dto.question);
         if (!dto.workspaceId) {
@@ -121,6 +123,33 @@ let AiAgileFlowAssistantService = class AiAgileFlowAssistantService {
             },
         };
     }
+    answerOutOfScopeQuestion() {
+        return {
+            success: true,
+            message: 'Câu hỏi nằm ngoài phạm vi trợ lý AgileFlow',
+            data: {
+                answer: [
+                    'Mình hiểu bạn đang cần hỗ trợ về một nội dung khác.',
+                    'Hiện tại mình là trợ lý quản lý dự án AgileFlow nên chưa thể viết code, giải thuật toán hoặc tư vấn chủ đề không liên quan đến dự án trong cửa sổ này.',
+                    'Mình có thể hỗ trợ bạn ngay với:',
+                    '• Phân tích tiến độ và rủi ro Sprint.',
+                    '• Tìm task quá hạn, blocker và người đang cần hỗ trợ.',
+                    '• Đề xuất thứ tự ưu tiên và hướng giải quyết dựa trên dữ liệu thật.',
+                    '• Tóm tắt cuộc họp, quyết định và việc cần làm tiếp theo.',
+                    'Bạn có thể thử hỏi: “Sprint hiện tại có rủi ro nào và nên xử lý ra sao?”',
+                ].join('\n'),
+                suggestedQuestions: [
+                    'Sprint hiện tại có rủi ro nào và nên xử lý ra sao?',
+                    'Công việc nào đang quá hạn và cần ưu tiên?',
+                    'Ai đang gặp trở ngại và cần hỗ trợ?',
+                ],
+                sources: [],
+                state: 'GLOBAL',
+                choices: [],
+                scope: { workspaceId: null, projectId: null, sprintId: null },
+            },
+        };
+    }
     choiceResponse(state, answer, choices) {
         return {
             success: true,
@@ -148,6 +177,12 @@ let AiAgileFlowAssistantService = class AiAgileFlowAssistantService {
             'quyen gi',
             'co tac dung gi',
         ].some((term) => normalized.includes(term));
+    }
+    isOutOfScopeQuestion(question) {
+        const normalized = this.normalize(question).trim();
+        const asksForUnrelatedBuild = /(?:code|viet|lap trinh|tao|xay).*(?:thuat (?:toan|ton)|ma nguon|website|web|app|ung dung|game|bot)|(?:thuat (?:toan|ton)|ma nguon|website|web|app|ung dung|game|bot).*(?:code|viet|lap trinh|tao|xay)/u.test(normalized);
+        const unrelatedTopic = /(?:nau an|thoi tiet|giai tri|tinh yeu|xem boi|dich thuat|giai bai|lam bai tap)/u.test(normalized);
+        return asksForUnrelatedBuild || unrelatedTopic;
     }
     needsSprint(question) {
         const normalized = this.normalize(question);

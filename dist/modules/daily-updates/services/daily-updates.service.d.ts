@@ -281,6 +281,48 @@ export declare class DailyUpdatesService {
         message: string;
         data: null;
     }>;
+    restoreDailyUpdate(currentUserId: string, workspaceId: string, projectId: string, dailyUpdateId: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            dailyUpdate: {
+                id: string;
+                workspaceId: string;
+                projectId: string;
+                sprintId: string | null;
+                userId: string;
+                user: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
+                sprint: {
+                    id: string;
+                    name: string;
+                    status: import("../../../common/enums/sprint-status.enum").SprintStatus;
+                } | null;
+                updateDate: string;
+                yesterdayWork: string;
+                todayPlan: string;
+                blockers: string | null;
+                needHelpFromId: string | null;
+                needHelpFrom: {
+                    id: string;
+                    fullName: string;
+                    email: string;
+                    avatarUrl: string | null;
+                } | null;
+                notes: string | null;
+                mood: import("../../../common/enums/daily-mood.enum").DailyMood | null;
+                submissionStatus: DailyUpdateSubmissionStatus;
+                generatedByAi: boolean;
+                submittedAt: Date | null;
+                createdAt: Date;
+                updatedAt: Date;
+            } | null;
+        };
+    }>;
     private assertValidDailyUpdateFilters;
     private assertNeedHelpFromMember;
     private normalizeDate;

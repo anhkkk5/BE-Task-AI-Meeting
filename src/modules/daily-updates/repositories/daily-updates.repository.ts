@@ -71,6 +71,14 @@ export class DailyUpdatesRepository {
     });
   }
 
+  findArchivedByIdAndProject(dailyUpdateId: string, projectId: string) {
+    return this.repository.findOne({
+      where: { id: dailyUpdateId, projectId },
+      relations: { sprint: true, user: true, needHelpFrom: true },
+      withDeleted: true,
+    });
+  }
+
   findMy(projectId: string, userId: string, query: GetDailyUpdatesQueryDto) {
     return this.findByProject(projectId, query, {
       userId,
@@ -118,6 +126,21 @@ export class DailyUpdatesRepository {
       .execute();
   }
 
+  submitPendingBeforeDate(beforeDate: string) {
+    return this.repository
+      .createQueryBuilder()
+      .update(DailyUpdate)
+      .set({
+        submissionStatus: DailyUpdateSubmissionStatus.Submitted,
+        submittedAt: () => 'CURRENT_TIMESTAMP(6)',
+      })
+      .where('submission_status = :status', {
+        status: DailyUpdateSubmissionStatus.PendingReview,
+      })
+      .andWhere('update_date < :beforeDate', { beforeDate })
+      .execute();
+  }
+
   async update(dailyUpdate: DailyUpdate, data: Partial<DailyUpdate>) {
     Object.assign(dailyUpdate, data);
     const savedDailyUpdate = await this.repository.save(dailyUpdate);
@@ -134,6 +157,11 @@ export class DailyUpdatesRepository {
     await this.repository.softRemove(dailyUpdate);
   }
 
+  async restore(dailyUpdate: DailyUpdate) {
+    await this.repository.recover(dailyUpdate);
+    return this.findByIdAndProject(dailyUpdate.id, dailyUpdate.projectId);
+  }
+
   private async findByProject(
     projectId: string,
     query: GetDailyUpdatesQueryDto,
@@ -146,8 +174,13 @@ export class DailyUpdatesRepository {
       .leftJoinAndSelect('dailyUpdate.user', 'user')
       .leftJoinAndSelect('dailyUpdate.sprint', 'sprint')
       .leftJoinAndSelect('dailyUpdate.needHelpFrom', 'needHelpFrom')
+      .withDeleted()
       .where('dailyUpdate.projectId = :projectId', { projectId })
-      .andWhere('dailyUpdate.deletedAt IS NULL');
+      .andWhere(
+        query.archived
+          ? 'dailyUpdate.deletedAt IS NOT NULL'
+          : 'dailyUpdate.deletedAt IS NULL',
+      );
 
     if (options.userId) {
       builder.andWhere('dailyUpdate.userId = :userId', {

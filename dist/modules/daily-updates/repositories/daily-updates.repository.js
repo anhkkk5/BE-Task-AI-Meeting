@@ -53,6 +53,13 @@ let DailyUpdatesRepository = class DailyUpdatesRepository {
             },
         });
     }
+    findArchivedByIdAndProject(dailyUpdateId, projectId) {
+        return this.repository.findOne({
+            where: { id: dailyUpdateId, projectId },
+            relations: { sprint: true, user: true, needHelpFrom: true },
+            withDeleted: true,
+        });
+    }
     findMy(projectId, userId, query) {
         return this.findByProject(projectId, query, {
             userId,
@@ -95,6 +102,20 @@ let DailyUpdatesRepository = class DailyUpdatesRepository {
             .andWhere('update_date < :beforeDate', { beforeDate })
             .execute();
     }
+    submitPendingBeforeDate(beforeDate) {
+        return this.repository
+            .createQueryBuilder()
+            .update(daily_update_entity_1.DailyUpdate)
+            .set({
+            submissionStatus: daily_update_submission_status_enum_1.DailyUpdateSubmissionStatus.Submitted,
+            submittedAt: () => 'CURRENT_TIMESTAMP(6)',
+        })
+            .where('submission_status = :status', {
+            status: daily_update_submission_status_enum_1.DailyUpdateSubmissionStatus.PendingReview,
+        })
+            .andWhere('update_date < :beforeDate', { beforeDate })
+            .execute();
+    }
     async update(dailyUpdate, data) {
         Object.assign(dailyUpdate, data);
         const savedDailyUpdate = await this.repository.save(dailyUpdate);
@@ -102,6 +123,10 @@ let DailyUpdatesRepository = class DailyUpdatesRepository {
     }
     async archive(dailyUpdate) {
         await this.repository.softRemove(dailyUpdate);
+    }
+    async restore(dailyUpdate) {
+        await this.repository.recover(dailyUpdate);
+        return this.findByIdAndProject(dailyUpdate.id, dailyUpdate.projectId);
     }
     async findByProject(projectId, query, options) {
         const page = query.page ?? 1;
@@ -111,8 +136,11 @@ let DailyUpdatesRepository = class DailyUpdatesRepository {
             .leftJoinAndSelect('dailyUpdate.user', 'user')
             .leftJoinAndSelect('dailyUpdate.sprint', 'sprint')
             .leftJoinAndSelect('dailyUpdate.needHelpFrom', 'needHelpFrom')
+            .withDeleted()
             .where('dailyUpdate.projectId = :projectId', { projectId })
-            .andWhere('dailyUpdate.deletedAt IS NULL');
+            .andWhere(query.archived
+            ? 'dailyUpdate.deletedAt IS NOT NULL'
+            : 'dailyUpdate.deletedAt IS NULL');
         if (options.userId) {
             builder.andWhere('dailyUpdate.userId = :userId', {
                 userId: options.userId,

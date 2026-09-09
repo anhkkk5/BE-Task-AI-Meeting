@@ -28,6 +28,9 @@ const meeting_participants_repository_1 = require("../repositories/meeting-parti
 const meetings_repository_1 = require("../repositories/meetings.repository");
 const meeting_access_service_1 = require("./meeting-access.service");
 const meeting_lifecycle_service_1 = require("./meeting-lifecycle.service");
+const mail_service_1 = require("../../mail/services/mail.service");
+const mail_templates_1 = require("../../mail/templates/mail-templates");
+const mail_config_1 = require("../../../config/mail.config");
 let MeetingsService = class MeetingsService {
     dataSource;
     meetingsRepository;
@@ -38,7 +41,8 @@ let MeetingsService = class MeetingsService {
     sprintAccessService;
     meetingLifecycleService;
     notificationsService;
-    constructor(dataSource, meetingsRepository, meetingParticipantsRepository, meetingAccessService, workspaceAccessService, projectAccessService, sprintAccessService, meetingLifecycleService, notificationsService) {
+    mailService;
+    constructor(dataSource, meetingsRepository, meetingParticipantsRepository, meetingAccessService, workspaceAccessService, projectAccessService, sprintAccessService, meetingLifecycleService, notificationsService, mailService) {
         this.dataSource = dataSource;
         this.meetingsRepository = meetingsRepository;
         this.meetingParticipantsRepository = meetingParticipantsRepository;
@@ -48,11 +52,12 @@ let MeetingsService = class MeetingsService {
         this.sprintAccessService = sprintAccessService;
         this.meetingLifecycleService = meetingLifecycleService;
         this.notificationsService = notificationsService;
+        this.mailService = mailService;
     }
     async createMeeting(currentUserId, workspaceId, projectId, dto) {
         await this.workspaceAccessService.assertWorkspaceActive(workspaceId);
         await this.meetingAccessService.assertUserCanManageMeeting(currentUserId, workspaceId);
-        await this.projectAccessService.assertProjectActive(projectId, workspaceId);
+        const project = await this.projectAccessService.assertProjectActive(projectId, workspaceId);
         await this.assertSprintFilter(projectId, dto.sprintId ?? undefined);
         this.assertTimeRange(dto.startTime, dto.endTime);
         const participantIds = this.uniqueUserIds([
@@ -85,6 +90,7 @@ let MeetingsService = class MeetingsService {
         });
         const meetingWithParticipants = await this.meetingsRepository.findByIdAndProject(meeting.id, projectId);
         await this.notifyParticipants(participantIds.filter((userId) => userId !== currentUserId), notification_entity_1.NotificationType.MeetingInvited, 'Bạn được mời tham gia cuộc họp', `${meeting.title} - Ngày: ${meeting.meetingDate}`, meeting);
+        await this.sendMeetingInvitationEmails(meetingWithParticipants ?? meeting, project?.name ?? 'Dự án');
         return {
             success: true,
             message: 'Create meeting successfully',
@@ -263,6 +269,52 @@ let MeetingsService = class MeetingsService {
             },
         })));
     }
+    async sendMeetingInvitationEmails(meeting, projectName) {
+        if (!this.mailService || !meeting.participants?.length)
+            return;
+        const dateFormatter = new Intl.DateTimeFormat('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            timeZone: 'Asia/Bangkok',
+        });
+        const timeFormatter = new Intl.DateTimeFormat('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'Asia/Bangkok',
+        });
+        const meetingUrl = `${(0, mail_config_1.mailConfig)().appUrl.replace(/\/$/, '')}/workspaces/${meeting.workspaceId}/projects/${meeting.projectId}/meetings/${meeting.id}`;
+        const meetingDate = meeting.startTime
+            ? dateFormatter.format(meeting.startTime)
+            : meeting.meetingDate.split('-').reverse().join('/');
+        const startTime = meeting.startTime
+            ? timeFormatter.format(meeting.startTime)
+            : 'Chưa xác định';
+        const endTime = meeting.endTime
+            ? timeFormatter.format(meeting.endTime)
+            : 'Chưa xác định';
+        const organizerName = meeting.creator?.fullName ?? 'Người tổ chức';
+        await Promise.all(meeting.participants
+            .filter((participant) => Boolean(participant.user?.email))
+            .map((participant) => {
+            const content = (0, mail_templates_1.buildMeetingInvitationMail)({
+                recipientName: participant.user.fullName || participant.user.email,
+                organizerName,
+                projectName,
+                meetingTitle: meeting.title,
+                description: meeting.description,
+                meetingDate,
+                startTime,
+                endTime,
+                meetingUrl,
+            });
+            return this.mailService.sendMailSafely({
+                to: participant.user.email,
+                ...content,
+            });
+        }));
+    }
     async assertSprintFilter(projectId, sprintId) {
         if (sprintId) {
             await this.sprintAccessService.assertSprintInProject(sprintId, projectId);
@@ -357,6 +409,7 @@ exports.MeetingsService = MeetingsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectDataSource)()),
     __param(8, (0, common_1.Optional)()),
+    __param(9, (0, common_1.Optional)()),
     __metadata("design:paramtypes", [typeorm_2.DataSource,
         meetings_repository_1.MeetingsRepository,
         meeting_participants_repository_1.MeetingParticipantsRepository,
@@ -365,6 +418,7 @@ exports.MeetingsService = MeetingsService = __decorate([
         project_access_service_1.ProjectAccessService,
         sprint_access_service_1.SprintAccessService,
         meeting_lifecycle_service_1.MeetingLifecycleService,
-        notifications_service_1.NotificationsService])
+        notifications_service_1.NotificationsService,
+        mail_service_1.MailService])
 ], MeetingsService);
 //# sourceMappingURL=meetings.service.js.map
